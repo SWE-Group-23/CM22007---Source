@@ -1,4 +1,12 @@
+"""
+Example service.
+"""
+
+
 def main():
+    """
+    Example main.
+    """
     print("Hello from example-service!")
 
 
