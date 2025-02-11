@@ -1,4 +1,4 @@
-REGISTRY=localhost:5000
+REGISTRY=localhost:5001
 
 SERVICES=$(wildcard src/*/*/Dockerfile)
 SERVICE_NAMES=$(notdir $(patsubst %/Dockerfile, %, $(SERVICES)))
@@ -64,7 +64,7 @@ registry:
 		echo "Local docker registry already running."; \
 	else \
 		echo "Starting local docker registry at $(REGISTRY)..."; \
-		(docker start registry && echo "Restarted registry...") || (docker run -d -p 5000:5000 --name registry registry:2.8.3 && echo "Started new registry..."); \
+		(docker start registry && echo "Restarted registry...") || (docker run -d -p 5001:5000 --name registry registry:2.8.3 && echo "Started new registry..."); \
 		echo "Done!"; \
 	fi
 
