@@ -15,6 +15,7 @@ spec:
       containers:
         - name: example-service
           image: localhost:5000/example-service:latest
+          imagePullPolicy: IfNotPresent
 # ---
 # apiVersion: v1
 # kind: Service
