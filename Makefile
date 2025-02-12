@@ -25,6 +25,7 @@ build: registry minikube
 		name=$$(basename $$(dirname $$service)); \
 		echo "Building and pushing $$name to local registry..."; \
 		(cd $$(dirname $$service); \
+		uv lock; \
 	   	echo "Building..."; docker build -t $(REGISTRY)/$$name .; \
 	   	echo "Pushing..."; docker push $(REGISTRY)/$$name;); \
 		echo "Done!"; \
@@ -61,6 +62,11 @@ minikube-clean:
 	@minikube stop
 	@echo "Done!"
 
+minikube-clean-full: minikube-clean
+	@echo "Deleting minikube..."
+	@minikube delete
+	@echo "Done!"
+
 registry:
 	@if docker ps --filter "name=registry" | grep -q registry; then \
 		echo "Local docker registry already running."; \
@@ -82,6 +88,6 @@ registry-clean-full: registry-clean
 
 clean: deploy-clean registry-clean
 
-clean-all: registry-clean-full deploy-clean minikube-clean
+clean-all: registry-clean-full minikube-clean-full deploy-clean
 
 .PHONY: clean registry-clean minikube-clean deploy-clean minikube registry build deploy print-services all
