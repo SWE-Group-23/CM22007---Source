@@ -80,4 +80,4 @@ clean: deploy-clean
 
 clean-all: minikube-clean-full deploy-clean
 
-.PHONY: clean minikube-clean deploy-clean minikube build deploy print-services all
+.PHONY: all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-clean-full clean clean-all
