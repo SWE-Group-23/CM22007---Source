@@ -2,10 +2,12 @@
 # Vars
 ##
 
-# set docker runtime if needed
-DOCKER_RUNTIME=docker
+# include personal build options
+-include .build_config.mk
 
-MINIKUBE_DRIVER=docker
+# set docker runtime and minikube driver if not already in .build_config.mk
+DOCKER_RUNTIME ?= docker
+MINIKUBE_DRIVER ?= docker
 
 # paths to Dockerfiles for each service
 SERVICES=$(wildcard src/*/*/Dockerfile)
@@ -74,7 +76,7 @@ redeploy: deploy-clean | deploy
 
 # start minikube if it isn't already running
 minikube: check-docker
-	@echo "Starting minikube..."
+	@echo "Starting minikube with $(MINIKUBE_DRIVER) driver..."
 	@if minikube status | grep -q "host: Running"; then \
 		echo "Minikube already running."; \
 	else \
