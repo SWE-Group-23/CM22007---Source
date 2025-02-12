@@ -24,7 +24,9 @@ build: registry minikube
 	@for service in $(SERVICES); do \
 		name=$$(basename $$(dirname $$service)); \
 		echo "Building and pushing $$name to local registry..."; \
-		(cd $$(dirname $$service); echo "Building..."; docker build -t $(REGISTRY)/$$name .; echo "Pushing..."; docker push $(REGISTRY)/$$name; echo "Loading to minikube..."; minikube image load $(REGISTRY)/$$name;); \
+		(cd $$(dirname $$service); \
+	   	echo "Building..."; docker build -t $(REGISTRY)/$$name .; \
+	   	echo "Pushing..."; docker push $(REGISTRY)/$$name;); \
 		echo "Done!"; \
 	done
 
@@ -50,7 +52,7 @@ minikube: registry
 	@if minikube status | grep -q "host: Running"; then \
 		echo "Minikube already running."; \
 	else \
-		minikube start; \
+		minikube start --insecure-registry="host.minikube.internal:5001"; \
 		echo "Done!"; \
 	fi
 
