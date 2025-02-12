@@ -4,14 +4,6 @@ COPY --from=ghcr.io/astral-sh/uv:0.5.30 /uv /uvx /bin/
 WORKDIR /app
 COPY . .
 
-RUN apk update && apk add --no-cache \
-    musl-dev \
-    libc-dev \
-    python3-dev \
-    libffi-dev \
-    gcc \
-    g++
-
 ENV CASS_DRIVER_NO_EXTENSIONS=1
 
 RUN --mount=type=cache,target=/root/.cache/uv \
