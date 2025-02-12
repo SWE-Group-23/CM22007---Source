@@ -5,6 +5,8 @@
 # set docker runtime if needed
 DOCKER_RUNTIME=docker
 
+MINIKUBE_DRIVER=docker
+
 # paths to Dockerfiles for each service
 SERVICES=$(wildcard src/*/*/Dockerfile)
 # names of services
@@ -76,7 +78,7 @@ minikube: check-docker
 	@if minikube status | grep -q "host: Running"; then \
 		echo "Minikube already running."; \
 	else \
-		minikube start --driver=virtualbox; \
+		minikube start --driver=$(MINIKUBE_DRIVER); \
 		echo "Done!"; \
 	fi
 
