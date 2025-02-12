@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: example-service
-          image: localhost:5000/example-service:latest
+          image: host.minikube.internal:5001/example-service:latest
           imagePullPolicy: IfNotPresent
 # ---
 # apiVersion: v1
