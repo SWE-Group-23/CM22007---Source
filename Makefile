@@ -71,13 +71,17 @@ minikube-clean:
 	@-minikube stop
 	@echo "Done!"
 
+minikube-restart: minikube-clean | minikube
+
 minikube-clean-full: minikube-clean
 	@echo "Deleting minikube..."
 	@-minikube delete
 	@echo "Done!"
 
+minikube-reset: minikube-clean-full | minikube
+
 clean: deploy-clean
 
 clean-all: minikube-clean-full deploy-clean
 
-.PHONY: all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-clean-full clean clean-all
+.PHONY: all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
