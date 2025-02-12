@@ -1,4 +1,4 @@
-REGISTRY=localhost:5001
+DOCKER_RUNTIME=docker
 
 SERVICES=$(wildcard src/*/*/Dockerfile)
 SERVICE_NAMES=$(notdir $(patsubst %/Dockerfile, %, $(SERVICES)))
@@ -15,79 +15,69 @@ print-services:
 		echo "$$name : $$service"; \
 	done
 
+check-docker:
+	@if ! $(DOCKER_RUNTIME) info > /dev/null 2>&1; then \
+		echo "Docker isn't running, please start the docker daemon (using systemd: \`sudo systemctl start $(DOCKER_RUNTIME)\`)."; \
+		exit 1; \
+	fi
+
 ##
 # Build + Deployment
 ##
 
-build: registry minikube
-	@echo "Building docker images for services..."
+build: minikube check-docker
+	@echo "Building docker images inside Minikube..."
 	@for service in $(SERVICES); do \
 		name=$$(basename $$(dirname $$service)); \
-		echo "Building and pushing $$name to local registry..."; \
-		(cd $$(dirname $$service); \
-		uv lock; \
-	   	echo "Building..."; docker build -t $(REGISTRY)/$$name .; \
-	   	echo "Pushing..."; docker push $(REGISTRY)/$$name;); \
+		echo "Building $$name..."; \
+		( \
+			cd $$(dirname $$service); \
+			uv lock; \
+			minikube image build -t $$name .; \
+		); \
 		echo "Done!"; \
 	done
 
-deploy: build registry minikube
+deploy: build minikube
 	@echo "Deploying services to K8s..."
 	@kubectl apply -f k8s/
 	@echo "Done!"
 
 deploy-clean:
 	@echo "Deleting deployments..."
-	-@for service in $(SERVICE_NAMES); do \
+	@-for service in $(SERVICE_NAMES); do \
 		echo "Deleting $$service..."; \
 		kubectl delete deployments.apps "$$service"; \
 	done
 	@echo "Done!"
 
+redeploy: deploy-clean | deploy
+
 ##
 # Infra
 ##
 
-minikube: registry
+minikube: check-docker
 	@echo "Starting minikube..."
 	@if minikube status | grep -q "host: Running"; then \
 		echo "Minikube already running."; \
 	else \
-		minikube start --insecure-registry="host.minikube.internal:5001"; \
+		minikube start --driver=virtualbox; \
 		echo "Done!"; \
 	fi
 
 minikube-clean:
 	@echo "Stopping minikube..."
-	@minikube stop
+	@-minikube stop
 	@echo "Done!"
 
 minikube-clean-full: minikube-clean
 	@echo "Deleting minikube..."
-	@minikube delete
+	@-minikube delete
 	@echo "Done!"
 
-registry:
-	@if docker ps --filter "name=registry" | grep -q registry; then \
-		echo "Local docker registry already running."; \
-	else \
-		echo "Starting local docker registry at $(REGISTRY)..."; \
-		(docker start registry && echo "Restarted registry...") || (docker run -d -p 5001:5000 --name registry registry:2.8.3 && echo "Started new registry..."); \
-		echo "Done!"; \
-	fi
+clean: deploy-clean
 
-registry-clean:
-	@echo "Killing registry container..."
-	@-docker kill registry
-	@echo "Done!"
+clean-all: minikube-clean-full deploy-clean
 
-registry-clean-full: registry-clean
-	@echo "Removing registry container..."
-	@docker container rm registry
-	@echo "Done!"
-
-clean: deploy-clean registry-clean
-
-clean-all: registry-clean-full minikube-clean-full deploy-clean
-
-.PHONY: clean registry-clean minikube-clean deploy-clean minikube registry build deploy print-services all
+.PHONY: clean minikube-clean deploy-clean minikube build deploy print-services all

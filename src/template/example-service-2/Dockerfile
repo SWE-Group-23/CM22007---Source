@@ -1,16 +1,17 @@
 FROM python:3.13.1-alpine
 COPY --from=ghcr.io/astral-sh/uv:0.5.30 /uv /uvx /bin/
 
-WORKDIR /app
-COPY . .
-
 RUN apk update && apk add --no-cache \
+    build-base \
     musl-dev \
     libc-dev \
     python3-dev \
     libffi-dev \
     gcc \
     g++
+
+WORKDIR /app
+COPY . .
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
