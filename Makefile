@@ -20,6 +20,17 @@ all: deploy
 # Util
 ##
 
+rabbitmq-manage:
+	@kubectl rabbitmq manage rabbitmq
+
+rabbitmq-creds:
+	@echo Username:
+	@kubectl get secret rabbitmq-default-user -o jsonpath='{.data.username}' | base64 --decode 
+	@echo
+	@echo Password:
+	@kubectl get secret rabbitmq-default-user -o jsonpath='{.data.password}' | base64 --decode
+	@echo
+
 # print all the services in SERVICES and the path to their Dockerfile
 print-services:
 	@for service in $(SERVICES); do \
@@ -52,8 +63,14 @@ build: minikube check-docker
 		echo "Done!"; \
 	done
 
+rabbitmq-setup: minikube
+	@echo "Installing rabbitMQ cluster operator..."
+	@kubectl rabbitmq install-cluster-operator
+	@echo "Getting rabbitMQ resource definitions..."
+	@kubectl get customresourcedefinitions.apiextensions.k8s.io
+
 # apply all k8s configs in the k8s/ directory
-deploy: build minikube
+deploy: build rabbitmq-setup minikube
 	@echo "Deploying services to K8s..."
 	@kubectl apply -f k8s/
 	@echo "Done!"
@@ -108,4 +125,4 @@ clean: deploy-clean
 # deletes minikube and deletes deployments
 clean-all: minikube-clean-full deploy-clean
 
-.PHONY: all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
+.PHONY: rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
