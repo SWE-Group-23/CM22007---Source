@@ -22,7 +22,7 @@ def main():
 
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(
-            env_vars["RABBITMQ_SERVICE_HOST"],
+            "rabbitmq",
             credentials=credentials
         )
     )
