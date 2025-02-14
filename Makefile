@@ -68,6 +68,12 @@ rabbitmq-setup: minikube
 	@kubectl rabbitmq install-cluster-operator
 	@echo "Getting rabbitMQ resource definitions..."
 	@kubectl get customresourcedefinitions.apiextensions.k8s.io
+	@echo "Install cert-manager..."
+	@kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
+	@echo "Waiting for cert-manager"
+	@until kubectl --dry-run=server apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/latest/download/messaging-topology-operator-with-certmanager.yaml &> /dev/null; do sleep 1; done
+	@echo "Installing rabbitMQ Topology operator..."
+	@kubectl apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/latest/download/messaging-topology-operator-with-certmanager.yaml
 
 # apply all k8s configs in the k8s/ directory
 deploy: build rabbitmq-setup minikube
@@ -97,7 +103,7 @@ minikube: check-docker
 	@if minikube status | grep -q "host: Running"; then \
 		echo "Minikube already running."; \
 	else \
-		minikube start --driver=$(MINIKUBE_DRIVER); \
+		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 4; \
 		echo "Done!"; \
 	fi
 
