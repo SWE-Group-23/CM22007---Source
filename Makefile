@@ -66,25 +66,30 @@ build: minikube check-docker
 # installs rabbitmq cluster operator, cert-manager, rabbitmq topology operator, then deploys rabbitmq
 rabbitmq-setup: minikube
 	@echo "Installing rabbitMQ cluster operator..."
+	# TODO: check if it's installed already and skip if it is
 	@kubectl rabbitmq install-cluster-operator
 	@echo "Getting rabbitMQ resource definitions..."
+	# TODO: check if this is already done and skip if it is
 	@kubectl get customresourcedefinitions.apiextensions.k8s.io
 	@echo "Install cert-manager..."
+	# TODO: check if it's installed already and skip if it is
 	@kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
-	@echo "Waiting for cert-manager..."
-	@until kubectl --dry-run=server apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/latest/download/messaging-topology-operator-with-certmanager.yaml &> /dev/null; do sleep 1; done
+	@printf "Waiting for cert-manager"
+	# TODO: make this not use dry run if possible
+	@until kubectl --dry-run=server apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/latest/download/messaging-topology-operator-with-certmanager.yaml &> /dev/null; do sleep 1; printf "."; done; printf "\n"
 	@echo "Installing rabbitMQ Topology operator..."
+	# TODO: check if it's installed already and skip if it is
 	@kubectl apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/latest/download/messaging-topology-operator-with-certmanager.yaml
 	@echo "Deploying rabbitMQ..."
 	@kubectl apply -f k8s/rabbit-mq.yaml
-	@echo "Waiting for rabbitMQ to start..."
-	@until kubectl rabbitmq -n rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; done
+	@printf "Waiting for rabbitMQ to start"
+	@until kubectl rabbitmq -n rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; printf "."; done; printf "\n"
 	@echo "Done!"
 
 # delete all deployments made in rabbitmq-setup
-rabbitmq-clean:
+rabbitmq-clean: deploy-clean
 	@echo "Deleting rabbitmq deployments..."
-	@kubectl delete --namespace=rabbitmq --all deployment
+	@kubectl delete -f k8s/rabbit-mq.yaml
 	@kubectl delete --namespace=rabbitmq-system --all deployment
 	@echo "Deleting cert-manager deployments..."
 	@kubectl delete --namespace=cert-manager --all deployment
@@ -96,7 +101,7 @@ deploy: build rabbitmq-setup minikube
 	@echo "Done!"
 
 # delete all deployments in SERVICE_NAMES
-deploy-clean: rabbitmq-clean
+deploy-clean:
 	@echo "Deleting deployments..."
 	@-for service in $(SERVICE_NAMES); do \
 		echo "Deleting $$service..."; \
@@ -142,7 +147,7 @@ minikube-reset: minikube-clean-full | minikube
 # just deletes deployments for now
 clean: deploy-clean
 
-# deletes minikube and deletes deployments
-clean-all: minikube-clean-full rabbitmq-clean
+# deletes minikube (which should delete all deployments)
+clean-all: minikube-clean-full
 
 .PHONY: rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
