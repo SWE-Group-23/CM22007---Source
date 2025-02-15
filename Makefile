@@ -63,6 +63,7 @@ build: minikube check-docker
 		echo "Done!"; \
 	done
 
+# installs rabbitmq cluster operator, cert-manager, rabbitmq topology operator, then deploys rabbitmq
 rabbitmq-setup: minikube
 	@echo "Installing rabbitMQ cluster operator..."
 	@kubectl rabbitmq install-cluster-operator
@@ -70,10 +71,23 @@ rabbitmq-setup: minikube
 	@kubectl get customresourcedefinitions.apiextensions.k8s.io
 	@echo "Install cert-manager..."
 	@kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
-	@echo "Waiting for cert-manager"
+	@echo "Waiting for cert-manager..."
 	@until kubectl --dry-run=server apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/latest/download/messaging-topology-operator-with-certmanager.yaml &> /dev/null; do sleep 1; done
 	@echo "Installing rabbitMQ Topology operator..."
 	@kubectl apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/latest/download/messaging-topology-operator-with-certmanager.yaml
+	@echo "Deploying rabbitMQ..."
+	@kubectl apply -f k8s/rabbit-mq.yaml
+	@echo "Waiting for rabbitMQ to start..."
+	@until kubectl rabbitmq -n rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; done
+	@echo "Done!"
+
+# delete all deployments made in rabbitmq-setup
+rabbitmq-clean:
+	@echo "Deleting rabbitmq deployments..."
+	@kubectl delete --namespace=rabbitmq --all deployment
+	@kubectl delete --namespace=rabbitmq-system --all deployment
+	@echo "Deleting cert-manager deployments..."
+	@kubectl delete --namespace=cert-manager --all deployment
 
 # apply all k8s configs in the k8s/ directory
 deploy: build rabbitmq-setup minikube
@@ -82,7 +96,7 @@ deploy: build rabbitmq-setup minikube
 	@echo "Done!"
 
 # delete all deployments in SERVICE_NAMES
-deploy-clean:
+deploy-clean: rabbitmq-clean
 	@echo "Deleting deployments..."
 	@-for service in $(SERVICE_NAMES); do \
 		echo "Deleting $$service..."; \
@@ -129,6 +143,6 @@ minikube-reset: minikube-clean-full | minikube
 clean: deploy-clean
 
 # deletes minikube and deletes deployments
-clean-all: minikube-clean-full deploy-clean
+clean-all: minikube-clean-full rabbitmq-clean
 
-.PHONY: rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
+.PHONY: rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
