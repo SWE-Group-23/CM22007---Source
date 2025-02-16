@@ -3,9 +3,12 @@ Example service.
 """
 
 import os
-import time
 
 import pika
+
+
+def message_callback(ch, method, properties, body):
+    print(f"[RECEIVED] {body}")
 
 
 def main():
@@ -27,11 +30,18 @@ def main():
         )
     )
 
-    _ = connection.channel()
+    channel = connection.channel()
 
-    time.sleep(120)
+    channel.queue_declare(queue="hello-rabbitmq")
 
-    print("Hello from example-service 1")
+    channel.basic_consume(
+        queue="hello-rabbitmq",
+        on_message_callback=message_callback,
+        auto_ack=True,
+    )
+
+    print("[INFO] Consuming...")
+    channel.start_consuming()
 
 
 if __name__ == "__main__":

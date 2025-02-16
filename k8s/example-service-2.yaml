@@ -16,3 +16,45 @@ spec:
         - name: example-service-2
           image: example-service-2:latest
           imagePullPolicy: Never
+          tty: true
+          env:
+            - name: RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: example-service-2-user-user-credentials
+                  key: username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: example-service-2-user-user-credentials
+                  key: password
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: User
+metadata:
+  name: example-service-2-user
+spec:
+  tags:
+  - policymaker
+  rabbitmqClusterReference:
+    name: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Permission
+metadata:
+  name: example-service-2-permission
+spec:
+  vhost: "/"
+  userReference:
+    name: "example-service-2-user"
+  permissions:
+    write: ".*"
+    configure: ".*"
+    read: ".*"
+  rabbitmqClusterReference:
+    name: rabbitmq
+
