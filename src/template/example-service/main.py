@@ -32,10 +32,8 @@ def main():
 
     channel = connection.channel()
 
-    channel.queue_declare(queue="hello-rabbitmq")
-
     channel.basic_consume(
-        queue="hello-rabbitmq",
+        queue="example-services-queue",
         on_message_callback=message_callback,
         auto_ack=True,
     )

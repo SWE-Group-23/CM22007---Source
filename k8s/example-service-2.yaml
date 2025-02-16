@@ -52,9 +52,9 @@ spec:
   userReference:
     name: "example-service-2-user"
   permissions:
-    write: ".*"
-    configure: ".*"
-    read: ".*"
+    write: "example-services-exchange"
+    configure: ""
+    read: ""
   rabbitmqClusterReference:
     name: rabbitmq
 

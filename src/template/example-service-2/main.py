@@ -29,12 +29,10 @@ def main():
 
     channel = connection.channel()
 
-    channel.queue_declare(queue="hello-rabbitmq")
-
     while True:
         channel.basic_publish(
-            exchange='',
-            routing_key='hello-rabbitmq',
+            exchange='example-services-exchange',
+            routing_key='example-services-queue',
             body="Hello, RabbitMQ!"
         )
         print("[SENT] Hello, RabbitMQ!")

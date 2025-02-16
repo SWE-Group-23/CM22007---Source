@@ -52,8 +52,8 @@ spec:
   userReference:
     name: "example-service-user"
   permissions:
-    write: ".*"
-    configure: ".*"
-    read: ".*"
+    write: ""
+    configure: ""
+    read: "example-services-queue"
   rabbitmqClusterReference:
     name: rabbitmq
