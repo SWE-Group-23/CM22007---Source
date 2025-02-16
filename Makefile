@@ -130,7 +130,7 @@ minikube: check-docker
 	@if minikube status | grep -q "host: Running"; then \
 		echo "Minikube already running."; \
 	else \
-		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 4 -n 2; \
+		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 2 --memory 2G; \
 		minikube addons enable registry; \
 		echo "Done!"; \
 	fi
