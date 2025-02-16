@@ -131,7 +131,7 @@ minikube: check-docker
 		echo "Minikube already running."; \
 	else \
 		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 4 -n 2; \
-		minikube addons enable registry \
+		minikube addons enable registry; \
 		echo "Done!"; \
 	fi
 
