@@ -58,8 +58,8 @@ build: minikube check-docker
 		( \
 			cd $$(dirname $$service); \
 			uv lock; \
-			docker build -t localhost:32805/$$name .; \
-			docker push localhost:32805/$$name; \
+			docker build -t localhost:`(minikube addons enable registry | grep "uses port" | awk '{print $$9} END {exit $$9 == ""}' || echo 5000)`/$$name .; \
+			docker push localhost:`(minikube addons enable registry | grep "uses port 2" | awk '{print $$9} END {exit $$9 == ""}' || echo 5000)`/$$name; \
 		); \
 		echo "Done!"; \
 	done
