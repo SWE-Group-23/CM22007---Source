@@ -58,7 +58,8 @@ build: minikube check-docker
 		( \
 			cd $$(dirname $$service); \
 			uv lock; \
-			minikube image build -t $$name .; \
+			docker build -t localhost:32805/$$name .; \
+			docker push localhost:32805/$$name; \
 		); \
 		echo "Done!"; \
 	done
@@ -67,6 +68,11 @@ cert-manager:
 	@echo "Install cert-manager..."
 	# TODO: check if it's installed already and skip if it is
 	@kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
+
+scylladb-setup: minikube cert-manager
+	@echo "Installing Prometheus Operator..."
+	#kubectl apply --server-side -f=https://github.com/prometheus-operator/prometheus-operator/releases/latest/download/bundle.yaml
+	kubectl -n=scylla-operator apply --server-side -f=https://raw.githubusercontent.com/scylladb/scylla-operator/refs/heads/v1.15/deploy/operator.yaml
 
 # installs rabbitmq cluster operator, cert-manager, rabbitmq topology operator, then deploys rabbitmq
 rabbitmq-setup: minikube cert-manager
@@ -97,7 +103,7 @@ rabbitmq-clean: deploy-clean
 	@kubectl delete --namespace=cert-manager --all deployment
 
 # apply all k8s configs in the k8s/ directory
-deploy: build rabbitmq-setup minikube
+deploy: minikube | build rabbitmq-setup scylladb-setup
 	@echo "Deploying services to K8s..."
 	@kubectl apply -f k8s/
 	@echo "Done!"
@@ -124,7 +130,8 @@ minikube: check-docker
 	@if minikube status | grep -q "host: Running"; then \
 		echo "Minikube already running."; \
 	else \
-		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 4; \
+		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 4 -n 2; \
+		minikube addons enable registry \
 		echo "Done!"; \
 	fi
 
@@ -152,4 +159,4 @@ clean: deploy-clean
 # deletes minikube (which should delete all deployments)
 clean-all: minikube-clean-full
 
-.PHONY: rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
+.PHONY: scylladb-setup cert-manager rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
