@@ -63,17 +63,19 @@ build: minikube check-docker
 		echo "Done!"; \
 	done
 
+cert-manager:
+	@echo "Install cert-manager..."
+	# TODO: check if it's installed already and skip if it is
+	@kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
+
 # installs rabbitmq cluster operator, cert-manager, rabbitmq topology operator, then deploys rabbitmq
-rabbitmq-setup: minikube
+rabbitmq-setup: minikube cert-manager
 	@echo "Installing rabbitMQ cluster operator..."
 	# TODO: check if it's installed already and skip if it is
 	@kubectl rabbitmq install-cluster-operator
 	@echo "Getting rabbitMQ resource definitions..."
 	# TODO: check if this is already done and skip if it is
 	@kubectl get customresourcedefinitions.apiextensions.k8s.io
-	@echo "Install cert-manager..."
-	# TODO: check if it's installed already and skip if it is
-	@kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
 	@printf "Waiting for cert-manager"
 	# TODO: make this not use dry run if possible
 	@until kubectl --dry-run=server apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/latest/download/messaging-topology-operator-with-certmanager.yaml &> /dev/null; do sleep 1; printf "."; done; printf "\n"
