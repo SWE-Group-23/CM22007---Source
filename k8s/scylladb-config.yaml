@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scylla-config
+data:
+  scylla.yaml: |
+    authenticator: PasswordAuthenticator
+    authorizer: CassandraAuthorizer
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scylla
+
+---
+
+apiVersion: scylla.scylladb.com/v1
+kind: ScyllaCluster
+metadata:
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: simple-cluster
+  namespace: scylla
+spec:
+  agentVersion: 3.3.0@sha256:dc2684f51e961d88da5a8eac2d9f165cb7a960cbf91f67f49332e7224317c96b
+  version: 6.1.1
+  developerMode: true
+  datacenter:
+    name: dev-1
+    racks:
+      - name: dev-1a
+        scyllaConfig: scylla-config
+        scyllaAgentConfig: scylla-agent-config
+        members: 1 
+        storage:
+          capacity: 5Gi
+        resources:
+          requests:
+            cpu: 100m
+            memory: 1Gi
+          limits:
+            cpu: 1
+            memory: 1Gi
+        volumes:
+          - name: coredumpfs
+            hostPath:
+              path: /tmp/coredumps
+        volumeMounts:
+          - mountPath: /tmp/coredumps
+            name: coredumpfs
