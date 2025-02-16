@@ -83,7 +83,7 @@ rabbitmq-setup: minikube
 	@echo "Deploying rabbitMQ..."
 	@kubectl apply -f k8s/rabbit-mq.yaml
 	@printf "Waiting for rabbitMQ to start"
-	@until kubectl rabbitmq -n rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; printf "."; done; printf "\n"
+	@until kubectl rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; printf "."; done; printf "\n"
 	@echo "Done!"
 
 # delete all deployments made in rabbitmq-setup

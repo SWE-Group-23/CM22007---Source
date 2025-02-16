@@ -16,6 +16,7 @@ spec:
         - name: example-service
           image: example-service:latest
           imagePullPolicy: Never
+          tty: true
           env:
             - name: RABBITMQ_USERNAME
               valueFrom:
@@ -52,7 +53,7 @@ spec:
     name: "example-service-user"
   permissions:
     write: ".*"
-    configure: ""
+    configure: ".*"
     read: ".*"
   rabbitmqClusterReference:
     name: rabbitmq
