@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: example-service-2
-          image: localhost:5000/example-service-2:latest
-          imagePullPolicy: IfNotPresent
+          image: example-service-2:latest
+          imagePullPolicy: Never
           tty: true
           env:
             - name: RABBITMQ_USERNAME

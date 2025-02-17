@@ -58,8 +58,7 @@ build: minikube check-docker
 		( \
 			cd $$(dirname $$service); \
 			uv lock; \
-			docker build -t localhost:`(minikube addons enable registry | grep "uses port" | awk '{print $$9} END {exit $$9 == ""}' || echo 5000)`/$$name .; \
-			docker push localhost:`(minikube addons enable registry | grep "uses port 2" | awk '{print $$9} END {exit $$9 == ""}' || echo 5000)`/$$name; \
+			minikube image build -t $$name .; \
 		); \
 		echo "Done!"; \
 	done
@@ -130,8 +129,7 @@ minikube: check-docker
 	@if minikube status | grep -q "host: Running"; then \
 		echo "Minikube already running."; \
 	else \
-		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 2 --memory 2G; \
-		minikube addons enable registry; \
+		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 2; \
 		echo "Done!"; \
 	fi
 
