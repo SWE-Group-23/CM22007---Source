@@ -69,8 +69,9 @@ cert-manager:
 	@kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
 
 scylladb-setup: minikube cert-manager
-	@echo "Installing Prometheus Operator..."
+	# @echo "Installing Prometheus Operator..."
 	#kubectl apply --server-side -f=https://github.com/prometheus-operator/prometheus-operator/releases/latest/download/bundle.yaml
+	@echo "Installing Scylla operator..."
 	kubectl -n=scylla-operator apply --server-side -f=https://raw.githubusercontent.com/scylladb/scylla-operator/refs/heads/v1.15/deploy/operator.yaml
 
 # installs rabbitmq cluster operator, cert-manager, rabbitmq topology operator, then deploys rabbitmq
@@ -89,8 +90,6 @@ rabbitmq-setup: minikube cert-manager
 	@kubectl apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/latest/download/messaging-topology-operator-with-certmanager.yaml
 	@echo "Deploying rabbitMQ..."
 	@kubectl apply -f k8s/rabbit-mq.yaml
-	@printf "Waiting for rabbitMQ to start"
-	@until kubectl rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; printf "."; done; printf "\n"
 	@echo "Done!"
 
 # delete all deployments made in rabbitmq-setup
@@ -101,9 +100,19 @@ rabbitmq-clean: deploy-clean
 	@echo "Deleting cert-manager deployments..."
 	@kubectl delete --namespace=cert-manager --all deployment
 
+wait-ready: rabbitmq-setup scylladb-setup
+	@printf "Waiting for rabbitMQ to start"
+	@until kubectl rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; printf "."; done; printf "\n"
+
 # apply all k8s configs in the k8s/ directory
-deploy: minikube | build rabbitmq-setup scylladb-setup
+deploy: minikube | build wait-ready
 	@echo "Deploying services to K8s..."
+	@kubectl apply -f k8s/
+	@echo "Done!"
+
+# apply all k8s configs in the k8s/ directory
+deploy-unchecked: minikube | build
+	@echo "WARNING: You should only use this target if you know all other services are running."
 	@kubectl apply -f k8s/
 	@echo "Done!"
 
@@ -118,6 +127,7 @@ deploy-clean:
 
 # delete all deployments, then rebuild and deploy
 redeploy: deploy-clean | deploy
+redeploy-unchecked: deploy-clean | deploy-unchecked
 
 ##
 # Infra
@@ -157,4 +167,4 @@ clean: deploy-clean
 # deletes minikube (which should delete all deployments)
 clean-all: minikube-clean-full
 
-.PHONY: scylladb-setup cert-manager rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
+.PHONY: wait-ready redeploy-unchecked deploy-unchecked scylladb-setup cert-manager rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
