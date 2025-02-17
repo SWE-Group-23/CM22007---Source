@@ -1,18 +1,19 @@
 apiVersion: v1
-kind: ConfigMap
+kind: Namespace
 metadata:
-  name: scylla-config
-data:
-  scylla.yaml: |
-    authenticator: PasswordAuthenticator
-    authorizer: CassandraAuthorizer
+  name: scylla
 
 ---
 
 apiVersion: v1
-kind: Namespace
+kind: ConfigMap
 metadata:
-  name: scylla
+  name: scylla-config
+  namespace: scylla
+data:
+  scylla.yaml: |
+    authenticator: PasswordAuthenticator
+    authorizer: CassandraAuthorizer
 
 ---
 
@@ -21,24 +22,31 @@ kind: ScyllaCluster
 metadata:
   labels:
     controller-tools.k8s.io: "1.0"
-  name: simple-cluster
+  name: example-db
   namespace: scylla
 spec:
   agentVersion: 3.3.0@sha256:dc2684f51e961d88da5a8eac2d9f165cb7a960cbf91f67f49332e7224317c96b
   version: 6.1.1
   developerMode: true
+  exposeOptions:
+    nodeService:
+      type: ClusterIP
+    broadcastOptions:
+      clients:
+        type: ServiceClusterIP
+      nodes:
+        type: ServiceClusterIP
   datacenter:
     name: dev-1
     racks:
       - name: dev-1a
         scyllaConfig: scylla-config
-        scyllaAgentConfig: scylla-agent-config
         members: 1 
         storage:
           capacity: 5Gi
         resources:
           requests:
-            cpu: 100m
+            cpu: 400m
             memory: 1Gi
           limits:
             cpu: 1
