@@ -73,6 +73,17 @@ scylladb-setup: minikube cert-manager
 	#kubectl apply --server-side -f=https://github.com/prometheus-operator/prometheus-operator/releases/latest/download/bundle.yaml
 	@echo "Installing Scylla operator..."
 	kubectl -n=scylla-operator apply --server-side -f=https://raw.githubusercontent.com/scylladb/scylla-operator/refs/heads/v1.15/deploy/operator.yaml
+	@echo "Done!"
+
+scylladb-clean: deploy-clean
+	@echo "Deleting ScyllaDB clusters..."
+	kubectl delete --namespace=scylla --all scyllaclusters.scylla.scylladb.com
+	@echo "Done!"
+
+scylladb-clean-full: scylladb-clean
+	@echo "Deleting ScyllaDB operators..."
+	kubectl delete --namespace=scylla-operator --all deployment
+	@echo "Done!"
 
 # installs rabbitmq cluster operator, cert-manager, rabbitmq topology operator, then deploys rabbitmq
 rabbitmq-setup: minikube cert-manager
@@ -167,4 +178,4 @@ clean: deploy-clean
 # deletes minikube (which should delete all deployments)
 clean-all: minikube-clean-full
 
-.PHONY: wait-ready redeploy-unchecked deploy-unchecked scylladb-setup cert-manager rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
+.PHONY: scylladb-clean-full scylladb-clean wait-ready redeploy-unchecked deploy-unchecked scylladb-setup cert-manager rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
