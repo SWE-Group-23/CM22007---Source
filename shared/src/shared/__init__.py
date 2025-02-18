@@ -1,3 +1,12 @@
+"""
+The shared library for all services to use.
+Used to abstract away boilerplate.
+
+Provides:
+    setup_rabbitmq -- setup a RabbitMQ channel with given args.
+    setup_scylla -- setup a ScyllaDB session with given args.
+"""
+
 import cassandra.cluster as cc
 import cassandra.auth as ca
 import pika
