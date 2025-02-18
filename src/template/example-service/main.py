@@ -3,43 +3,34 @@ Example service.
 """
 
 import os
+import uuid
+import functools
 
-import pika
 import cassandra.cluster as cc
 import cassandra.auth as ca
-import uuid
+import pika
 
 
-class CallbackHandler:
+def message_callback(scylla_session, _ch, _method, _properties, body):
     """
-    Class that contains information needed
-    for the RabbitMQ callback and a callback
-    method.
+    The method called when a RabbitMQ message is
+    received.
+
+    For example purposes, it just puts the message in a messages
+    table with a random UUID.
     """
 
-    def __init__(self, scylla_session):
-        self.scylla_session = scylla_session
-
-    def message_callback(self, ch, method, properties, body):
+    print(f"[RECEIVED] {body}")
+    message = {
+        "id": uuid.uuid4(),
+        "message": body.decode(),
+    }
+    query = scylla_session.prepare(
         """
-        The method called when a RabbitMQ message is
-        received.
-
-        For example purposes, it just puts the message in a messages
-        table with a random UUID.
+        INSERT INTO messages (id, message) VALUES (?, ?);
         """
-
-        print(f"[RECEIVED] {body}")
-        message = {
-            "id": uuid.uuid4(),
-            "message": body.decode(),
-        }
-        query = self.scylla_session.prepare(
-            """
-            INSERT INTO messages (id, message) VALUES (?, ?);
-            """
-        )
-        self.scylla_session.execute(query, message.values())
+    )
+    scylla_session.execute(query, message.values())
 
 
 def main():
@@ -90,8 +81,9 @@ def main():
     )
 
     # Create a callback handler with the scylla session
-    callback_handler = CallbackHandler(
-        scylla_session=session
+    callback = functools.partial(
+        message_callback,
+        session,
     )
 
     # Get RabbitMQ service user credentials
@@ -114,7 +106,7 @@ def main():
     # Configure and start consuming
     channel.basic_consume(
         queue="example-services-queue",
-        on_message_callback=callback_handler.message_callback,
+        on_message_callback=callback,
         auto_ack=True,
     )
 
