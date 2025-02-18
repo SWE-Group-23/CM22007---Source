@@ -1,7 +1,7 @@
 [project]
 name = "example-service"
 version = "0.1.0"
-description = "Add your description here"
+description = "The first example service, which consumes a RabbitMQ queue and adds to a table in it's own ScyllaDB keyspace."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -9,3 +9,4 @@ dependencies = [
     "scylla-driver>=3.28.2",
     "valkey>=6.1.0",
 ]
+

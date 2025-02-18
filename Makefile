@@ -52,13 +52,15 @@ check-docker:
 # build all services within minikube
 build: minikube check-docker
 	@echo "Building docker images inside Minikube..."
-	@for service in $(SERVICES); do \
+	@set -e; for service in $(SERVICES); do \
 		name=$$(basename $$(dirname $$service)); \
 		echo "Building $$name..."; \
 		( \
 			cd $$(dirname $$service); \
+			cp -r ../../../shared .; \
 			uv lock; \
 			minikube image build -t $$name .; \
+			rm -r shared/; \
 		); \
 		echo "Done!"; \
 	done
