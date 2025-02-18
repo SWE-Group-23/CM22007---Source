@@ -1,7 +1,7 @@
 [project]
 name = "example-service"
 version = "0.1.0"
-description = "Add your description here"
+description = "The second example service, which sends messages to the first example service."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

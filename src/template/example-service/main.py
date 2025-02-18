@@ -6,9 +6,7 @@ import os
 import uuid
 import functools
 
-import cassandra.cluster as cc
-import cassandra.auth as ca
-import pika
+import shared
 
 
 def message_callback(scylla_session, _ch, _method, _properties, body):
@@ -40,19 +38,11 @@ def main():
 
     env_vars = os.environ
 
-    # Set up database cluster connection
-    cluster = cc.Cluster(
-        contact_points=[
-            "example-db-client.scylla.svc",
-        ],
-        auth_provider=ca.PlainTextAuthProvider(
-            # NOTE: default creds, will be changed
-            # to service user creds in future
-            username='cassandra',
-            password='cassandra'
-        )
+    # Set up database session
+    # NOTE: non-default creds will be required in the future.
+    session = shared.setup_scylla(
+        ["example-db-client.scylla.svc"],
     )
-    session = cluster.connect()
 
     # Create a keyspace for the service
     # NOTE: this will be done by the CRD
@@ -80,28 +70,17 @@ def main():
         """
     )
 
-    # Create a callback handler with the scylla session
+    # Create a callback handler with the Scylla session
     callback = functools.partial(
         message_callback,
         session,
     )
 
-    # Get RabbitMQ service user credentials
-    credentials = pika.PlainCredentials(
-            env_vars["RABBITMQ_USERNAME"],
-            env_vars["RABBITMQ_PASSWORD"],
+    # Create RabbitMQ channel
+    channel = shared.setup_rabbitmq(
+        env_vars["RABBITMQ_USERNAME"],
+        env_vars["RABBITMQ_PASSWORD"],
     )
-
-    # Connect to RabbitMQ with credentials
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(
-            "rabbitmq",
-            credentials=credentials
-        )
-    )
-
-    # Create channel
-    channel = connection.channel()
 
     # Configure and start consuming
     channel.basic_consume(
