@@ -57,7 +57,7 @@ build: minikube check-docker
 		echo "Building $$name..."; \
 		( \
 			cd $$(dirname $$service); \
-			cp -r ../../../shared .; \
+			cp -r ../../shared .; \
 			uv lock; \
 			minikube image build -t $$name .; \
 			rm -r shared/; \
