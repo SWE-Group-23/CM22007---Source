@@ -1,0 +1,177 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: scyllausers.custom.local
+spec:
+  group: custom.local
+  names:
+    kind: ScyllaUser
+    plural: scyllausers
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              properties:
+                scyllaClusterReference:
+                  type: string
+
+---
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: scyllakeyspaces.custom.local
+spec:
+  group: custom.local
+  names:
+    kind: ScyllaKeyspace
+    plural: scyllakeyspaces
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              properties:
+                scyllaClusterReference:
+                  type: string
+                replicationFactor:
+                  type: integer
+
+---
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: scyllapermissions.custom.local
+spec:
+  group: custom.local
+  names:
+    kind: ScyllaPermission
+    plural: scyllapermissions
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              properties:
+                scyllaClusterReference:
+                  type: string
+                user:
+                  type: string
+                keyspace:
+                  type: string
+                permission:
+                  type: string
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scylla-auth-operator
+  #namespace: scylla
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scylla-auth-operator
+  template:
+    metadata:
+      labels:
+        app: scylla-auth-operator
+    spec:
+      serviceAccountName: scylla-operator-sa
+      containers:
+        - name: scylla-auth-operator
+          image: scylla-auth-operator:latest
+          imagePullPolicy: IfNotPresent
+          tty: true
+          env:
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: example-db-superuser
+                  key: username
+                  optional: true
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: example-db-superuser
+                  key: password
+                  optional: true
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: scylla-operator-role
+  #namespace: scylla
+rules:
+- apiGroups: ["custom.local"]
+  resources: ["scyllausers", "scyllakeyspaces", "scyllapermissions"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "delete"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: scylla-operator-rolebinding
+  #namepace: scylla
+subjects:
+- kind: ServiceAccount
+  name: scylla-operator-sa
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: scylla-operator-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: scylla-operator-sa
+  #namespace: scylla

@@ -1,0 +1,32 @@
+apiVersion: custom.local/v1
+kind: ScyllaUser
+metadata:
+  name: example-scylla-user
+  #namespace: scylla
+spec:
+  scyllaClusterReference: example-db
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaKeyspace
+metadata:
+  name: example-scylla-keyspace
+  #namespace: scylla
+spec:
+  scyllaClusterReference: example-db
+  replicationFactor: 1
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaPermission
+metadata:
+  name: example-scylla-permission
+  #namespace: scylla
+spec:
+  scyllaClusterReference: example-db
+  user: example-scylla-user
+  keyspace: example-scylla-keyspace
+  permission: CREATE
+
