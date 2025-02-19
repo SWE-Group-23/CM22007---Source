@@ -31,6 +31,15 @@ rabbitmq-creds:
 	@kubectl get secret rabbitmq-default-user -o jsonpath='{.data.password}' | base64 --decode
 	@echo
 
+
+scylla-creds:
+	@echo Username:
+	@kubectl get secret example-db-superuser -o jsonpath='{.data.username}' | base64 --decode 
+	@echo
+	@echo Password:
+	@kubectl get secret example-db-superuser -o jsonpath='{.data.password}' | base64 --decode
+	@echo
+
 # print all the services in SERVICES and the path to their Dockerfile
 print-services:
 	@for service in $(SERVICES); do \
@@ -120,12 +129,14 @@ wait-ready: rabbitmq-setup scylladb-setup
 # apply all k8s configs in the k8s/ directory
 deploy: minikube | build wait-ready
 	@echo "Deploying services to K8s..."
+	@kubectl apply -f k8s-crds/
 	@kubectl apply -f k8s/
 	@echo "Done!"
 
 # apply all k8s configs in the k8s/ directory
 deploy-unchecked: minikube | build
 	@echo "WARNING: You should only use this target if you know all other services are running."
+	@kubectl apply -f k8s-crds/
 	@kubectl apply -f k8s/
 	@echo "Done!"
 
