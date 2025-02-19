@@ -14,6 +14,9 @@ SERVICES=$(wildcard src/*/*/Dockerfile)
 # names of services
 SERVICE_NAMES=$(notdir $(patsubst %/Dockerfile, %, $(SERVICES)))
 
+# service k8s configs
+K8S_CFGS=$(wildcard src/*/*/*.yaml)
+
 all: deploy
 
 ##
@@ -31,7 +34,6 @@ rabbitmq-creds:
 	@kubectl get secret rabbitmq-default-user -o jsonpath='{.data.password}' | base64 --decode
 	@echo
 
-
 scylla-creds:
 	@echo Username:
 	@kubectl get secret example-db-superuser -o jsonpath='{.data.username}' | base64 --decode 
@@ -45,6 +47,19 @@ print-services:
 	@for service in $(SERVICES); do \
 		name=$$(basename $$(dirname $$service)); \
 		echo "$$name : $$service"; \
+	done
+
+print-k8s-cfgs:
+	@echo "Service k8s + queues:"
+	@for config in $(K8S_CFGS); do \
+		name=$$(basename $$(dirname $$config)); \
+		echo "$$name : $$config"; \
+	done
+
+	@printf "\n\n"
+	@echo "Global k8s:"
+	@for config in $(wildcard k8s/*); do \
+		echo "$$config"; \
 	done
 
 # check if docker is running
@@ -128,16 +143,29 @@ wait-ready: rabbitmq-setup scylladb-setup
 
 # apply all k8s configs in the k8s/ directory
 deploy: minikube | build wait-ready
-	@echo "Deploying services to K8s..."
-	@kubectl apply -f k8s-crds/
+	@echo "Deploying CRDs..."
+	@kubectl apply -f k8s/crds/
+	@echo "Deploying global configs..."
 	@kubectl apply -f k8s/
+	@echo "Deploying services to K8s..."
+	@-for config in $(K8S_CFGS); do \
+		echo "Deploying $$config..."; \
+		kubectl apply -f "$$config"; \
+	done
 	@echo "Done!"
 
 # apply all k8s configs in the k8s/ directory
 deploy-unchecked: minikube | build
 	@echo "WARNING: You should only use this target if you know all other services are running."
-	@kubectl apply -f k8s-crds/
+	@echo "Deploying CRDs..."
+	@kubectl apply -f k8s/crds/
+	@echo "Deploying global configs..."
 	@kubectl apply -f k8s/
+	@echo "Deploying services to K8s..."
+	@-for config in $(K8S_CFGS); do \
+		echo "Deploying $$config..."; \
+		kubectl apply -f "$$config"; \
+	done
 	@echo "Done!"
 
 # delete all deployments in SERVICE_NAMES
@@ -191,4 +219,4 @@ clean: deploy-clean
 # deletes minikube (which should delete all deployments)
 clean-all: minikube-clean-full
 
-.PHONY: scylladb-clean-full scylladb-clean wait-ready redeploy-unchecked deploy-unchecked scylladb-setup cert-manager rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
+.PHONY: print-k8s-cfgs scylladb-creds scylladb-clean-full scylladb-clean wait-ready redeploy-unchecked deploy-unchecked scylladb-setup cert-manager rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
