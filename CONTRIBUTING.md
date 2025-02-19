@@ -78,7 +78,7 @@ about what it does.
 
 We use `minikube` to run a K8s cluster locally.
 
-## Creating a New Subsystem
+## Creating a New Sub-system
 The `src/template/` sub-system is meant to be a template of a very basic sub-system.
 
 ```
