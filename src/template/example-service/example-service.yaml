@@ -21,12 +21,22 @@ spec:
             - name: RABBITMQ_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: example-service-user-user-credentials
+                  name: example-service-rabbitmq-user-user-credentials
                   key: username
             - name: RABBITMQ_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: example-service-user-user-credentials
+                  name: example-service-rabbitmq-user-user-credentials
+                  key: password
+            - name: SCYLLADB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: template-user-scylla-creds
+                  key: username
+            - name: SCYLLADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: template-user-scylla-creds
                   key: password
 
 ---
@@ -34,7 +44,7 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: User
 metadata:
-  name: example-service-user
+  name: example-service-rabbitmq-user
 spec:
   tags:
   - policymaker
@@ -46,14 +56,14 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: Permission
 metadata:
-  name: example-service-permission
+  name: example-service-rabbitmq-permission
 spec:
   vhost: "/"
   userReference:
-    name: "example-service-user"
+    name: "example-service-rabbitmq-user"
   permissions:
     write: ""
     configure: ""
-    read: "example-services-queue"
+    read: "template-queue"
   rabbitmqClusterReference:
     name: rabbitmq

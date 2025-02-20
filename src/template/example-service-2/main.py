@@ -13,17 +13,17 @@ def main():
     Example main.
     """
 
-    env_vars = os.environ
+    env = os.environ
 
     channel = shared.setup_rabbitmq(
-        env_vars["RABBITMQ_USERNAME"],
-        env_vars["RABBITMQ_PASSWORD"],
+        env["RABBITMQ_USERNAME"],
+        env["RABBITMQ_PASSWORD"],
     )
 
     while True:
         channel.basic_publish(
-            exchange='example-services-exchange',
-            routing_key='example-services-queue',
+            exchange='template-exchange',
+            routing_key='template-queue',
             body="Hello, RabbitMQ!"
         )
         print("[SENT] Hello, RabbitMQ!")

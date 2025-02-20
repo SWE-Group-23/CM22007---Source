@@ -1,9 +1,9 @@
 apiVersion: rabbitmq.com/v1beta1
 kind: Exchange
 metadata:
-  name: example-services-exchange
+  name: template-exchange
 spec:
-  name: example-services-exchange
+  name: template-exchange
   autoDelete: false
   durable: true
   rabbitmqClusterReference:
@@ -14,9 +14,9 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: Queue
 metadata:
-  name: example-services-queue
+  name: template-queue
 spec:
-  name: example-services-queue
+  name: template-queue
   autoDelete: false
   durable: true
   rabbitmqClusterReference:
@@ -27,11 +27,11 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: Binding
 metadata:
-  name: binding
+  name: template-binding
 spec:
-  source: example-services-exchange
-  destination: example-services-queue
-  routingKey: "example-services-queue"
+  source: template-exchange
+  destination: template-queue
+  routingKey: "template-queue"
   destinationType: queue
   rabbitmqClusterReference:
     name: rabbitmq
