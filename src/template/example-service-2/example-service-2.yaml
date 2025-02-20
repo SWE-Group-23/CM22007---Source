@@ -21,12 +21,12 @@ spec:
             - name: RABBITMQ_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: example-service-2-user-user-credentials
+                  name: example-service-2-rabbitmq-user-user-credentials
                   key: username
             - name: RABBITMQ_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: example-service-2-user-user-credentials
+                  name: example-service-2-rabbitmq-user-user-credentials
                   key: password
 
 ---
@@ -34,7 +34,7 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: User
 metadata:
-  name: example-service-2-user
+  name: example-service-2-rabbitmq-user
 spec:
   tags:
   - policymaker
@@ -46,13 +46,13 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: Permission
 metadata:
-  name: example-service-2-permission
+  name: example-service-2-rabbitmq-permission
 spec:
   vhost: "/"
   userReference:
-    name: "example-service-2-user"
+    name: "example-service-2-rabbitmq-user"
   permissions:
-    write: "example-services-exchange"
+    write: "template-exchange"
     configure: ""
     read: ""
   rabbitmqClusterReference:

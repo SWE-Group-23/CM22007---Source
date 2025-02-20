@@ -137,7 +137,7 @@ class ScyllaDBCredsOperator:
         body = client.V1Secret()
         body.string_data = {"username": name, "password": password}
         metadata = client.V1ObjectMeta()
-        metadata.name = f"{name}-user-creds"
+        metadata.name = f"{name}-scylla-creds"
         body.metadata = metadata
 
         try:
@@ -164,7 +164,7 @@ class ScyllaDBCredsOperator:
 
         try:
             self.api_instance.delete_namespaced_secret(
-                f"{name}-user-creds",
+                f"{name}-scylla-creds",
                 namespace,
             )
         except client.exceptions.ApiException as e:

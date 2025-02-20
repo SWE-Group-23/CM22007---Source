@@ -5,6 +5,7 @@ Example service.
 import os
 import uuid
 import functools
+import base64 as b64
 
 import shared
 
@@ -36,29 +37,24 @@ def main():
     Example main.
     """
 
-    env_vars = os.environ
+    env = os.environ
 
     # Set up database session
     # NOTE: non-default creds will be required in the future.
     session = shared.setup_scylla(
         ["example-db-client.scylla.svc"],
+        user=env["SCYLLADB_USERNAME"],
+        password=env["SCYLLADB_PASSWORD"],
     )
 
-    # Create a keyspace for the service
-    # NOTE: this will be done by the CRD
-    session.execute(
-        """
-        CREATE KEYSPACE IF NOT EXISTS example_service
-            WITH REPLICATION = {
-                'class': 'SimpleStrategy',
-                'replication_factor': '3'
-            }
-            AND DURABLE_WRITES = true;
-        """
-    )
+    # Get keyspace name
+    # TODO: move this to shared library.
+    keyspace = "k" + b64.b32hexencode(
+        "template-keyspace".encode()
+    ).decode().replace("=", "_").lower()
 
     # Use that keyspace
-    session.set_keyspace("example_service")
+    session.set_keyspace(keyspace)
 
     # Create table for stuff
     session.execute(
@@ -78,13 +74,13 @@ def main():
 
     # Create RabbitMQ channel
     channel = shared.setup_rabbitmq(
-        env_vars["RABBITMQ_USERNAME"],
-        env_vars["RABBITMQ_PASSWORD"],
+        env["RABBITMQ_USERNAME"],
+        env["RABBITMQ_PASSWORD"],
     )
 
     # Configure and start consuming
     channel.basic_consume(
-        queue="example-services-queue",
+        queue="template-queue",
         on_message_callback=callback,
         auto_ack=True,
     )

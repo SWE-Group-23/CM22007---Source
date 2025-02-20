@@ -93,6 +93,11 @@ cert-manager:
 	@echo "Install cert-manager..."
 	# TODO: check if it's installed already and skip if it is
 	@kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
+	@echo "Waiting for cert-manager to start..."
+	kubectl wait --for condition=established crd/certificates.cert-manager.io crd/issuers.cert-manager.io
+	kubectl -n cert-manager rollout status --timeout=5m deployment.apps/cert-manager-webhook
+	kubectl -n cert-manager rollout status --timeout=5m deployment.apps/cert-manager-cainjector
+
 
 scylladb-setup: minikube cert-manager
 	# @echo "Installing Prometheus Operator..."
@@ -119,9 +124,9 @@ rabbitmq-setup: minikube cert-manager
 	@echo "Getting rabbitMQ resource definitions..."
 	# TODO: check if this is already done and skip if it is
 	@kubectl get customresourcedefinitions.apiextensions.k8s.io
-	@printf "Waiting for cert-manager"
-	# TODO: make this not use dry run if possible
-	@until kubectl --dry-run=server apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/latest/download/messaging-topology-operator-with-certmanager.yaml &> /dev/null; do sleep 1; printf "."; done; printf "\n"
+	# @printf "Waiting for cert-manager"
+	# # TODO: make this not use dry run if possible
+	# @until kubectl --dry-run=server apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/latest/download/messaging-topology-operator-with-certmanager.yaml &> /dev/null; do sleep 1; printf "."; done; printf "\n"
 	@echo "Installing rabbitMQ Topology operator..."
 	# TODO: check if it's installed already and skip if it is
 	@kubectl apply -f https://github.com/rabbitmq/messaging-topology-operator/releases/latest/download/messaging-topology-operator-with-certmanager.yaml
@@ -140,6 +145,12 @@ rabbitmq-clean: deploy-clean
 wait-ready: rabbitmq-setup scylladb-setup
 	@printf "Waiting for rabbitMQ to start"
 	@until kubectl rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; printf "."; done; printf "\n"
+	@echo "Waiting for ScyllaDB to start..."
+	@kubectl wait --for condition=established crd/scyllaclusters.scylla.scylladb.com
+	@kubectl wait --for condition=established crd/scyllaoperatorconfigs.scylla.scylladb.com
+	@kubectl wait --for condition=established crd/nodeconfigs.scylla.scylladb.com
+	@echo "Done!"
+
 
 # apply all k8s configs in the k8s/ directory
 deploy: minikube | build wait-ready

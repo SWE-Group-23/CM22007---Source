@@ -1,8 +1,7 @@
 apiVersion: custom.local/v1
 kind: ScyllaUser
 metadata:
-  name: example-scylla-user
-  #namespace: scylla
+  name: template-user
 spec:
   scyllaClusterReference: example-db
 
@@ -11,8 +10,7 @@ spec:
 apiVersion: custom.local/v1
 kind: ScyllaKeyspace
 metadata:
-  name: example-scylla-keyspace
-  #namespace: scylla
+  name: template-keyspace
 spec:
   scyllaClusterReference: example-db
   replicationFactor: 1
@@ -22,11 +20,10 @@ spec:
 apiVersion: custom.local/v1
 kind: ScyllaPermission
 metadata:
-  name: example-scylla-permission
-  #namespace: scylla
+  name: template-permission
 spec:
   scyllaClusterReference: example-db
-  user: example-scylla-user
-  keyspace: example-scylla-keyspace
+  user: template-user
+  keyspace: template-keyspace
   permission: CREATE
 
