@@ -38,6 +38,11 @@ spec:
                 secretKeyRef:
                   name: template-user-scylla-creds
                   key: password
+            - name: SCYLLADB_KEYSPACE
+              valueFrom:
+                configMapKeyRef:
+                  name: template-keyspace
+                  key: keyspace
 
 ---
 
