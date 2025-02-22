@@ -5,7 +5,6 @@ Example service.
 import os
 import uuid
 import functools
-import base64 as b64
 
 import shared
 
