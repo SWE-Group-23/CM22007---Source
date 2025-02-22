@@ -63,7 +63,11 @@ class ScyllaDBCredsOperator:
             auth_provider=ca.PlainTextAuthProvider(
                 username=self.db_username,
                 password=self.db_password,
-            )
+            ),
+            load_balancing_policy=cs.policies.TokenAwarePolicy(
+                cs.policies.DCAwareRoundRobinPolicy(),
+            ),
+            protocol_version=4,
         )
 
         logging.info(f"Connected to ScyllaDB cluster at {contact_points}.")
@@ -82,7 +86,9 @@ class ScyllaDBCredsOperator:
             logging.info("Found credentials.")
             return
 
-        session = self.cluster_connect(["example-db-client.scylla.svc"])
+        session = self.cluster_connect(
+            ["dev-db-client.scylla.svc"]
+        )
 
         logging.info("Creating new superuser.")
         self.db_username = "su" + secrets.token_hex(20)

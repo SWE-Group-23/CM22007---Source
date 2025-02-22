@@ -3,7 +3,7 @@ kind: ScyllaUser
 metadata:
   name: template-user
 spec:
-  scyllaClusterReference: example-db
+  scyllaClusterReference: dev-db
 
 ---
 
@@ -12,8 +12,8 @@ kind: ScyllaKeyspace
 metadata:
   name: template-keyspace
 spec:
-  scyllaClusterReference: example-db
-  replicationFactor: 1
+  scyllaClusterReference: dev-db
+  replicationFactor: 3
 
 ---
 
@@ -22,7 +22,7 @@ kind: ScyllaPermission
 metadata:
   name: template-permission
 spec:
-  scyllaClusterReference: example-db
+  scyllaClusterReference: dev-db
   user: template-user
   keyspace: template-keyspace
   permission: CREATE

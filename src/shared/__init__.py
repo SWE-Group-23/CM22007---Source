@@ -9,6 +9,7 @@ Provides:
 
 import cassandra.cluster as cc
 import cassandra.auth as ca
+import cassandra as cs
 import pika
 
 
@@ -70,7 +71,11 @@ def setup_scylla(
         auth_provider=ca.PlainTextAuthProvider(
             username=user,
             password=password,
-        )
+        ),
+        load_balancing_policy=cs.policies.TokenAwarePolicy(
+            cs.policies.DCAwareRoundRobinPolicy(),
+        ),
+        protocol_version=4,
     )
 
     return cluster.connect()
