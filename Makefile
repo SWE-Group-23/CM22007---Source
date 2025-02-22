@@ -160,15 +160,34 @@ rabbitmq-clean: deploy-clean
 	@echo "Deleting cert-manager deployments..."
 	@kubectl delete --namespace=cert-manager --all deployment
 
-wait-ready: rabbitmq-setup scylladb-setup
+# sets up valkey if it isn't already installed
+valkey-setup: minikube
+	@echo "Checking for Valkey operator..."
+	@if kubectl get deployment -n valkey-operator-system | grep -q 'valkey-operator-controller-manager'; then \
+		echo "Valkey operator found!"; \
+	else \
+		echo "Installing Valkey operator..."; \
+		kubectl apply -f https://github.com/hyperspike/valkey-operator/releases/download/v0.0.57/install.yaml; \
+		echo "Done!"; \
+	fi
+
+# deletes valkey deployment
+valkey-clean:
+	@echo "Deleting Valkey operator deployment..."
+	@kubectl delete --namespace=valkey-operator-system --all deployment
+	@echo "Done!"
+
+# waits for rabbitmq, valkey, and scylladb to start
+wait-ready: rabbitmq-setup scylladb-setup valkey-setup
 	@printf "Waiting for rabbitMQ to start"
 	@until kubectl rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; printf "."; done; printf "\n"
-	@echo "Waiting for ScyllaDB to start...";
+	@echo "Waiting for ScyllaDB to start..."
 	@kubectl wait --for condition=established crd/scyllaclusters.scylla.scylladb.com
 	@kubectl wait --for condition=established crd/scyllaoperatorconfigs.scylla.scylladb.com
 	@kubectl wait --for condition=established crd/nodeconfigs.scylla.scylladb.com
+	@echo "Waiting for Valkey to start..."
+	@kubectl -n valkey-operator-system rollout status --timeout=5m deployments.apps/valkey-operator-controller-manager
 	@echo "Done!"
-
 
 # apply all k8s configs in the k8s/ directory
 deploy: minikube | build wait-ready
@@ -248,4 +267,4 @@ clean: deploy-clean
 # deletes minikube (which should delete all deployments)
 clean-all: minikube-clean-full
 
-.PHONY: print-k8s-cfgs scylladb-creds scylladb-clean-full scylladb-clean wait-ready redeploy-unchecked deploy-unchecked scylladb-setup cert-manager rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
+.PHONY: valkey-clean valkey-setup print-k8s-cfgs scylladb-creds scylladb-clean-full scylladb-clean wait-ready redeploy-unchecked deploy-unchecked scylladb-setup cert-manager rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
