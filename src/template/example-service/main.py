@@ -42,7 +42,7 @@ def main():
     # Set up database session
     # NOTE: non-default creds will be required in the future.
     session = shared.setup_scylla(
-        ["example-db-client.scylla.svc"],
+        ["dev-db-client.scylla.svc"],
         user=env["SCYLLADB_USERNAME"],
         password=env["SCYLLADB_PASSWORD"],
     )
