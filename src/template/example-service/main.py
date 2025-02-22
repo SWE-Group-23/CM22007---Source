@@ -47,14 +47,8 @@ def main():
         password=env["SCYLLADB_PASSWORD"],
     )
 
-    # Get keyspace name
-    # TODO: move this to shared library.
-    keyspace = "k" + b64.b32hexencode(
-        "template-keyspace".encode()
-    ).decode().replace("=", "_").lower()
-
     # Use that keyspace
-    session.set_keyspace(keyspace)
+    session.set_keyspace(env["SCYLLADB_KEYSPACE"])
 
     # Create table for stuff
     session.execute(

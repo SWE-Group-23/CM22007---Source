@@ -147,7 +147,7 @@ rules:
   resources: ["scyllausers", "scyllakeyspaces", "scyllapermissions"]
   verbs: ["get", "list", "watch"]
 - apiGroups: [""]
-  resources: ["secrets"]
+  resources: ["secrets", "configmaps"]
   verbs: ["create", "delete"]
 
 ---

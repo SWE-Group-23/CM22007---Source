@@ -212,7 +212,9 @@ class ScyllaDBCredsOperator:
         with base64 padding (=) replaced
         with underscores (_)
         """
-        return "k" + b32hexencode(name.encode()).decode().replace("=", "_")
+        return "k" + b32hexencode(
+            name.encode()
+        ).decode().replace("=", "").lower()
 
     def create_keyspace(self, _namespace, name, data):
         """
@@ -241,7 +243,19 @@ class ScyllaDBCredsOperator:
         print(data)
         print(keyspace_name)
 
-    def delete_keyspace(self, _namespace, name, data):
+        body = client.V1Secret()
+        body.kind = "ConfigMap"
+        body.data = {"keyspace": keyspace_name}
+        metadata = client.V1ObjectMeta()
+        metadata.name = f"{name}"
+        body.metadata = metadata
+
+        self.api_instance.create_namespaced_config_map(
+            self.config["namespace"],
+            body
+        )
+
+    def delete_keyspace(self, namespace, name, data):
         """
         Deletes a keyspace for a user.
         """
@@ -258,6 +272,16 @@ class ScyllaDBCredsOperator:
             DROP KEYSPACE {keyspace_name};
             """
         )
+
+        try:
+            self.api_instance.delete_namespaced_config_map(
+                f"{keyspace_name}",
+                namespace,
+            )
+        except client.exceptions.ApiException as e:
+            # 409: conflict
+            if str(e).find("(409)") == -1:
+                raise e
 
     def process_keyspaces(self):
         """
