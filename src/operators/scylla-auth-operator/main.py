@@ -11,6 +11,7 @@ import threading
 import sys
 import os
 import time
+import logging
 from functools import partial
 
 from kubernetes import client, config, watch
@@ -65,6 +66,8 @@ class ScyllaDBCredsOperator:
             )
         )
 
+        logging.info(f"Connected to ScyllaDB cluster at {contact_points}.")
+
         return cluster.connect()
 
     def setup_login(self):
@@ -76,10 +79,12 @@ class ScyllaDBCredsOperator:
         if "DB_USERNAME" in env and "DB_PASSWORD" in env:
             self.db_username = env["DB_USERNAME"]
             self.db_password = env["DB_PASSWORD"]
+            logging.info("Found credentials.")
             return
 
         session = self.cluster_connect(["example-db-client.scylla.svc"])
 
+        logging.info("Creating new superuser.")
         self.db_username = "su" + secrets.token_hex(20)
         self.db_password = secrets.token_hex(32)
 
@@ -91,6 +96,7 @@ class ScyllaDBCredsOperator:
             (self.db_username, self.db_password)
         )
 
+        logging.info("Creating secret with superuser credentials.")
         body = client.V1Secret()
         body.string_data = {
             "username": self.db_username,
@@ -105,6 +111,7 @@ class ScyllaDBCredsOperator:
             body,
         )
 
+        logging.info("Removing default credentials.")
         session = self.cluster_connect(["example-db-client.scylla.svc"])
 
         session.execute(
@@ -119,10 +126,9 @@ class ScyllaDBCredsOperator:
         also creates a new namespaced secret with
         their credentials.
         """
-        print(f"user: {name} created!")
-        print(name)
-        print(data)
 
+        logging.info(f"Creating user: {name}.")
+        logging.info(f"Using data: {data}")
         session = self.cluster_connect(
             [f"{data['scyllaClusterReference']}-client.scylla.svc"]
         )
@@ -134,6 +140,7 @@ class ScyllaDBCredsOperator:
             (name, password,)
         )
 
+        logging.info(f"Creating secret for user: {name}.")
         body = client.V1Secret()
         body.string_data = {"username": name, "password": password}
         metadata = client.V1ObjectMeta()
@@ -146,22 +153,25 @@ class ScyllaDBCredsOperator:
             # 409: conflict, e.g. namespaced secret already exists
             if str(e).find("(409)") == -1:
                 raise e
+            logging.warning("User secret already exists.")
 
         del password
+        logging.info(f"Created user: {name}.")
 
     def delete_user(self, namespace, name, data):
         """
         Deletes a user in the cluster (if they exist),
         also removing their credentials.
         """
-        print(f"user: {name} deleted!")
-
+        logging.info(f"Deleting user: {name}")
+        logging.info(f"Using data: {data}")
         session = self.cluster_connect(
             [f"{data['scyllaClusterReference']}-client.scylla.svc"]
         )
 
         session.execute("DROP USER IF EXISTS %s;", (name,))
 
+        logging.info(f"Deleting secret for user {name}.")
         try:
             self.api_instance.delete_namespaced_secret(
                 f"{name}-scylla-creds",
@@ -171,6 +181,9 @@ class ScyllaDBCredsOperator:
             # 409: conflict
             if str(e).find("(409)") == -1:
                 raise e
+            logging.warning("User secret doesn't exist.")
+
+        logging.info(f"Deleted user: {name}.")
 
     def process_users(self):
         """
@@ -220,11 +233,12 @@ class ScyllaDBCredsOperator:
         """
         Creates a keyspace for a user.
         """
+        keyspace_name = self.encode_keyspace_name(name)
+        logging.info(f"Creating keyspace: {name} as {keyspace_name}")
+        logging.info(f"Using data: {data}")
         session = self.cluster_connect(
             [f"{data['scyllaClusterReference']}-client.scylla.svc"]
         )
-
-        keyspace_name = self.encode_keyspace_name(name)
 
         session.execute(
             """
@@ -238,11 +252,6 @@ class ScyllaDBCredsOperator:
             (data["replicationFactor"],)
         )
 
-        print(f"keyspace {name} created!")
-        print(name)
-        print(data)
-        print(keyspace_name)
-
         body = client.V1Secret()
         body.kind = "ConfigMap"
         body.data = {"keyspace": keyspace_name}
@@ -250,22 +259,29 @@ class ScyllaDBCredsOperator:
         metadata.name = f"{name}"
         body.metadata = metadata
 
-        self.api_instance.create_namespaced_config_map(
-            self.config["namespace"],
-            body
-        )
+        logging.info(f"Creating config map for keyspace: {keyspace_name}")
+        try:
+            self.api_instance.create_namespaced_config_map(
+                self.config["namespace"],
+                body
+            )
+        except client.exceptions.ApiException as e:
+            if str(e).find("(409)") == -1:
+                raise e
+            logging.warning("Keyspace ConfigMap already found.")
+
+        logging.info(f"Created keyspace: {name} as {keyspace_name}")
 
     def delete_keyspace(self, namespace, name, data):
         """
         Deletes a keyspace for a user.
         """
-        print(f"keyspace {name} deleted")
-
+        keyspace_name = self.encode_keyspace_name(name)
+        logging.info(f"Deleting keyspace: {name} as {keyspace_name}")
+        logging.info(f"Using data: {data}")
         session = self.cluster_connect(
             [f"{data['scyllaClusterReference']}-client.scylla.svc"]
         )
-
-        keyspace_name = self.encode_keyspace_name(name)
 
         session.execute(
             f"""
@@ -273,6 +289,7 @@ class ScyllaDBCredsOperator:
             """
         )
 
+        logging.info(f"Deleting config map for keyspace: {keyspace_name}")
         try:
             self.api_instance.delete_namespaced_config_map(
                 f"{keyspace_name}",
@@ -282,6 +299,9 @@ class ScyllaDBCredsOperator:
             # 409: conflict
             if str(e).find("(409)") == -1:
                 raise e
+            logging.warning("Keyspace ConfigMap doesn't exist.")
+
+        logging.info(f"Deleted keyspace: {name} as {keyspace_name}")
 
     def process_keyspaces(self):
         """
@@ -321,16 +341,18 @@ class ScyllaDBCredsOperator:
         Grants all permissions to a specific
         user in their keyspace.
         """
-        print(f"permision {name} created!")
-        print(name)
-        print(data)
+        keyspace_name = self.encode_keyspace_name(
+            data["keyspace"]
+        )
+
+        logging.info(
+            f"""Granting permission {data["permission"]} to {data["user"]}
+            on keyspace {keyspace_name}."""
+        )
+        logging.info(f"With data: {data}.")
 
         session = self.cluster_connect(
             [f"{data['scyllaClusterReference']}-client.scylla.svc"]
-        )
-
-        keyspace_name = self.encode_keyspace_name(
-            data["keyspace"]
         )
 
         assert data["permission"].upper() in [
@@ -352,7 +374,7 @@ class ScyllaDBCredsOperator:
                 if str(e).find("doesn't exist") == -1:
                     raise e
 
-                print("Couldn't create permission. Retrying")
+                logging.warning("Couldn't grant permission. Retrying.")
                 time.sleep(5)
                 continue
 
@@ -361,13 +383,15 @@ class ScyllaDBCredsOperator:
         Revokes permissions from a user
         in their keyspace.
         """
-        print(f"permission {name} deleted")
 
+        keyspace_name = self.encode_keyspace_name(data["keyspace"])
+        logging.info(
+            f"""Revoking permission {data["permission"]} to {data["user"]}
+            on keyspace {keyspace_name}."""
+        )
         session = self.cluster_connect(
             [f"{data['scyllaClusterReference']}-client.scylla.svc"]
         )
-
-        keyspace_name = self.encode_keyspace_name(data["keyspace"])
 
         assert data["permission"].upper() in [
             "ALL", "CREATE", "ALTER", "DROP",
@@ -389,7 +413,7 @@ class ScyllaDBCredsOperator:
                 if str(e).find("doesn't exist") == -1:
                     raise e
 
-                print("Couldn't delete permission. Retrying")
+                logging.warning("Couldn't delete permission. Retrying")
                 time.sleep(5)
                 continue
 
@@ -471,6 +495,7 @@ def main():
     Sets up login, then starts processing
     user, keyspace, and permission streams.
     """
+    logging.basicConfig(level=logging.INFO)
     operator = ScyllaDBCredsOperator()
     operator.run()
 
