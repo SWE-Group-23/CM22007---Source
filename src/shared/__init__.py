@@ -44,7 +44,7 @@ def setup_rabbitmq(
         )
     )
 
-    return connection.channel()
+    return (connection, connection.channel())
 
 
 def setup_scylla(

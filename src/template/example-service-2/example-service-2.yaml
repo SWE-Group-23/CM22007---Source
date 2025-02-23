@@ -28,6 +28,21 @@ spec:
                 secretKeyRef:
                   name: example-service-2-rabbitmq-user-user-credentials
                   key: password
+            - name: SCYLLADB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: template-user-scylla-creds
+                  key: username
+            - name: SCYLLADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: template-user-scylla-creds
+                  key: password
+            - name: SCYLLADB_KEYSPACE
+              valueFrom:
+                configMapKeyRef:
+                  name: template-keyspace
+                  key: keyspace
 
 ---
 
@@ -54,7 +69,7 @@ spec:
   permissions:
     write: "template-exchange"
     configure: ""
-    read: ""
+    read: "pong-queue"
   rabbitmqClusterReference:
     name: rabbitmq
 

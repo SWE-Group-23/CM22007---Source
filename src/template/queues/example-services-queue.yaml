@@ -14,9 +14,22 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: Queue
 metadata:
-  name: template-queue
+  name: ping-queue
 spec:
-  name: template-queue
+  name: ping-queue
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Queue
+metadata:
+  name: pong-queue
+spec:
+  name: pong-queue
   autoDelete: false
   durable: true
   rabbitmqClusterReference:
@@ -27,11 +40,25 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: Binding
 metadata:
-  name: template-binding
+  name: ping-binding
 spec:
   source: template-exchange
-  destination: template-queue
-  routingKey: "template-queue"
+  destination: ping-queue
+  routingKey: "ping-queue"
+  destinationType: queue
+  rabbitmqClusterReference:
+    name: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Binding
+metadata:
+  name: pong-binding
+spec:
+  source: template-exchange
+  destination: pong-queue
+  routingKey: "pong-queue"
   destinationType: queue
   rabbitmqClusterReference:
     name: rabbitmq

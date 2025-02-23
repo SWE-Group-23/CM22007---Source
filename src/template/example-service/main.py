@@ -5,11 +5,12 @@ Example service.
 import os
 import uuid
 import functools
+import pika
 
 import shared
 
 
-def message_callback(scylla_session, _ch, _method, _properties, body):
+def message_callback(scylla_session, ch, method, properties, body):
     """
     The method called when a RabbitMQ message is
     received.
@@ -17,7 +18,7 @@ def message_callback(scylla_session, _ch, _method, _properties, body):
     For example purposes, it just puts the message in a messages
     table with a random UUID.
     """
-
+    # add to db
     print(f"[RECEIVED] {body}")
     message = {
         "id": uuid.uuid4(),
@@ -25,34 +26,42 @@ def message_callback(scylla_session, _ch, _method, _properties, body):
     }
     query = scylla_session.prepare(
         """
-        INSERT INTO messages (id, message) VALUES (?, ?);
+        INSERT INTO pings (id, message) VALUES (?, ?);
         """
     )
     scylla_session.execute(query, message.values())
+
+    # respond
+    ch.basic_publish(
+        exchange='template-exchange',
+        routing_key=properties.reply_to,
+        properties=pika.BasicProperties(
+            correlation_id=properties.correlation_id
+        ),
+        body="Pong!",
+    )
+    print("[RESPONDED] Pong!")
 
 
 def main():
     """
     Example main.
     """
-
-    env = os.environ
-
     # Set up database session
     # NOTE: non-default creds will be required in the future.
     session = shared.setup_scylla(
         ["dev-db-client.scylla.svc"],
-        user=env["SCYLLADB_USERNAME"],
-        password=env["SCYLLADB_PASSWORD"],
+        user=os.environ["SCYLLADB_USERNAME"],
+        password=os.environ["SCYLLADB_PASSWORD"],
     )
 
-    # Use that keyspace
-    session.set_keyspace(env["SCYLLADB_KEYSPACE"])
+    # Set keyspace
+    session.set_keyspace(os.environ["SCYLLADB_KEYSPACE"])
 
-    # Create table for stuff
+    # Create table for storing pings
     session.execute(
         """
-        CREATE TABLE IF NOT EXISTS messages (
+        CREATE TABLE IF NOT EXISTS pings (
             id UUID PRIMARY KEY,
             message text,
         )
@@ -66,14 +75,14 @@ def main():
     )
 
     # Create RabbitMQ channel
-    channel = shared.setup_rabbitmq(
-        env["RABBITMQ_USERNAME"],
-        env["RABBITMQ_PASSWORD"],
+    _, channel = shared.setup_rabbitmq(
+        os.environ["RABBITMQ_USERNAME"],
+        os.environ["RABBITMQ_PASSWORD"],
     )
 
     # Configure and start consuming
     channel.basic_consume(
-        queue="template-queue",
+        queue="ping-queue",
         on_message_callback=callback,
         auto_ack=True,
     )
