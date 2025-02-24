@@ -33,7 +33,7 @@ def message_callback(scylla_session, ch, method, properties, body):
 
     # respond
     ch.basic_publish(
-        exchange='template-exchange',
+        exchange='ping-rpc-resp-exc',
         routing_key=properties.reply_to,
         properties=pika.BasicProperties(
             correlation_id=properties.correlation_id
@@ -82,7 +82,7 @@ def main():
 
     # Configure and start consuming
     channel.basic_consume(
-        queue="ping-queue",
+        queue="ping-rpc-call-q",
         on_message_callback=callback,
         auto_ack=True,
     )
