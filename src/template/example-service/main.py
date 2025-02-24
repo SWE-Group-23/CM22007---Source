@@ -3,44 +3,14 @@ Example service.
 """
 
 import os
-import uuid
-import functools
-import pika
 
 import shared
+import shared.rpcs as rpcs
 
 
-def message_callback(scylla_session, ch, method, properties, body):
-    """
-    The method called when a RabbitMQ message is
-    received.
-
-    For example purposes, it just puts the message in a messages
-    table with a random UUID.
-    """
-    # add to db
-    print(f"[RECEIVED] {body}")
-    message = {
-        "id": uuid.uuid4(),
-        "message": body.decode(),
-    }
-    query = scylla_session.prepare(
-        """
-        INSERT INTO pings (id, message) VALUES (?, ?);
-        """
-    )
-    scylla_session.execute(query, message.values())
-
-    # respond
-    ch.basic_publish(
-        exchange='ping-rpc-resp-exc',
-        routing_key=properties.reply_to,
-        properties=pika.BasicProperties(
-            correlation_id=properties.correlation_id
-        ),
-        body="Pong!",
-    )
-    print("[RESPONDED] Pong!")
+class PingRPCServer(rpcs.RPCServer):
+    def process(self, _body):
+        return "Pong!"
 
 
 def main():
@@ -68,27 +38,14 @@ def main():
         """
     )
 
-    # Create a callback handler with the Scylla session
-    callback = functools.partial(
-        message_callback,
-        session,
-    )
-
-    # Create RabbitMQ channel
-    _, channel = shared.setup_rabbitmq(
+    rpc_server = PingRPCServer(
         os.environ["RABBITMQ_USERNAME"],
         os.environ["RABBITMQ_PASSWORD"],
+        "ping-rpc",
     )
 
-    # Configure and start consuming
-    channel.basic_consume(
-        queue="ping-rpc-call-q",
-        on_message_callback=callback,
-        auto_ack=True,
-    )
-
-    print("[INFO] Consuming...")
-    channel.start_consuming()
+    print("Consuming...")
+    rpc_server.channel.start_consuming()
 
 
 if __name__ == "__main__":
