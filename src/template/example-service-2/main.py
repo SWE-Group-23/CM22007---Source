@@ -4,56 +4,10 @@ Example service.
 
 import os
 import time
-import pika
 import uuid
 
 import shared
-
-
-class PingRPCClient(object):
-    def __init__(self):
-        self.connection, self.channel = shared.setup_rabbitmq(
-            os.environ["RABBITMQ_USERNAME"],
-            os.environ["RABBITMQ_PASSWORD"],
-        )
-
-        result = self.channel.queue_declare(
-            queue=f'ping-rpc-resp-q-{uuid.uuid4()}', exclusive=True
-        )
-        self.channel.queue_bind(result.method.queue, 'ping-rpc-resp-exc')
-        self.callback_queue = result.method.queue
-
-        self.channel.basic_consume(
-            queue=self.callback_queue,
-            on_message_callback=self.on_response,
-            auto_ack=True,
-        )
-
-        self.response = None
-        self.corr_id = None
-
-    def on_response(self, _ch, _method, properties, body):
-        if self.corr_id == properties.correlation_id:
-            self.response = body
-
-    def call(self):
-        self.response = None
-        self.corr_id = str(uuid.uuid4())
-        self.channel.basic_publish(
-            exchange="ping-rpc-call-exc",
-            routing_key="ping-rpc-call-q",
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id,
-            ),
-            body="Ping!",
-        )
-        print("[SENT] Ping!")
-        while self.response is None:
-            self.connection.process_data_events(
-                time_limit=1
-            )
-        return self.response
+from shared.rpcs.ping import PingRPCClient
 
 
 def main():
@@ -80,7 +34,12 @@ def main():
         """
     )
 
-    ping_rpc = PingRPCClient()
+    ping_rpc = PingRPCClient(
+        os.environ["RABBITMQ_USERNAME"],
+        os.environ["RABBITMQ_PASSWORD"],
+        "ping-rpc",
+    )
+
     while True:
         response = ping_rpc.call()
         print(f"[RECEIVED] {response}")
