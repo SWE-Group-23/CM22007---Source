@@ -10,7 +10,7 @@ import uuid
 import shared
 
 
-class PingRPCClient():
+class PingRPCClient(object):
     def __init__(self):
         self.connection, self.channel = shared.setup_rabbitmq(
             os.environ["RABBITMQ_USERNAME"],
@@ -47,7 +47,7 @@ class PingRPCClient():
         print("[SENT] Ping!")
         while self.response is None:
             self.connection.process_data_events(
-                time_limit=None
+                time_limit=1
             )
         return self.response
 
@@ -76,8 +76,8 @@ def main():
         """
     )
 
+    ping_rpc = PingRPCClient()
     while True:
-        ping_rpc = PingRPCClient()
         response = ping_rpc.call()
         print(f"[RECEIVED] {response}")
         message = {
@@ -86,11 +86,11 @@ def main():
         }
         query = session.prepare(
             """
-            INSERT INTO pings (id, message) VALUES (?, ?);
+            INSERT INTO pongs (id, message) VALUES (?, ?);
             """
         )
         session.execute(query, message.values())
-        time.sleep(10)
+        time.sleep(1)
 
 
 if __name__ == "__main__":

@@ -82,6 +82,7 @@ class ScyllaDBCredsOperator:
         """
         env = os.environ
 
+        print(env)
         if "DB_USERNAME" in env and "DB_PASSWORD" in env:
             self.db_username = env["DB_USERNAME"]
             self.db_password = env["DB_PASSWORD"]

@@ -36,10 +36,10 @@ rabbitmq-creds:
 
 scylla-creds:
 	@echo Username:
-	@kubectl get secret example-db-superuser -o jsonpath='{.data.username}' | base64 --decode 
+	@kubectl get secret dev-db-superuser -o jsonpath='{.data.username}' | base64 --decode 
 	@echo
 	@echo Password:
-	@kubectl get secret example-db-superuser -o jsonpath='{.data.password}' | base64 --decode
+	@kubectl get secret dev-db-superuser -o jsonpath='{.data.password}' | base64 --decode
 	@echo
 
 # print all the services in SERVICES and the path to their Dockerfile
@@ -113,6 +113,10 @@ scylladb-setup: minikube cert-manager
 scylladb-clean: deploy-clean
 	@echo "Deleting ScyllaDB clusters..."
 	kubectl delete --namespace=scylla --all scyllaclusters.scylla.scylladb.com
+	@echo "Deleting ScyllaDB creds..."
+	@# TODO: properly namespace secrets
+	kubectl delete secrets dev-db-superuser
+	kubectl delete secrets template-user-scylla-creds
 	@echo "Done!"
 
 scylladb-clean-full: scylladb-clean
