@@ -17,7 +17,11 @@ class PingRPCClient(object):
             os.environ["RABBITMQ_PASSWORD"],
         )
 
-        self.callback_queue = "pong-queue"
+        result = self.channel.queue_declare(
+            queue=f'ping-rpc-resp-q-{uuid.uuid4()}', exclusive=True
+        )
+        self.channel.queue_bind(result.method.queue, 'ping-rpc-resp-exc')
+        self.callback_queue = result.method.queue
 
         self.channel.basic_consume(
             queue=self.callback_queue,
@@ -36,8 +40,8 @@ class PingRPCClient(object):
         self.response = None
         self.corr_id = str(uuid.uuid4())
         self.channel.basic_publish(
-            exchange="template-exchange",
-            routing_key="ping-queue",
+            exchange="ping-rpc-call-exc",
+            routing_key="ping-rpc-call-q",
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id,

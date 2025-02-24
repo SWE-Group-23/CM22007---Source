@@ -126,13 +126,13 @@ spec:
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: example-db-superuser
+                  name: dev-db-superuser
                   key: username
                   optional: true
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: example-db-superuser
+                  name: dev-db-superuser
                   key: password
                   optional: true
 

@@ -67,9 +67,9 @@ spec:
   userReference:
     name: "example-service-2-rabbitmq-user"
   permissions:
-    write: "template-exchange"
-    configure: ""
-    read: "pong-queue"
+    write: "ping-rpc-(call-exc|resp-q-.*)"
+    configure: "ping-rpc-resp-(exc|q-.*)"
+    read: "ping-rpc-resp-(exc|q-.*)"
   rabbitmqClusterReference:
     name: rabbitmq
 
