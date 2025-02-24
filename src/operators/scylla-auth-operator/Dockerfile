@@ -11,10 +11,5 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-install-project
 
-ENV EXCHANGE_NAME=rabbitmq-exchange
-ENV QUEUE_NAME=rabbitmq-queue
-ENV ROUTING=rabbitmq-routing-key
-ENV KEYSPACE=example-keyspace
-
 CMD ["uv", "run", "main.py"]
 
