@@ -181,20 +181,47 @@ valkey-clean:
 	@kubectl delete --namespace=valkey-operator-system --all deployment
 	@echo "Done!"
 
-# waits for rabbitmq, valkey, and scylladb to start
-wait-ready: rabbitmq-setup scylladb-setup valkey-setup
-	@printf "Waiting for rabbitMQ to start"
-	@until kubectl rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; printf "."; done; printf "\n"
+# deploys dependencies in parallel
+deploy-dependencies: cert-manager
+	$(MAKE) -j 4 _deploy-scylladb _deploy-rabbitmq _deploy-valkey _build
+
+_deploy-scylladb:
+	$(MAKE) scylladb-setup
+
+_deploy-rabbitmq:
+	$(MAKE) rabbitmq-setup
+
+_deploy-valkey:
+	$(MAKE) valkey-setup
+
+_build:
+	$(MAKE) build
+
+# deploys the database pod
+deploy-database: deploy-dependencies
 	@echo "Waiting for ScyllaDB to start..."
 	@kubectl wait --for condition=established crd/scyllaclusters.scylla.scylladb.com
 	@kubectl wait --for condition=established crd/scyllaoperatorconfigs.scylla.scylladb.com
 	@kubectl wait --for condition=established crd/nodeconfigs.scylla.scylladb.com
+	@kubectl -n scylla-operator rollout status --timeout=5m deployments.apps/scylla-operator
+	@kubectl -n scylla-operator rollout status --timeout=5m deployments.apps/webhook-server
+	@echo "Deploying database..."
+	@kubectl apply -f k8s/scylladb-config.yaml
+	@echo "Done!"
+
+# waits for rabbitmq, valkey, and scylladb to start
+wait-ready: deploy-dependencies deploy-database
+	@printf "Waiting for rabbitMQ to start"
+	@until kubectl rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; printf "."; done; printf "\n"
+	@echo "Waiting for ScyllaDB cluster to start..."
+	@kubectl -n scylla wait pod/dev-db-dev-1-dev-1a-0 --for=condition=PodReadyToStartContainers --timeout=5m
+	@kubectl -n scylla wait pod/dev-db-dev-1-dev-1a-0 --for=condition=Ready --timeout=10m
 	@echo "Waiting for Valkey to start..."
 	@kubectl -n valkey-operator-system rollout status --timeout=5m deployments.apps/valkey-operator-controller-manager
 	@echo "Done!"
 
 # apply all k8s configs in the k8s/ directory
-deploy: minikube | build wait-ready
+deploy: minikube | wait-ready
 	@echo "Deploying CRDs..."
 	@kubectl apply -f k8s/crds/
 	@echo "Deploying global configs..."
