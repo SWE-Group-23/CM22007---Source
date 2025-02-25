@@ -23,7 +23,7 @@ def setup_rabbitmq(
     Sets up a connection to RabbitMQ, returning
     a channel.
 
-    Args;
+    Args:
         user: str -- username for RabbitMQ connection.
         password: str -- password for RabbitMQ connection.
         host: str -- host of RabbitMQ service (default "rabbitmq")
@@ -48,16 +48,18 @@ def setup_rabbitmq(
 
 
 def setup_scylla(
-    contact_points: list[str],
+    keyspace: str,
     *,
+    contact_points=None,
     user="cassandra",
     password="cassandra",
 ) -> cc.Session:
     """
     Creates a cassandra.cluster.Session with
-    given information.
+    given information, setting it's keyspace.
 
     Args:
+        keyspace: str -- the keyspace to set the session to use.
         contact_points: list[str] -- hostnames of Scylla clients to connect to.
         user: str -- username to use when connecting to database.
         password: str -- password to use when connecting to database.
@@ -66,6 +68,9 @@ def setup_scylla(
         cassandra.cluster.Session -- the session created from the
                                      connection to the Scylla cluster
     """
+    if contact_points is None:
+        contact_points = ["dev-db-client.scylla.svc"]
+
     cluster = cc.Cluster(
         contact_points=contact_points,
         auth_provider=ca.PlainTextAuthProvider(
@@ -78,4 +83,7 @@ def setup_scylla(
         protocol_version=4,
     )
 
-    return cluster.connect()
+    session = cluster.connect()
+    session.set_keyspace(keyspace)
+
+    return session

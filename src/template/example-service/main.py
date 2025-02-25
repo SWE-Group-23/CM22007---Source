@@ -5,12 +5,23 @@ Example service.
 import os
 
 import shared
-import shared.rpcs as rpcs
+from shared import rpcs
 
 
 class PingRPCServer(rpcs.RPCServer):
-    def process(self, _body):
-        return "Pong!"
+    """
+    Subclass of RPCServer which
+    simply returns "Pong!" no matter
+    what.
+    """
+
+    def process(self, body, *args, **kwargs):
+        """
+        Just respond with "Pong!".
+        """
+        if body.decode() == "Ping!":
+            return "Pong!"
+        return "That's not a ping!"
 
 
 def main():
@@ -18,15 +29,11 @@ def main():
     Example main.
     """
     # Set up database session
-    # NOTE: non-default creds will be required in the future.
     session = shared.setup_scylla(
-        ["dev-db-client.scylla.svc"],
+        keyspace=os.environ["SCYLLADB_KEYSPACE"],
         user=os.environ["SCYLLADB_USERNAME"],
         password=os.environ["SCYLLADB_PASSWORD"],
     )
-
-    # Set keyspace
-    session.set_keyspace(os.environ["SCYLLADB_KEYSPACE"])
 
     # Create table for storing pings
     session.execute(

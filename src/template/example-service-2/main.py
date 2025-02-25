@@ -15,14 +15,12 @@ def main():
     Example main.
     """
 
+    # Set up database session
     session = shared.setup_scylla(
-        ["dev-db-client.scylla.svc"],
+        keyspace=os.environ["SCYLLADB_KEYSPACE"],
         user=os.environ["SCYLLADB_USERNAME"],
         password=os.environ["SCYLLADB_PASSWORD"],
     )
-
-    # Set keyspace
-    session.set_keyspace(os.environ["SCYLLADB_KEYSPACE"])
 
     # Create table to store pongs
     session.execute(
