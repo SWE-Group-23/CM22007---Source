@@ -39,4 +39,4 @@ jobs:
         uv pip install --system pylint --cache-dir "$RUNNER_TEMP/uv_cache"
     - name: Analysing the code with pylint
       run: |
-        pylint --extension-pkg-allow-list=cassandra.cluster $(git ls-files '*.py')
+        pylint $(git ls-files '*.py')
