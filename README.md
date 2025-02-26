@@ -3,6 +3,7 @@ Source code for the project.
 
 ## Requirements
 You will need to run this on a Linux machine as GNU make is a requirement.
+- `make`
 - `uv`
 - `minikube`
 - `kubectl`

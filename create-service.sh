@@ -82,7 +82,6 @@ requires-python = ">=3.13"
 dependencies = [
     "pika>=1.3.2",
     "scylla-driver>=3.28.2",
-    "valkey>=6.1.0",
 ]
 EOL
 
@@ -190,3 +189,6 @@ EOL
 echo "Syncing uv dependencies with pyproject.toml..."
 (cd "$SUB_DIR"; uv sync)
 
+echo "Done creating $2 service."
+echo "You should now write the code for your service."
+echo "For information on creating RPCs, check CONTRIBUTING.md"

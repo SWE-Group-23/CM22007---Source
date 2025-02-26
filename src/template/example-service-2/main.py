@@ -7,7 +7,7 @@ import time
 import uuid
 
 import shared
-from shared.rpcs.ping import PingRPCClient
+from shared.rpcs.ping_rpc import PingRPCClient
 
 
 def main():
