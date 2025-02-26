@@ -42,6 +42,14 @@ scylla-creds:
 	@kubectl get secret dev-db-superuser -o jsonpath='{.data.password}' | base64 --decode
 	@echo
 
+pylint:
+	@echo "Running pylint..."
+	@if ! uv tool run pylint $(shell git ls-files '*.py'); then \
+		echo "FAIL WORKFLOW."; \
+	else \
+		echo "PASS WORKFLOW."; \
+	fi
+
 # print all the services in SERVICES and the path to their Dockerfile
 print-services:
 	@for service in $(SERVICES); do \
