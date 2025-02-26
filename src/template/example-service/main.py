@@ -17,7 +17,8 @@ class PingRPCServer(rpcs.RPCServer):
 
     def process(self, body, *args, **kwargs):
         """
-        Just respond with "Pong!".
+        Respond with "Pong!", unless message
+        isn't "Ping!".
         """
         if body.decode() == "Ping!":
             return "Pong!"
