@@ -96,6 +96,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: $2
+  namespace: $1
 spec:
   replicas: 1
   selector:
@@ -154,11 +155,13 @@ apiVersion: rabbitmq.com/v1beta1
 kind: User
 metadata:
   name: $2-rabbitmq-user
+  namespace: $1
 spec:
   tags:
   - policymaker
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 
 ---
 
@@ -166,6 +169,7 @@ apiVersion: rabbitmq.com/v1beta1
 kind: Permission
 metadata:
   name: $2-rabbitmq-permission
+  namespace: $1
 spec:
   vhost: "/"
   userReference:
@@ -176,6 +180,7 @@ spec:
     read: ""
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 EOL
 
 echo "Creating main.py..."

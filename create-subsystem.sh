@@ -26,13 +26,25 @@ echo "Creating new subsystem: $1...";
 echo "Creating directory $DIR..."
 mkdir -p "$DIR"
 
+echo "Creating k8s config directory $DIR/k8s..."
+mkdir -p "$DIR/k8s"
+
+echo "Creating k8s namespace config..."
+cat >"$DIR/k8s/namespace.yaml" <<EOL
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: $1
+EOL
+
 echo "Creating subsystem ScyllaDB config..."
-mkdir -p "$DIR/scylla"
-cat >"$DIR/scylla/$1-scylla-perms.yaml" <<EOL
+mkdir -p "$DIR/k8s/scylla"
+cat >"$DIR/k8s/scylla/$1-scylla-perms.yaml" <<EOL
 apiVersion: custom.local/v1
 kind: ScyllaUser
 metadata:
   name: $1-user
+  namespace: $1
 spec:
   scyllaClusterReference: dev-db
 
@@ -42,6 +54,7 @@ apiVersion: custom.local/v1
 kind: ScyllaKeyspace
 metadata:
   name: $1-keyspace
+  namespace: $1
 spec:
   scyllaClusterReference: dev-db
   replicationFactor: 3
@@ -52,6 +65,7 @@ apiVersion: custom.local/v1
 kind: ScyllaPermission
 metadata:
   name: $1-permission
+  namespace: $1
 spec:
   scyllaClusterReference: dev-db
   user: $1-user
