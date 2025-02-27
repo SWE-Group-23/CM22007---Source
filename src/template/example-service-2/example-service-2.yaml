@@ -17,6 +17,13 @@ spec:
           image: example-service-2:latest
           imagePullPolicy: IfNotPresent
           tty: true
+          securityContext:
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /home/user1/.cache/uv
+              name: uv
+            - mountPath: /tmp
+              name: temp
           env:
             - name: RABBITMQ_USERNAME
               valueFrom:
@@ -43,6 +50,11 @@ spec:
                 configMapKeyRef:
                   name: template-keyspace
                   key: keyspace
+      volumes:
+        - emptyDir: {}
+          name: uv
+        - emptyDir: {}
+          name: temp
 
 ---
 

@@ -122,6 +122,13 @@ spec:
           image: scylla-auth-operator:latest
           imagePullPolicy: IfNotPresent
           tty: true
+          securityContext:
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /home/user1/.cache/uv
+              name: uv
+            - mountPath: /tmp
+              name: temp
           env:
             - name: DB_USERNAME
               valueFrom:
@@ -135,6 +142,11 @@ spec:
                   name: dev-db-superuser
                   key: password
                   optional: true
+      volumes:
+        - emptyDir: {}
+          name: uv
+        - emptyDir: {}
+          name: temp
 
 ---
 

@@ -111,6 +111,11 @@ spec:
           image: $2:latest
           imagePullPolicy: IfNotPresent
           tty: true
+          volumeMounts:
+            - mountPath: /home/user1/.cache/uv
+              name: uv
+            - mountPath: /tmp
+              name: temp
           env:
             - name: RABBITMQ_USERNAME
               valueFrom:
@@ -137,6 +142,11 @@ spec:
                 configMapKeyRef:
                   name: $1-keyspace
                   key: keyspace
+      volumes:
+        - emptyDir: {}
+          name: uv
+        - emptyDir: {}
+          name: temp
 
 ---
 
