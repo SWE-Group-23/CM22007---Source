@@ -147,7 +147,8 @@ files.
 keyspace, and permissions.
 
 `k8s` contains "global" Kubernetes configurations for our infrastructure, you shouldn't need to touch
-any of this when developing your own subsystems.
+any of this when developing your own subsystems. To be clear: do not touch any "global" Kubernetes config
+without asking [@peterc-s](https://github.com/peterc-s/) or [@wjgr2004](https://github.com/wjgr2004/)
 
 ## Creating Subsystems
 To create a subsystem, use the `create-subsystem.sh` script (`./create-subsystem.sh` for usage).
