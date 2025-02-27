@@ -24,14 +24,14 @@ all: deploy
 ##
 
 rabbitmq-manage:
-	@kubectl rabbitmq manage rabbitmq
+	@kubectl rabbitmq -n rabbitmq manage rabbitmq
 
 rabbitmq-creds:
 	@echo Username:
-	@kubectl get secret rabbitmq-default-user -o jsonpath='{.data.username}' | base64 --decode 
+	@kubectl get secret -n rabbitmq rabbitmq-default-user -o jsonpath='{.data.username}' | base64 --decode 
 	@echo
 	@echo Password:
-	@kubectl get secret rabbitmq-default-user -o jsonpath='{.data.password}' | base64 --decode
+	@kubectl get secret -n rabbitmq rabbitmq-default-user -o jsonpath='{.data.password}' | base64 --decode
 	@echo
 
 scylla-creds:
@@ -220,7 +220,7 @@ deploy-database: deploy-dependencies
 # waits for rabbitmq, valkey, and scylladb to start
 wait-ready: deploy-dependencies deploy-database
 	@printf "Waiting for rabbitMQ to start"
-	@until kubectl rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; printf "."; done; printf "\n"
+	@until kubectl rabbitmq -n rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; printf "."; done; printf "\n"
 	@echo "Waiting for ScyllaDB cluster to start..."
 	@kubectl -n scylla wait pod/dev-db-dev-1-dev-1a-0 --for=condition=PodReadyToStartContainers --timeout=5m
 	@kubectl -n scylla wait pod/dev-db-dev-1-dev-1a-0 --for=condition=Ready --timeout=10m
@@ -234,6 +234,15 @@ deploy: minikube | wait-ready
 	@kubectl apply -f k8s/crds/
 	@echo "Deploying global configs..."
 	@kubectl apply -f k8s/
+	@echo "Deploying subsystem configs..."
+	@-for config_dir in src/**/k8s; do \
+		echo "Deploying $$config_dir..."; \
+		kubectl apply -f "$$config_dir"; \
+	done
+	@-for config_dir in src/**/k8s/**/; do \
+		echo "Deploying $$config_dir..."; \
+		kubectl apply -f "$$config_dir"; \
+	done
 	@echo "Deploying services to K8s..."
 	@-for config in $(K8S_CFGS); do \
 		echo "Deploying $$config..."; \
@@ -248,6 +257,15 @@ deploy-unchecked: minikube | build
 	@kubectl apply -f k8s/crds/
 	@echo "Deploying global configs..."
 	@kubectl apply -f k8s/
+	@echo "Deploying subsystem configs..."
+	@-for config_dir in src/**/k8s; do \
+		echo "Deploying $$config_dir..."; \
+		kubectl apply -f "$$config_dir"; \
+	done
+	@-for config_dir in src/**/k8s/**/; do \
+		echo "Deploying $$config_dir..."; \
+		kubectl apply -f "$$config_dir"; \
+	done
 	@echo "Deploying services to K8s..."
 	@-for config in $(K8S_CFGS); do \
 		echo "Deploying $$config..."; \
@@ -255,12 +273,12 @@ deploy-unchecked: minikube | build
 	done
 	@echo "Done!"
 
-# delete all deployments in SERVICE_NAMES
+# delete all deployments in each subsystem
 deploy-clean:
-	@echo "Deleting deployments..."
-	@-for service in $(SERVICE_NAMES); do \
-		echo "Deleting $$service..."; \
-		kubectl delete deployments.apps "$$service"; \
+	@echo "Deleting deployments in all subsystem namespaces..."
+	@-for subsystem in $$(ls -d src/* | grep -vE 'shared|operators' | xargs -n1 basename); do \
+		echo "Cleaning subsystem: $$subsystem"; \
+		kubectl delete deployments.apps --all -n "$$subsystem"; \
 	done
 	@echo "Done!"
 

@@ -34,7 +34,7 @@ class ScyllaDBCredsOperator:
 
         self.config = {
             "group": "custom.local",
-            "namespace": "default",
+            "namespace": "scylla-auth",
             "version": "v1",
         }
 
@@ -163,6 +163,8 @@ class ScyllaDBCredsOperator:
             if str(e).find("(409)") == -1:
                 raise e
             logging.warning("User secret already exists.")
+        except Exception as e:
+            raise e
 
         del password
         logging.info("Created user: %s.", name)
@@ -191,6 +193,8 @@ class ScyllaDBCredsOperator:
             if str(e).find("(409)") == -1:
                 raise e
             logging.warning("User secret doesn't exist.")
+        except Exception as e:
+            raise e
 
         logging.info("Deleted user: %s.", name)
 
@@ -201,27 +205,27 @@ class ScyllaDBCredsOperator:
         """
         while True:
             stream = watch.Watch().stream(
-                self.objects_api_instance.list_namespaced_custom_object,
+                self.objects_api_instance.list_cluster_custom_object,
                 self.config["group"],
                 self.config["version"],
-                self.config["namespace"],
                 "scyllausers",
             )
             for event in stream:
                 custom_resource = event['object']
                 name = custom_resource['metadata']['name']
+                namespace = custom_resource['metadata']['namespace']
                 data = custom_resource.get('spec', {})
 
                 match event["type"]:
                     case "ADDED":
                         self.create_user(
-                            self.config["namespace"],
+                            namespace,
                             name,
                             data,
                         )
                     case "DELETED":
                         self.delete_user(
-                            self.config["namespace"],
+                            namespace,
                             name,
                             data,
                         )
@@ -238,7 +242,7 @@ class ScyllaDBCredsOperator:
             name.encode()
         ).decode().replace("=", "").lower()
 
-    def create_keyspace(self, _namespace, name, data):
+    def create_keyspace(self, namespace, name, data):
         """
         Creates a keyspace for a user.
         """
@@ -271,13 +275,15 @@ class ScyllaDBCredsOperator:
         logging.info("Creating config map for keyspace: %s.", keyspace_name)
         try:
             self.api_instance.create_namespaced_config_map(
-                self.config["namespace"],
+                namespace,
                 body
             )
         except client.exceptions.ApiException as e:
             if str(e).find("(409)") == -1:
                 raise e
             logging.warning("Keyspace ConfigMap already found.")
+        except Exception as e:
+            raise e
 
         logging.info("Created keyspace: %s as %s.", name, keyspace_name)
 
@@ -309,6 +315,8 @@ class ScyllaDBCredsOperator:
             if str(e).find("(409)") == -1:
                 raise e
             logging.warning("Keyspace ConfigMap doesn't exist.")
+        except Exception as e:
+            raise e
 
         logging.info("Deleted keyspace: %s as %s.", name, keyspace_name)
 
@@ -320,27 +328,27 @@ class ScyllaDBCredsOperator:
         """
         while True:
             stream = watch.Watch().stream(
-                self.objects_api_instance.list_namespaced_custom_object,
+                self.objects_api_instance.list_cluster_custom_object,
                 self.config["group"],
                 self.config["version"],
-                self.config["namespace"],
                 "scyllakeyspaces",
             )
             for event in stream:
                 custom_resource = event['object']
                 name = custom_resource['metadata']['name']
+                namespace = custom_resource['metadata']['namespace']
                 data = custom_resource.get('spec', {})
 
                 match event["type"]:
                     case "ADDED":
                         self.create_keyspace(
-                            self.config["namespace"],
+                            namespace,
                             name,
                             data,
                         )
                     case "DELETED":
                         self.delete_keyspace(
-                            self.config["namespace"],
+                            namespace,
                             name,
                             data,
                         )
@@ -435,15 +443,15 @@ class ScyllaDBCredsOperator:
         """
         while True:
             stream = watch.Watch().stream(
-                self.objects_api_instance.list_namespaced_custom_object,
+                self.objects_api_instance.list_cluster_custom_object,
                 self.config["group"],
                 self.config["version"],
-                self.config["namespace"],
                 "scyllapermissions",
             )
             for event in stream:
                 custom_resource = event['object']
                 name = custom_resource['metadata']['name']
+                namespace = custom_resource['metadata']['namespace']
                 data = custom_resource.get('spec', {})
 
                 match event["type"]:
@@ -451,7 +459,7 @@ class ScyllaDBCredsOperator:
                         job = threading.Thread(
                             target=partial(
                                 self.create_permission,
-                                self.config["namespace"],
+                                namespace,
                                 name,
                                 data,
                             )
@@ -461,7 +469,7 @@ class ScyllaDBCredsOperator:
                         job = threading.Thread(
                             target=partial(
                                 self.delete_permission,
-                                self.config["namespace"],
+                                namespace,
                                 name,
                                 data,
                             )

@@ -1,9 +1,19 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rabbitmq
+
+---
+
 apiVersion: rabbitmq.com/v1beta1
 kind: RabbitmqCluster
 metadata:
   labels:
     app: rabbitmq
   name: rabbitmq
+  namespace: rabbitmq
+  annotations:
+    rabbitmq.com/topology-allowed-namespaces: "*"
 spec:
   replicas: 1
   service:

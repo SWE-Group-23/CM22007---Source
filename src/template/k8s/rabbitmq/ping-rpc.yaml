@@ -8,6 +8,7 @@ spec:
   durable: true
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 
 ---
 
@@ -21,6 +22,7 @@ spec:
   durable: true
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 
 ---
 
@@ -34,6 +36,7 @@ spec:
   durable: true
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 
 ---
 
@@ -48,3 +51,4 @@ spec:
   destinationType: queue
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
