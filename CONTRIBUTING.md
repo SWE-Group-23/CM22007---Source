@@ -36,6 +36,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # install shared library
 RUN uv pip install -e shared/
 
+# create a new unprivileged user
+RUN addgroup -S group1 && adduser -S user1 -G group1
+# set it to own the /app directory
+RUN chown -R user1:group1 /app
+# use new user
+USER user1:group1
+
 # run the service
 CMD ["uv", "run", "main.py"]
 ```
