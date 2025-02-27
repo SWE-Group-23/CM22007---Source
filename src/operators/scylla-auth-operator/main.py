@@ -163,8 +163,6 @@ class ScyllaDBCredsOperator:
             if str(e).find("(409)") == -1:
                 raise e
             logging.warning("User secret already exists.")
-        except Exception as e:
-            raise e
 
         del password
         logging.info("Created user: %s.", name)
@@ -193,8 +191,6 @@ class ScyllaDBCredsOperator:
             if str(e).find("(409)") == -1:
                 raise e
             logging.warning("User secret doesn't exist.")
-        except Exception as e:
-            raise e
 
         logging.info("Deleted user: %s.", name)
 
@@ -205,6 +201,7 @@ class ScyllaDBCredsOperator:
         """
         while True:
             stream = watch.Watch().stream(
+
                 self.objects_api_instance.list_cluster_custom_object,
                 self.config["group"],
                 self.config["version"],
@@ -282,8 +279,6 @@ class ScyllaDBCredsOperator:
             if str(e).find("(409)") == -1:
                 raise e
             logging.warning("Keyspace ConfigMap already found.")
-        except Exception as e:
-            raise e
 
         logging.info("Created keyspace: %s as %s.", name, keyspace_name)
 
@@ -315,8 +310,6 @@ class ScyllaDBCredsOperator:
             if str(e).find("(409)") == -1:
                 raise e
             logging.warning("Keyspace ConfigMap doesn't exist.")
-        except Exception as e:
-            raise e
 
         logging.info("Deleted keyspace: %s as %s.", name, keyspace_name)
 

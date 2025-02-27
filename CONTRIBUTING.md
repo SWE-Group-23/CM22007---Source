@@ -120,11 +120,13 @@ and deploy all services in a local Kubernetes cluster.
         └── k8s
             ├── rabbitmq
             └── scylla
+
 ```
 
 `src/` contains directories, which each (with the exception of `src/shared` and `src/operators`)
 represent a subsystem. Within each subsystem directory, there are more directories which each
 (with the exception of `src/{subsystem}/k8s`) represent services.
+
 
 `src/shared` contains a Python library that all services can use, it provides abstractions
 over creating ScyllaDB sessions and RabbitMQ connections. `src/shared/rpcs` is the RPC submodule,
@@ -161,7 +163,6 @@ src
 
 As you can see, the script will create an example subsystem, it's ScyllaDB credentials
 K8s configuration, and it's K8s namespace (this file also configures a network policy
-for the namespace which denies all ingress and egress traffic).
 
 ## Creating Services
 Once you've created a subsystem with `create-subsystem.sh`, you can create services
@@ -182,7 +183,6 @@ src
         ├── namespace.yaml
         └── scylla
             └── example-scylla-perms.yaml
-```
 
 You can see it has generated files for the service within it's subsystem. This
 includes:
