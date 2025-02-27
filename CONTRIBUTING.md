@@ -160,7 +160,8 @@ src
 ```
 
 As you can see, the script will create an example subsystem, it's ScyllaDB credentials
-K8s configuration, and it's K8s namespace.
+K8s configuration, and it's K8s namespace (this file also configures a network policy
+for the namespace which denies all ingress and egress traffic).
 
 ## Creating Services
 Once you've created a subsystem with `create-subsystem.sh`, you can create services

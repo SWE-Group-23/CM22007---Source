@@ -35,6 +35,30 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: $1
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress
+  namespace: $1
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-egress
+  namespace: $1
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
 EOL
 
 echo "Creating subsystem ScyllaDB config..."
