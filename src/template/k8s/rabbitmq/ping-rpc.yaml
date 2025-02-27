@@ -1,0 +1,54 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: Exchange
+metadata:
+  name: ping-rpc-call-exc
+spec:
+  name: ping-rpc-call-exc
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Exchange
+metadata:
+  name: ping-rpc-resp-exc
+spec:
+  name: ping-rpc-resp-exc
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Queue
+metadata:
+  name: ping-rpc-call-q
+spec:
+  name: ping-rpc-call-q
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Binding
+metadata:
+  name: ping-rpc-call-bind
+spec:
+  source: ping-rpc-call-exc
+  destination: ping-rpc-call-q
+  routingKey: "ping-rpc-call-q"
+  destinationType: queue
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq

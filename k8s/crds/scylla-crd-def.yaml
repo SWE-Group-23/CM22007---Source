@@ -1,3 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scylla-auth
+
+---
+
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -106,6 +113,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: scylla-auth-operator
+  namespace: scylla-auth
 spec:
   replicas: 1
   selector:
@@ -122,6 +130,13 @@ spec:
           image: scylla-auth-operator:latest
           imagePullPolicy: IfNotPresent
           tty: true
+          securityContext:
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /home/user1/.cache/uv
+              name: uv
+            - mountPath: /tmp
+              name: temp
           env:
             - name: DB_USERNAME
               valueFrom:
@@ -135,6 +150,11 @@ spec:
                   name: dev-db-superuser
                   key: password
                   optional: true
+      volumes:
+        - emptyDir: {}
+          name: uv
+        - emptyDir: {}
+          name: temp
 
 ---
 
@@ -159,7 +179,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: scylla-operator-sa
-  namespace: default
+  namespace: scylla-auth
 roleRef:
   kind: ClusterRole
   name: scylla-operator-role
@@ -171,3 +191,4 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: scylla-operator-sa
+  namespace: scylla-auth

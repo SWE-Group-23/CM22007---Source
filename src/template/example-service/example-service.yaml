@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: example-service
+  namespace: template
 spec:
   replicas: 1
   selector:
@@ -17,6 +18,13 @@ spec:
           image: example-service:latest
           imagePullPolicy: IfNotPresent
           tty: true
+          securityContext:
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /home/user1/.cache/uv
+              name: uv
+            - mountPath: /tmp
+              name: temp
           env:
             - name: RABBITMQ_USERNAME
               valueFrom:
@@ -43,6 +51,11 @@ spec:
                 configMapKeyRef:
                   name: template-keyspace
                   key: keyspace
+      volumes:
+        - emptyDir: {}
+          name: uv
+        - emptyDir: {}
+          name: temp
 
 ---
 
@@ -50,11 +63,13 @@ apiVersion: rabbitmq.com/v1beta1
 kind: User
 metadata:
   name: example-service-rabbitmq-user
+  namespace: template
 spec:
   tags:
   - policymaker
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 
 ---
 
@@ -62,6 +77,7 @@ apiVersion: rabbitmq.com/v1beta1
 kind: Permission
 metadata:
   name: example-service-rabbitmq-permission
+  namespace: template
 spec:
   vhost: "/"
   userReference:
@@ -72,3 +88,4 @@ spec:
     read: "ping-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq

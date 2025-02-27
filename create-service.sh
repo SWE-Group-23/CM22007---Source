@@ -55,6 +55,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \\
     
 RUN uv pip install -e shared/
 
+RUN addgroup -S group1 && adduser -S user1 -G group1
+RUN chown -R user1:group1 /app
+USER user1:group1
+
 CMD ["uv", "run", "main.py"]
 EOL
 
@@ -92,6 +96,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: $2
+  namespace: $1
 spec:
   replicas: 1
   selector:
@@ -107,6 +112,11 @@ spec:
           image: $2:latest
           imagePullPolicy: IfNotPresent
           tty: true
+          volumeMounts:
+            - mountPath: /home/user1/.cache/uv
+              name: uv
+            - mountPath: /tmp
+              name: temp
           env:
             - name: RABBITMQ_USERNAME
               valueFrom:
@@ -133,6 +143,11 @@ spec:
                 configMapKeyRef:
                   name: $1-keyspace
                   key: keyspace
+      volumes:
+        - emptyDir: {}
+          name: uv
+        - emptyDir: {}
+          name: temp
 
 ---
 
@@ -140,11 +155,13 @@ apiVersion: rabbitmq.com/v1beta1
 kind: User
 metadata:
   name: $2-rabbitmq-user
+  namespace: $1
 spec:
   tags:
   - policymaker
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 
 ---
 
@@ -152,6 +169,7 @@ apiVersion: rabbitmq.com/v1beta1
 kind: Permission
 metadata:
   name: $2-rabbitmq-permission
+  namespace: $1
 spec:
   vhost: "/"
   userReference:
@@ -162,6 +180,7 @@ spec:
     read: ""
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 EOL
 
 echo "Creating main.py..."

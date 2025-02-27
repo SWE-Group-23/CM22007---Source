@@ -17,7 +17,7 @@ def setup_rabbitmq(
     user: str,
     password: str,
     *,
-    host="rabbitmq"
+    host="rabbitmq.rabbitmq.svc.cluster.local"
 ) -> tuple[pika.BlockingConnection, pika.channel.Channel]:
     """
     Sets up a connection to RabbitMQ, returning

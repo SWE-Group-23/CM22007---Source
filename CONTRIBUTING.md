@@ -36,6 +36,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # install shared library
 RUN uv pip install -e shared/
 
+# create a new unprivileged user
+RUN addgroup -S group1 && adduser -S user1 -G group1
+# set it to own the /app directory
+RUN chown -R user1:group1 /app
+# use new user
+USER user1:group1
+
 # run the service
 CMD ["uv", "run", "main.py"]
 ```
@@ -110,13 +117,16 @@ and deploy all services in a local Kubernetes cluster.
     └── template
         ├── example-service
         ├── example-service-2
-        ├── rabbitmq
-        └── scylla
+        └── k8s
+            ├── rabbitmq
+            └── scylla
+
 ```
 
 `src/` contains directories, which each (with the exception of `src/shared` and `src/operators`)
 represent a subsystem. Within each subsystem directory, there are more directories which each
-(with the exception of `src/{subsystem}/rabbitmq` and `src/{subsystem}/scylla`) represent services.
+(with the exception of `src/{subsystem}/k8s`) represent services.
+
 
 `src/shared` contains a Python library that all services can use, it provides abstractions
 over creating ScyllaDB sessions and RabbitMQ connections. `src/shared/rpcs` is the RPC submodule,
@@ -126,14 +136,17 @@ on RPCs.
 `src/operators` contains custom Kubernetes operators, you shouldn't need to touch these
 when developing your own subsystems.
 
-`src/{subsystem}/rabbitmq` contains Kubernetes configuration for required RabbitMQ exchanges
+`src/{subsystem}/k8s` should contain subsystem specific Kubernetes configuration, including
+a `namespace.yaml` which defines a Kubernetes namespace for each subsystem's resources.
+
+`src/{subsystem}/k8s/rabbitmq` contains Kubernetes configuration for required RabbitMQ exchanges
 and queues for RPC calls within each subsystem, you may have to manually edit these configuration
 files.
 
-`src/{subsystem}/scylla` contains Kubernetes configuration for a subsystems ScyllaDB credentials,
+`src/{subsystem}/k8s/scylla` contains Kubernetes configuration for a subsystems ScyllaDB credentials,
 keyspace, and permissions.
 
-`k8s` contains Kubernetes configurations for our infrastructure, you shouldn't need to touch
+`k8s` contains "global" Kubernetes configurations for our infrastructure, you shouldn't need to touch
 any of this when developing your own subsystems.
 
 ## Creating Subsystems
@@ -142,12 +155,14 @@ For example, if we run `./create-subsystem.sh example` we get the following:
 ```
 src
 └── example
-    └── scylla
-        └── example-scylla-perms.yaml
+    └── k8s
+        ├── namespace.yaml
+        └── scylla
+            └── example-scylla-perms.yaml
 ```
 
-As you can see, the script will create an example subsystem, and it's ScyllaDB credentials
-K8s configuration.
+As you can see, the script will create an example subsystem, it's ScyllaDB credentials
+K8s configuration, and it's K8s namespace (this file also configures a network policy
 
 ## Creating Services
 Once you've created a subsystem with `create-subsystem.sh`, you can create services
@@ -164,9 +179,10 @@ src
     │   ├── pyproject.toml
     │   ├── README.md
     │   └── uv.lock
-    └── scylla
-        └── example-scylla-perms.yaml
-```
+    └── k8s
+        ├── namespace.yaml
+        └── scylla
+            └── example-scylla-perms.yaml
 
 You can see it has generated files for the service within it's subsystem. This
 includes:
@@ -185,7 +201,7 @@ a Remote Procedure Call (RPC).
 We use RabbitMQ to perform RPCs.
 
 First, we define our call and response exchanges, along with the call queue in the 
-`src/{subsystem}/rabbitmq/{rpc-name}.yaml`, which looks like this:
+`src/{subsystem}/k8s/rabbitmq/{rpc-name}.yaml`, which looks like this:
 ```yaml
 # call exchange
 apiVersion: rabbitmq.com/v1beta1
@@ -198,6 +214,7 @@ spec:
   durable: true
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 
 ---
 
@@ -212,6 +229,7 @@ spec:
   durable: true
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 
 ---
 
@@ -226,6 +244,7 @@ spec:
   durable: true
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 ```
 
 The call exchange means that the client can send a message and get it routed to the
@@ -249,6 +268,7 @@ spec:
   destinationType: queue
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 ```
 
 Due to the nature of Kubernetes, we can have multiple clients calling the same type of
@@ -367,6 +387,7 @@ apiVersion: rabbitmq.com/v1beta1
 kind: Permission
 metadata:
   name: example-service-rabbitmq-permission
+  namespace: template
 spec:
   vhost: "/"
   userReference:
@@ -377,6 +398,7 @@ spec:
     read: "ping-rpc-call-q" # give read access to call queue
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 ```
 
 The client's permissions are a bit more complicated. A client needs to be able to:
@@ -390,6 +412,7 @@ apiVersion: rabbitmq.com/v1beta1
 kind: Permission
 metadata:
   name: example-service-2-rabbitmq-permission
+  namespace: template
 spec:
   vhost: "/"
   userReference:
@@ -400,6 +423,7 @@ spec:
     read: "ping-rpc-resp-(exc|q-.*)" # write to call exchange and unique response queue
   rabbitmqClusterReference:
     name: rabbitmq
+    namespace: rabbitmq
 ```
 
 #### In Code

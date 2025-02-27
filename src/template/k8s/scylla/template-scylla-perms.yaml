@@ -1,0 +1,32 @@
+apiVersion: custom.local/v1
+kind: ScyllaUser
+metadata:
+  name: template-user
+  namespace: template
+spec:
+  scyllaClusterReference: dev-db
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaKeyspace
+metadata:
+  name: template-keyspace
+  namespace: template
+spec:
+  scyllaClusterReference: dev-db
+  replicationFactor: 3
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaPermission
+metadata:
+  name: template-permission
+  namespace: template
+spec:
+  scyllaClusterReference: dev-db
+  user: template-user
+  keyspace: template-keyspace
+  permission: CREATE
+
