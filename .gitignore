@@ -1,3 +1,4 @@
 **/uv.lock
 **/*.egg-info
 .build_config.mk
+**/.DS_Store
