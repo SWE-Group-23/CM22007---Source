@@ -36,10 +36,10 @@ rabbitmq-creds:
 
 scylla-creds:
 	@echo Username:
-	@kubectl get secret dev-db-superuser -o jsonpath='{.data.username}' | base64 --decode 
+	@kubectl get secret -n scylla-auth dev-db-superuser -o jsonpath='{.data.username}' | base64 --decode 
 	@echo
 	@echo Password:
-	@kubectl get secret dev-db-superuser -o jsonpath='{.data.password}' | base64 --decode
+	@kubectl get secret -n scylla-auth dev-db-superuser -o jsonpath='{.data.password}' | base64 --decode
 	@echo
 
 pylint:
