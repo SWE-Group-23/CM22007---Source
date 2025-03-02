@@ -20,3 +20,4 @@ You will need to run this on a Linux machine as GNU make is a requirement.
 
 ## Recommended Tools
 For managing and viewing the status of Kubernetes objects, `k9s` is a great tool.
+`k9s` can be installed using `brew` on mac and `wget https://github.com/derailed/k9s/releases/download/v0.40.5/k9s_linux_amd64.deb; sudo apt install ./k9s_linux_amd64.deb; rm k9s_linux_amd64.deb` on ubuntu
