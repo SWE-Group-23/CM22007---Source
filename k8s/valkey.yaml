@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: valkey
+
+---
+
+apiVersion: hyperspike.io/v1
+kind: Valkey
+metadata:
+  labels:
+    app.kubernetes.io/name: valkey-example
+  name: valkey-example
+  namespace: valkey
+spec:
+  nodes: 1
+  replicas: 0
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  volumePermissions: true
+  exporterImage: ghcr.io/hyperspike/valkey-sidecar:latest
+  image: ghcr.io/hyperspike/valkey:8.0.2
+  prometheus: false
+  storage:
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard

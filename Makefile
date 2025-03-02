@@ -182,6 +182,8 @@ valkey-setup: minikube
 		kubectl apply -f https://github.com/hyperspike/valkey-operator/releases/download/v0.0.57/install.yaml; \
 		echo "Done!"; \
 	fi
+	@echo "Deploying Valkey..."
+	@echo kubectl apply -f k8s/valkey.yaml
 
 # deletes valkey deployment
 valkey-clean:
@@ -296,7 +298,7 @@ minikube: check-docker
 	@if minikube status | grep -q "host: Running"; then \
 		echo "Minikube already running."; \
 	else \
-		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 2; \
+		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 3 --memory 3g; \
 		echo "Done!"; \
 	fi
 
