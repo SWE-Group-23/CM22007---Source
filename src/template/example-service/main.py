@@ -7,6 +7,8 @@ import os
 import shared
 from shared import rpcs
 
+import valkey
+
 
 class PingRPCServer(rpcs.RPCServer):
     """
@@ -35,6 +37,10 @@ def main():
         user=os.environ["SCYLLADB_USERNAME"],
         password=os.environ["SCYLLADB_PASSWORD"],
     )
+
+    r = valkey.Valkey(host="valkey-example", port="6379", db=0, username="default", password=os.environ["VALKEY_PASSWORD"])
+    r.set("test", "success")
+    print(f"response: {r.get('test')}")
 
     # Create table for storing pings
     session.execute(

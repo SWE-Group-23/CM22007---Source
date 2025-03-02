@@ -1,17 +1,10 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: valkey
-
----
-
 apiVersion: hyperspike.io/v1
 kind: Valkey
 metadata:
   labels:
     app.kubernetes.io/name: valkey-example
   name: valkey-example
-  namespace: valkey
+  namespace: template
 spec:
   nodes: 1
   replicas: 0

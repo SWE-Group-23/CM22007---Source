@@ -51,6 +51,11 @@ spec:
                 configMapKeyRef:
                   name: template-keyspace
                   key: keyspace
+            - name: VALKEY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: valkey-example
+                  key: password
       volumes:
         - emptyDir: {}
           name: uv
