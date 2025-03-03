@@ -13,7 +13,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     
 RUN uv pip install -e shared/
 
-RUN addgroup -S group1 && adduser -S user1 -G group1
+RUN addgroup -S group1 && adduser -S user1 -G group1 -u 1000
 RUN chown -R user1:group1 /app
 USER user1:group1
 
