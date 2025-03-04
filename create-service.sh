@@ -55,7 +55,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \\
     
 RUN uv pip install -e shared/
 
-RUN addgroup -S group1 && adduser -S user1 -G group1
+RUN addgroup -S group1 && adduser -S user1 -G group1 -u 1000
 RUN chown -R user1:group1 /app
 USER user1:group1
 
@@ -112,6 +112,16 @@ spec:
           image: $2:latest
           imagePullPolicy: IfNotPresent
           tty: true
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
             - mountPath: /home/user1/.cache/uv
               name: uv

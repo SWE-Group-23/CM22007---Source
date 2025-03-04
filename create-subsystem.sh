@@ -35,6 +35,10 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: $1
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
 
 ---
 
