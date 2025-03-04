@@ -51,7 +51,7 @@ pylint:
 	fi
 
 # just deletes deployments for now
-clean: deploy-clean
+clean: deploy-clean test-clean
 
 # deletes minikube (which should delete all deployments)
 clean-all: minikube-clean-full
@@ -315,13 +315,10 @@ test: deploy
 	$(MAKE) test-unchecked
 
 test-unchecked: test-clean
-	@# wait reasonable amount of time for all pods to be in the running state,
-	@# otherwise fail as pods should deploy fine
 	@-echo "Waiting for all services to be ready..."
 	@-kubectl wait --for=condition=ready pods --all --all-namespaces --timeout=3m
 	@-echo "Done!"
 
-	@# build test image
 	@-echo "Building test container..."
 	@( \
 		cd tests; \
@@ -332,28 +329,24 @@ test-unchecked: test-clean
 	)
 	@-echo "Done!"
 	
-	@# deploy testing namespace
 	@-echo "Deploying testing namespace..."
 	@-kubectl apply -f tests/testing.yaml
 	@-echo "Done!"
 
-	@# copy superuser credentials over to testing namespace
 	@-echo "Copying necessary credentials into testing namespace..."
 	@-./tests/copy-secret.sh rabbitmq-default-user rabbitmq testing
 	@-./tests/copy-secret.sh dev-db-superuser scylla-auth testing
 	@-echo "Done!"
 	
-	@# deploy test job
 	@-echo "Running tests..."
 	@-kubectl apply -f tests/test-job.yaml
 
-	@# wait for test job
 	@-kubectl wait -n testing --for=condition=ready pods --all 
+	@sleep 1
 	@-kubectl logs -n testing --follow job/testing-service
 	@-echo "Done!"
-
-	@# exit with proper code
-	@echo "TODO"
+	
+	@kubectl wait-job -n testing testing-service
 
 test-clean: check-docker
 	@-kubectl delete -f tests/testing.yaml
