@@ -2,14 +2,8 @@
 Runs all integration and end-to-end tests.
 """
 
-import os
 import sys
 import unittest
-
-import cassandra as cs
-import cassandra.auth as ca
-import cassandra.cluster as cc
-
 
 # class CleanupTestResult(unittest.TextTestResult):
 #     """
