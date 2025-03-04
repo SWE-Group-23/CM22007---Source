@@ -561,6 +561,8 @@ The main targets are:
 - `redeploy-unchecked` - will stop and redeploy our own services without checking if RabbitMQ, ScyllaDB, and Valkey are running.
 - `redeploy` - will stop redeploy our own services, checking that infra is running, and deploying it if it isn't.
 - `clean-all` - will stop `minikube`, and delete any persistent storage it had, essentially wiping the slate clean.
+- `test` - deploys and then runs tests.
+- `test-unchecked` - doesn't deploy (if you already know everything is deployed) and runs tests.
 
 You can also set your own Docker runtime and Minikube driver in a file
 named `.build_config.mk` (gitignored), for example:
