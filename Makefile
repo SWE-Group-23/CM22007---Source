@@ -50,6 +50,12 @@ pylint:
 		echo "PASS WORKFLOW."; \
 	fi
 
+# just deletes deployments for now
+clean: deploy-clean
+
+# deletes minikube (which should delete all deployments)
+clean-all: minikube-clean-full
+
 # print all the services in SERVICES and the path to their Dockerfile
 print-services:
 	@for service in $(SERVICES); do \
@@ -76,6 +82,38 @@ check-docker:
 		echo "Docker isn't running, please start the docker daemon (using systemd: \`sudo systemctl start $(DOCKER_RUNTIME)\`)."; \
 		exit 1; \
 	fi
+
+##
+# Infra
+##
+
+# start minikube if it isn't already running
+minikube: check-docker
+	@echo "Starting minikube with $(MINIKUBE_DRIVER) driver..."
+	@if minikube status | grep -q "host: Running"; then \
+		echo "Minikube already running."; \
+	else \
+		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 2; \
+		echo "Done!"; \
+	fi
+
+# stop minikube
+minikube-clean:
+	@echo "Stopping minikube..."
+	@-minikube stop
+	@echo "Done!"
+
+# restart minikube
+minikube-restart: minikube-clean | minikube
+
+# delete minikube vm
+minikube-clean-full: minikube-clean
+	@echo "Deleting minikube..."
+	@-minikube delete
+	@echo "Done!"
+
+# delete minikube vm then start up a new one
+minikube-reset: minikube-clean-full | minikube
 
 ##
 # Build + Deployment
@@ -230,29 +268,12 @@ wait-ready: deploy-dependencies deploy-database
 
 # apply all k8s configs in the k8s/ directory
 deploy: minikube | wait-ready
-	@echo "Deploying CRDs..."
-	@kubectl apply -f k8s/crds/
-	@echo "Deploying global configs..."
-	@kubectl apply -f k8s/
-	@echo "Deploying subsystem configs..."
-	@-for config_dir in src/**/k8s; do \
-		echo "Deploying $$config_dir..."; \
-		kubectl apply -f "$$config_dir"; \
-	done
-	@-for config_dir in src/**/k8s/**/; do \
-		echo "Deploying $$config_dir..."; \
-		kubectl apply -f "$$config_dir"; \
-	done
-	@echo "Deploying services to K8s..."
-	@-for config in $(K8S_CFGS); do \
-		echo "Deploying $$config..."; \
-		kubectl apply -f "$$config"; \
-	done
-	@echo "Done!"
+	$(MAKE) deploy-unchecked
 
-# apply all k8s configs in the k8s/ directory
+# apply all k8s configs in the k8s/ directory without checking
+# if infra is running first. use this target only if you know
+# infra is running.
 deploy-unchecked: minikube | build
-	@echo "WARNING: You should only use this target if you know all other services are running."
 	@echo "Deploying CRDs..."
 	@kubectl apply -f k8s/crds/
 	@echo "Deploying global configs..."
@@ -287,41 +308,54 @@ redeploy: deploy-clean | deploy
 redeploy-unchecked: deploy-clean | deploy-unchecked
 
 ##
-# Infra
+# Testing
 ##
 
-# start minikube if it isn't already running
-minikube: check-docker
-	@echo "Starting minikube with $(MINIKUBE_DRIVER) driver..."
-	@if minikube status | grep -q "host: Running"; then \
-		echo "Minikube already running."; \
-	else \
-		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 2; \
-		echo "Done!"; \
-	fi
+test: deploy
+	$(MAKE) test-unchecked
 
-# stop minikube
-minikube-clean:
-	@echo "Stopping minikube..."
-	@-minikube stop
-	@echo "Done!"
+test-unchecked: test-clean
+	@# wait reasonable amount of time for all pods to be in the running state,
+	@# otherwise fail as pods should deploy fine
+	@-echo "Waiting for all services to be ready..."
+	@-kubectl wait --for=condition=ready pods --all --all-namespaces --timeout=3m
+	@-echo "Done!"
 
-# restart minikube
-minikube-restart: minikube-clean | minikube
+	@# build test image
+	@-echo "Building test container..."
+	@( \
+		cd tests; \
+		cp -r ../src/shared .; \
+		uv lock; \
+		minikube image build -t testing-service .; \
+		rm -r shared/; \
+	)
+	@-echo "Done!"
+	
+	@# deploy testing namespace
+	@-echo "Deploying testing namespace..."
+	@-kubectl apply -f tests/testing.yaml
+	@-echo "Done!"
 
-# delete minikube vm
-minikube-clean-full: minikube-clean
-	@echo "Deleting minikube..."
-	@-minikube delete
-	@echo "Done!"
+	@# copy superuser credentials over to testing namespace
+	@-echo "Copying necessary credentials into testing namespace..."
+	@-./tests/copy-secret.sh rabbitmq-default-user rabbitmq testing
+	@-./tests/copy-secret.sh dev-db-superuser scylla-auth testing
+	@-echo "Done!"
+	
+	@# deploy test job
+	@-echo "Running tests..."
+	@-kubectl apply -f tests/test-job.yaml
 
-# delete minikube vm then start up a new one
-minikube-reset: minikube-clean-full | minikube
+	@# wait for test job
+	@-kubectl wait -n testing --for=condition=ready pods --all 
+	@-kubectl logs -n testing --follow job/testing-service
+	@-echo "Done!"
 
-# just deletes deployments for now
-clean: deploy-clean
+	@# exit with proper code
+	@echo "TODO"
 
-# deletes minikube (which should delete all deployments)
-clean-all: minikube-clean-full
+test-clean: check-docker
+	@-kubectl delete -f tests/testing.yaml
 
 .PHONY: valkey-clean valkey-setup print-k8s-cfgs scylladb-creds scylladb-clean-full scylladb-clean wait-ready redeploy-unchecked deploy-unchecked scylladb-setup cert-manager rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all

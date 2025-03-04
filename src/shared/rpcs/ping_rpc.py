@@ -13,7 +13,7 @@ class PingRPCClient(RPCClient):
     sends "Ping!".
     """
 
-    def call(self, *args, **kwargs):
+    def call(self):
         """
         Send "Ping!" to server.
         """

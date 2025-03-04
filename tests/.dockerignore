@@ -1,0 +1,6 @@
+**/.venv
+.venv
+*.sh
+**/*.yaml
+*.yaml
+**/__pycache__
