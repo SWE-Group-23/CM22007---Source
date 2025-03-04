@@ -109,18 +109,20 @@ and deploy all services in a local Kubernetes cluster.
 .
 ├── k8s
 │   └── crds
-└── src
-    ├── operators
-    │   └── scylla-auth-operator
-    ├── shared
-    │   └── rpcs
-    └── template
-        ├── example-service
-        ├── example-service-2
-        └── k8s
-            ├── rabbitmq
-            └── scylla
-
+├── src
+│   ├── operators
+│   │   └── scylla-auth-operator
+│   ├── shared
+│   │   └── rpcs
+│   └── template
+│       ├── example-service
+│       ├── example-service-2
+│       └── k8s
+│           ├── rabbitmq
+│           └── scylla
+└── tests
+    └── integration
+        └── template
 ```
 
 `src/` contains directories, which each (with the exception of `src/shared` and `src/operators`)
@@ -149,6 +151,9 @@ keyspace, and permissions.
 `k8s` contains "global" Kubernetes configurations for our infrastructure, you shouldn't need to touch
 any of this when developing your own subsystems. To be clear: do not touch any "global" Kubernetes config
 without asking [@peterc-s](https://github.com/peterc-s/) or [@wjgr2004](https://github.com/wjgr2004/)
+
+`tests` contains a testing library (`tests/lib.py`), integration (`tests/integration/`), and end-to-end
+tests (will go in `tests/e2e/` when we have them). 
 
 ## Creating Subsystems
 To create a subsystem, use the `create-subsystem.sh` script (`./create-subsystem.sh` for usage).
@@ -458,6 +463,93 @@ in the client service:
 You should document the expected json requests and responses in the server's `README.md`.
 
 The client and server code should be simple enough that the API is clear just from reading it.
+
+## Creating a Test
+To create an integration test (which should test that an RPC API works correctly) you will need
+to make a new testing file.
+
+The `tests` directory tree looks like this:
+```
+tests
+├── copy-secret.sh
+├── Dockerfile
+├── .dockerignore
+├── __init__.py
+├── integration
+│   ├── __init__.py
+│   └── template
+│       ├── __init__.py
+│       └── test_ping_rpc.py
+├── lib.py
+├── main.py
+├── print-logs.sh
+├── pyproject.toml
+├── .python-version
+├── README.md
+├── testing.yaml
+├── test-job.yaml
+├── test-result.sh
+└── uv.lock
+```
+
+You can ignore many of the files here, as they don't need touching to create new tests.
+If your subsystem was the `example` subsystem, you would create a new directory `tests/integration/example`.
+You should then create an empty file called `__init__.py` in that directory, this is so that
+the main testing script can properly discover your test cases.
+
+Then, you can create a test file, its name must start with `test` or else it won't be
+discovered. Here's an example test file:
+```Python
+"""
+Integration tests for the ping RPC.
+"""
+
+import os
+
+from lib import AutocleanTestCase
+from shared.rpcs.ping_rpc import PingRPCClient
+from shared.rpcs.test_rpc import TestRPCClient
+
+
+class PingRPCTest(AutocleanTestCase):
+    """
+    Integration tests for the ping RPC.
+    """
+
+    def test_send_ping(self):
+        """
+        Test expected "Ping!" for a
+        "Pong!" response.
+        """
+        client = PingRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "ping-rpc",
+        )
+
+        response = client.call()
+
+        self.assertEqual(response, b"Pong!")
+
+    def test_send_nothing(self):
+        """
+        Tests the case where the ping RPC isn't sent the
+        correct request.
+        """
+        client = TestRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "ping-rpc",
+        )
+
+        response = client.call("")
+
+        self.assertNotEqual(response, b"Pong")
+        self.assertEqual(response, b"That's not a ping!")
+```
+
+You should use our `AutocleanTestCase` rather than the default `unittest.TestCase`, this is
+so that the test environment gets properly cleaned between test cases.
 
 ## Using GNU Make
 You should not need to modify the `Makefile`, but you should know what some of the
