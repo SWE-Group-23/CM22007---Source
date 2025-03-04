@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "pika>=1.3.2",
+    "requests>=2.32.3",
     "scylla-driver>=3.28.2",
     "valkey>=6.1.0",
 ]
