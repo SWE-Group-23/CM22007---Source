@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: testing-service
+  namespace: testing
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: testing-service
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: testing-service
+          image: testing-service:latest
+          imagePullPolicy: IfNotPresent
+          tty: true
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /home/user1/.cache/uv
+              name: uv
+            - mountPath: /tmp
+              name: temp
+          env:
+            - name: RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-default-user
+                  key: username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-default-user
+                  key: password
+            - name: SCYLLADB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: dev-db-superuser
+                  key: username
+            - name: SCYLLADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dev-db-superuser
+                  key: password
+      volumes:
+        - emptyDir: {}
+          name: uv
+        - emptyDir: {}
+          name: temp

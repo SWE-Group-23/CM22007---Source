@@ -23,10 +23,12 @@ one service should run an RPC (though k8s replicas of the same service
 are fine).
 """
 
+import logging
 import uuid
 from abc import ABC, abstractmethod
 
 import pika
+
 import shared
 
 
@@ -63,7 +65,7 @@ class RPCClient(ABC):
         self.channel.basic_consume(
             queue=self.callback_queue,
             on_message_callback=self.on_response,
-            auto_ack=True
+            auto_ack=True,
         )
 
         self.response = None
@@ -95,15 +97,14 @@ class RPCClient(ABC):
             ),
             body=body,
         )
-        print(f"[to {self.rpc_prefix}-call-q, id {self.corr_id}] {body}")
+        logging.info("[to %s-call-q, id %s] %s",
+                     self.rpc_prefix, self.corr_id, body)
         while self.response is None:
-            self.connection.process_data_events(
-                time_limit=1
-            )
+            self.connection.process_data_events(time_limit=1)
         return self.response
 
     @abstractmethod
-    def call(self, *args, **kwargs):
+    def call(self):
         """
         Should be implemented in sub-classes which
         should call `_call` with the correct body
@@ -158,17 +159,17 @@ class RPCServer(ABC):
         """
         response = self.process(body)
         ch.basic_publish(
-            exchange='ping-rpc-resp-exc',
+            exchange="ping-rpc-resp-exc",
             routing_key=props.reply_to,
             properties=pika.BasicProperties(
-                correlation_id=props.correlation_id
-            ),
+                correlation_id=props.correlation_id),
             body=response,
         )
-        print(f"[to {props.reply_to}, id {props.correlation_id}] {response}")
+        logging.info("[to %s, id %s] %s", props.reply_to,
+                     props.correlation_id, response)
 
     @abstractmethod
-    def process(self, body, *args, **kwargs):
+    def process(self, body):
         """
         Should be implemented in sub-classes which
         should take the body, process the request,

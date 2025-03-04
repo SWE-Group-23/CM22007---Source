@@ -2,3 +2,4 @@
 **/*.egg-info
 .build_config.mk
 **/.DS_Store
+**/__pycache__
