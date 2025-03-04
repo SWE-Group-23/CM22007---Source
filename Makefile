@@ -287,6 +287,11 @@ deploy-unchecked: minikube | build
 		echo "Deploying $$config_dir..."; \
 		kubectl apply -f "$$config_dir"; \
 	done
+
+	@echo "Waiting for scylla auth operator..."
+	@kubectl -n scylla-auth rollout status --timeout=5m deployments.apps/scylla-auth-operator
+	@echo "Done!"
+	
 	@echo "Deploying services to K8s..."
 	@-for config in $(K8S_CFGS); do \
 		echo "Deploying $$config..."; \
