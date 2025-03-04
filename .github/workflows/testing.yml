@@ -1,0 +1,65 @@
+name: Testing
+
+on: [push, pull_request]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make python3-pip curl
+
+      - name: Install Docker
+        run: |
+          curl -fsSL https://get.docker.com | sudo sh
+          sudo usermod -aG docker $USER
+          sudo chmod 666 /var/run/docker.sock
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+      - name: Install minikube
+        run: |
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+      - name: Install Python tools
+        run: pip3 install uv
+
+      - name: Install krew
+        run: |
+          (
+            set -x; cd "$(mktemp -d)" &&
+            curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/krew-linux_amd64.tar.gz" &&
+            tar zxvf krew-linux_amd64.tar.gz &&
+            KREW=./krew-linux_amd64 &&
+            "$KREW" install krew
+          )
+          echo "$HOME/.krew/bin" >> $GITHUB_PATH
+
+      - name: Install krew plugins
+        run: |
+          kubectl krew install rabbitmq
+          kubectl krew install wait-job
+
+      - name: Verify installations
+        run: |
+          docker --version
+          docker buildx version
+          kubectl version --client
+          minikube version
+          uv --version
+
+      - name: Run tests
+        run: make test
