@@ -4,13 +4,12 @@ Integration tests for the ping RPC.
 
 import os
 
-from unittest import TestCase
-
+from lib import AutocleanTestCase
 from shared.rpcs.ping_rpc import PingRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
 
 
-class PingRPCTest(TestCase):
+class PingRPCTest(AutocleanTestCase):
     """
     Integration tests for the ping RPC.
     """

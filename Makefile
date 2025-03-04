@@ -340,13 +340,11 @@ test-unchecked: test-clean
 	
 	@-echo "Running tests..."
 	@-kubectl apply -f tests/test-job.yaml
-
-	@-kubectl wait -n testing --for=condition=ready pods --all 
-	@sleep 1
+	@-kubectl wait-job -n testing testing-service >/dev/null 2>&1
 	@-kubectl logs -n testing --follow job/testing-service
 	@-echo "Done!"
 	
-	@kubectl wait-job -n testing testing-service
+	@./tests/test-result.sh
 
 test-clean: check-docker
 	@-kubectl delete -f tests/testing.yaml

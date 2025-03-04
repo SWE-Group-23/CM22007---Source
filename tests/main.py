@@ -99,10 +99,7 @@ def main():
     integration_suite = loader.discover("integration/")
 
     runner = unittest.TextTestRunner()
-    result = runner.run(integration_suite)
-
-    if not result.wasSuccessful():
-        sys.exit(1)
+    _ = runner.run(integration_suite)
 
 
 if __name__ == "__main__":
