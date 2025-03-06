@@ -11,7 +11,7 @@ class TestRPCClient(RPCClient):
     Used for integration testing RPC calls.
     """
 
-    def call(self, body):  # pylint: disable=arguments-differ
+    def call(self, body, *args, **kwargs):  # pylint: disable=arguments-differ
         """
         Calls the specified RPC with the given
         body.

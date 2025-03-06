@@ -104,7 +104,7 @@ class RPCClient(ABC):
         return self.response
 
     @abstractmethod
-    def call(self):
+    def call(self, *args, **kwargs):
         """
         Should be implemented in sub-classes which
         should call `_call` with the correct body
