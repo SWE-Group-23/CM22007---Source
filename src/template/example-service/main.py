@@ -4,8 +4,6 @@ Example service.
 
 import os
 
-import cassandra.cqlengine.management as cm
-
 import shared
 from shared import rpcs
 from shared.models import template as models
@@ -23,9 +21,14 @@ class PingRPCServer(rpcs.RPCServer):
         Respond with "Pong!", unless message
         isn't "Ping!".
         """
+        print(f"[RECEIVED] {body.decode()}")
         models.Pings.create(message=body.decode())
+
         if body.decode() == "Ping!":
+            print("[RESPONDING] Pong!")
             return "Pong!"
+
+        print("[RESPONDING] That's not a ping!")
         return "That's not a ping!"
 
 
@@ -40,9 +43,6 @@ def main():
         password=os.environ["SCYLLADB_PASSWORD"],
     )
 
-    # sync db schema
-    cm.sync_table(models.Pings)
-
     rpc_server = PingRPCServer(
         os.environ["RABBITMQ_USERNAME"],
         os.environ["RABBITMQ_PASSWORD"],
@@ -54,5 +54,4 @@ def main():
 
 
 if __name__ == "__main__":
-    os.environ["CQLENG_ALLOW_SCHEMA_MANAGEMENT"] = "1"
     main()

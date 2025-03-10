@@ -290,6 +290,18 @@ deploy-unchecked: minikube | build
 
 	@echo "Waiting for scylla auth operator..."
 	@kubectl -n scylla-auth rollout status --timeout=5m deployments.apps/scylla-auth-operator
+	@sleep 1
+	@echo "Done!"
+
+	@echo "Deploying setup jobs..."
+	@-for setup_job in src/*/setup-job; do \
+		echo "Deploying $$setup_job..."; \
+		kubectl apply -f "$$setup_job"; \
+	done
+	@-for setup_job in src/*/setup-job; do \
+		echo "Waiting on $$setup_job..."; \
+		kubectl wait --all-namespaces --for=condition=complete -f "$$setup_job"; \
+	done
 	@echo "Done!"
 	
 	@echo "Deploying services to K8s..."
