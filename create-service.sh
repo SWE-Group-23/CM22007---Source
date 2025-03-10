@@ -68,6 +68,7 @@ cat >"$SUB_DIR/.dockerignore" <<EOL
 .venv/
 *.yaml
 README.md
+.python-version
 EOL
 
 echo "Creating empty README.md..."

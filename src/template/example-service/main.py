@@ -6,6 +6,7 @@ import os
 
 import shared
 from shared import rpcs
+from shared.models import template as models
 
 
 class PingRPCServer(rpcs.RPCServer):
@@ -20,8 +21,14 @@ class PingRPCServer(rpcs.RPCServer):
         Respond with "Pong!", unless message
         isn't "Ping!".
         """
+        print(f"[RECEIVED] {body.decode()}")
+        models.Pings.create(message=body.decode())
+
         if body.decode() == "Ping!":
+            print("[RESPONDING] Pong!")
             return "Pong!"
+
+        print("[RESPONDING] That's not a ping!")
         return "That's not a ping!"
 
 
@@ -30,20 +37,10 @@ def main():
     Example main.
     """
     # Set up database session
-    session = shared.setup_scylla(
+    _ = shared.setup_scylla(
         keyspace=os.environ["SCYLLADB_KEYSPACE"],
         user=os.environ["SCYLLADB_USERNAME"],
         password=os.environ["SCYLLADB_PASSWORD"],
-    )
-
-    # Create table for storing pings
-    session.execute(
-        """
-        CREATE TABLE IF NOT EXISTS pings (
-            id UUID PRIMARY KEY,
-            message text,
-        )
-        """
     )
 
     rpc_server = PingRPCServer(

@@ -117,9 +117,10 @@ and deploy all services in a local Kubernetes cluster.
 │   └── template
 │       ├── example-service
 │       ├── example-service-2
-│       └── k8s
-│           ├── rabbitmq
-│           └── scylla
+│       ├── k8s
+│       │   ├── rabbitmq
+│       │   └── scylla
+│       └── template-setup-job
 └── tests
     └── integration
         └── template
@@ -127,8 +128,8 @@ and deploy all services in a local Kubernetes cluster.
 
 `src/` contains directories, which each (with the exception of `src/shared` and `src/operators`)
 represent a subsystem. Within each subsystem directory, there are more directories which each
-(with the exception of `src/{subsystem}/k8s`) represent services.
-
+(with the exception of `src/{subsystem}/k8s` and `src/{subsystem}/{subsystem}-setup-job`)
+represent services.
 
 `src/shared` contains a Python library that all services can use, it provides abstractions
 over creating ScyllaDB sessions and RabbitMQ connections. `src/shared/rpcs` is the RPC submodule,
@@ -148,6 +149,9 @@ files.
 `src/{subsystem}/k8s/scylla` contains Kubernetes configuration for a subsystems ScyllaDB credentials,
 keyspace, and permissions.
 
+`src/{subsystem}/{subsystem}-setup-job` contains a job (service that is run once and should terminate)
+which sets up the database schema for the subsystem's keyspace.
+
 `k8s` contains "global" Kubernetes configurations for our infrastructure, you shouldn't need to touch
 any of this when developing your own subsystems. To be clear: do not touch any "global" Kubernetes config
 without asking [@peterc-s](https://github.com/peterc-s/) or [@wjgr2004](https://github.com/wjgr2004/)
@@ -161,14 +165,14 @@ For example, if we run `./create-subsystem.sh example` we get the following:
 ```
 src
 └── example
+    ├── example-setup-job
     └── k8s
-        ├── namespace.yaml
         └── scylla
-            └── example-scylla-perms.yaml
 ```
 
 As you can see, the script will create an example subsystem, it's ScyllaDB credentials
-K8s configuration, and it's K8s namespace (this file also configures a network policy
+K8s configuration, it's setup job, and it's K8s namespace (this file also configures a
+network policy
 
 ## Creating Services
 Once you've created a subsystem with `create-subsystem.sh`, you can create services
@@ -185,10 +189,17 @@ src
     │   ├── pyproject.toml
     │   ├── README.md
     │   └── uv.lock
+    ├── example-setup-job
+    │   ├── Dockerfile
+    │   ├── .dockerignore
+    │   ├── main.py
+    │   ├── pyproject.toml
+    │   └── setup-job.yaml
     └── k8s
         ├── namespace.yaml
         └── scylla
             └── example-scylla-perms.yaml
+```
 
 You can see it has generated files for the service within it's subsystem. This
 includes:
@@ -550,6 +561,119 @@ class PingRPCTest(AutocleanTestCase):
 
 You should use our `AutocleanTestCase` rather than the default `unittest.TestCase`, this is
 so that the test environment gets properly cleaned between test cases.
+
+## Using ScyllaDB
+To use ScyllaDB, you should first create a CQL model of your desired tables within
+your subsystem. Create a python file in `src/shared/models` named after your
+subsystem. In this file, you can define tables as such:
+
+```Python
+"""
+CQL models for pings and pongs tables.
+"""
+
+import uuid
+
+from cassandra.cqlengine.models import Model
+from cassandra.cqlengine import columns
+
+
+class Pings(Model):  # pylint: disable=too-few-public-methods
+    """
+    Pings table:
+        id - UUID - Primary Key
+        message - Text
+    """
+    id = columns.UUID(primary_key=True, default=uuid.uuid4)
+    message = columns.Text()
+
+
+class Pongs(Model):  # pylint: disable=too-few-public-methods
+    """
+    Pongs table:
+        id - UUID - Primary Key
+        message - Text
+    """
+    id = columns.UUID(primary_key=True, default=uuid.uuid4)
+    message = columns.Text()
+```
+
+To make sure that your tables exist, you MUST edit your subsystem
+setup job's `main.py` to sync tables defined by your models:
+
+```Python
+"""
+Sets up ScyllaDB for the subsystem.
+"""
+
+import os
+
+import cassandra.cqlengine.management as cm
+
+import shared
+from shared.models import template as models
+
+
+def main():
+    """
+    Connects to Scylla then ensures table schemas
+    are correct.
+    """
+    _ = shared.setup_scylla(
+        keyspace=os.environ["SCYLLADB_KEYSPACE"],
+        user=os.environ["SCYLLADB_USERNAME"],
+        password=os.environ["SCYLLADB_PASSWORD"],
+    )
+
+    print("Setting up pings table...")
+    cm.sync_table(models.Pings)
+    print("Setting up pongs table...")
+    cm.sync_table(models.Pongs)
+
+
+if __name__ == "__main__":
+    os.environ["CQLENG_ALLOW_SCHEMA_MANAGEMENT"] = "1"
+    main()
+```
+
+This job will run when you first deploy. It shouldn't redeploy normally,
+so to make it redeploy, delete the job (in `k9s`, use `<ctrl-d>` with the 
+job selected), and then redeploy.
+
+Now, in your code, you can interact with the database without having to write
+any CQL:
+
+```Python
+"""
+Example ScyllaDB usage.
+"""
+
+import os
+
+import shared
+from shared.models import template as models
+
+
+def main():
+    """
+    Example main.
+    """
+    # Set up database session
+    _ = shared.setup_scylla(
+        keyspace=os.environ["SCYLLADB_KEYSPACE"],
+        user=os.environ["SCYLLADB_USERNAME"],
+        password=os.environ["SCYLLADB_PASSWORD"],
+    )
+
+    models.Pings.create(message="Ping!")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Check out [the docs](https://docs.datastax.com/en/developer/python-driver/3.25/api/cassandra/cqlengine/models/index.html)
+for more information on how to use models.
 
 ## Using GNU Make
 You should not need to modify the `Makefile`, but you should know what some of the

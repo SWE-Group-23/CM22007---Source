@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <new-subsystem-name>";
+    echo "Usage: $0 <subsystem-name>";
     exit 1;
 fi
 
@@ -17,89 +17,15 @@ fi
 
 DIR="src/$1"
 
-if [[ -d "$DIR" && "$(ls -A $DIR)" ]]; then
-    echo "Subsystem directory found and not empty.";
+if [[ ! -d "$DIR" ]]; then
+    echo "Subsystem directory not found.";
     exit 4;
 fi
 
-echo "Creating new subsystem: $1...";
-echo "Creating directory $DIR..."
-mkdir -p "$DIR"
-
-echo "Creating k8s config directory $DIR/k8s..."
-mkdir -p "$DIR/k8s"
-
-echo "Creating k8s namespace config..."
-cat >"$DIR/k8s/namespace.yaml" <<EOL
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: $1
-  labels:
-    pod-security.kubernetes.io/enforce: restricted
-    pod-security.kubernetes.io/audit: restricted
-    pod-security.kubernetes.io/warn: restricted
-
----
-
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: deny-all-ingress
-  namespace: $1
-spec:
-  podSelector: {}
-  policyTypes:
-  - Ingress
-
----
-
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: deny-all-egress
-  namespace: $1
-spec:
-  podSelector: {}
-  policyTypes:
-  - Egress
-EOL
-
-echo "Creating subsystem ScyllaDB config..."
-mkdir -p "$DIR/k8s/scylla"
-cat >"$DIR/k8s/scylla/$1-scylla-perms.yaml" <<EOL
-apiVersion: custom.local/v1
-kind: ScyllaUser
-metadata:
-  name: $1-user
-  namespace: $1
-spec:
-  scyllaClusterReference: dev-db
-
----
-
-apiVersion: custom.local/v1
-kind: ScyllaKeyspace
-metadata:
-  name: $1-keyspace
-  namespace: $1
-spec:
-  scyllaClusterReference: dev-db
-  replicationFactor: 3
-
----
-
-apiVersion: custom.local/v1
-kind: ScyllaPermission
-metadata:
-  name: $1-permission
-  namespace: $1
-spec:
-  scyllaClusterReference: dev-db
-  user: $1-user
-  keyspace: $1-keyspace
-  permission: CREATE
-EOL
+if [[ -d "$DIR/$1-setup-job" && "$(ls -A $DIR/$1-setup-job)" ]]; then
+    echo "Setup job directory found but not empty.";
+    exit 4;
+fi
 
 echo "Creating subsystem setup-job..."
 mkdir -p "$DIR/$1-setup-job"
@@ -233,5 +159,3 @@ spec:
         - emptyDir: {}
           name: temp
 EOL
-
-echo "You should now create services using the create-service.sh script."
