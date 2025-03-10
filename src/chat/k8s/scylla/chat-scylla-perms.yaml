@@ -1,0 +1,31 @@
+apiVersion: custom.local/v1
+kind: ScyllaUser
+metadata:
+  name: chat-user
+  namespace: chat
+spec:
+  scyllaClusterReference: dev-db
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaKeyspace
+metadata:
+  name: chat-keyspace
+  namespace: chat
+spec:
+  scyllaClusterReference: dev-db
+  replicationFactor: 3
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaPermission
+metadata:
+  name: chat-permission
+  namespace: chat
+spec:
+  scyllaClusterReference: dev-db
+  user: chat-user
+  keyspace: chat-keyspace
+  permission: CREATE
