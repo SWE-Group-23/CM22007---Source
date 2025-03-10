@@ -332,6 +332,10 @@ test: deploy
 	$(MAKE) test-unchecked
 
 test-unchecked: test-clean
+	@-echo "Deleting jobs..."
+	@-kubectl delete --all-namespaces jobs.batch --all
+	@-echo "Done!"
+
 	@-echo "Waiting for all services to be ready..."
 	@-kubectl wait --for=condition=ready pods --all --all-namespaces --timeout=3m
 	@-echo "Done!"
