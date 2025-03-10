@@ -7,6 +7,7 @@ Provides:
     setup_scylla -- setup a ScyllaDB session with given args.
 """
 
+import cassandra.cqlengine.connection as cec
 import cassandra.cluster as cc
 import cassandra.auth as ca
 import cassandra as cs
@@ -85,5 +86,8 @@ def setup_scylla(
 
     session = cluster.connect()
     session.set_keyspace(keyspace)
+
+    # set cqlengine session
+    cec.set_session(session)
 
     return session
