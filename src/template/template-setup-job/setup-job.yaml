@@ -1,19 +1,19 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: setup-job
+  name: template-setup-job
   namespace: template
 spec:
   backoffLimit: 1
   template:
     metadata:
       labels:
-        app: setup-job
+        app: template-setup-job
     spec:
       restartPolicy: Never
       containers:
-        - name: setup-job
-          image: setup-job:latest
+        - name: template-setup-job
+          image: template-setup-job:latest
           imagePullPolicy: IfNotPresent
           tty: true
           securityContext:

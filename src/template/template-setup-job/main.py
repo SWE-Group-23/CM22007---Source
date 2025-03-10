@@ -21,9 +21,9 @@ def main():
         password=os.environ["SCYLLADB_PASSWORD"],
     )
 
-    print("Create pings table...")
+    print("Setting up pings table...")
     cm.sync_table(models.Pings)
-    print("Create pongs table...")
+    print("Setting up pongs table...")
     cm.sync_table(models.Pongs)
 
 

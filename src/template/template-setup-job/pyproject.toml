@@ -1,5 +1,5 @@
 [project]
-name = "setup-job"
+name = "template-setup-job"
 version = "0.1.0"
 description = "Sets up ScyllaDB schema for the subsystem."
 readme = "README.md"
@@ -7,4 +7,3 @@ requires-python = ">=3.13"
 dependencies = [
     "scylla-driver>=3.28.2",
 ]
-
