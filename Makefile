@@ -294,11 +294,11 @@ deploy-unchecked: minikube | build
 	@echo "Done!"
 
 	@echo "Deploying setup jobs..."
-	@-for setup_job in src/*/setup-job; do \
+	@-for setup_job in src/*/*-setup-job; do \
 		echo "Deploying $$setup_job..."; \
 		kubectl apply -f "$$setup_job"; \
 	done
-	@-for setup_job in src/*/setup-job; do \
+	@-for setup_job in src/*/*-setup-job; do \
 		echo "Waiting on $$setup_job..."; \
 		kubectl wait --all-namespaces --for=condition=complete -f "$$setup_job"; \
 	done
