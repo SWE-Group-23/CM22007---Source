@@ -22,6 +22,10 @@ def main():
     )
     
     # sync tables here
+    print("Setting up chats table...")
+    cm.sync_table(models.Chats)
+    print("Setting up messages table...")
+    cm.sync_table(models.Messages)
 
 
 if __name__ == "__main__":
