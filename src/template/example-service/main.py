@@ -42,7 +42,7 @@ def main():
         host="valkey-example",
         port="6379",
         db=0,
-        username="default",
+        username=os.environ["VALKEY_USERNAME"],
         password=os.environ["VALKEY_PASSWORD"],
     )
     r.set("test", "success")

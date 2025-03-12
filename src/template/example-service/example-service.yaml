@@ -59,10 +59,15 @@ spec:
                 configMapKeyRef:
                   name: template-keyspace
                   key: keyspace
+            - name: VALKEY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: template-user-valkey-creds
+                  key: username
             - name: VALKEY_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: valkey-example
+                  name: template-user-valkey-creds
                   key: password
       volumes:
         - emptyDir: {}

@@ -27,3 +27,15 @@ spec:
         requests:
           storage: 1Gi
       storageClassName: standard
+
+---
+
+apiVersion: custom.local/v1
+kind: ValkeyUser
+metadata:
+  name: template-user
+  namespace: template
+spec:
+  valkeyClusterReference: valkey-example
+  commands: "+get +set"
+
