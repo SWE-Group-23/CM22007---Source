@@ -55,16 +55,6 @@ def main():
     r.set("test", "success")
     print(f"response: {r.get('test')}")
 
-    # Create table for storing pings
-    session.execute(
-        """
-        CREATE TABLE IF NOT EXISTS pings (
-            id UUID PRIMARY KEY,
-            message text,
-        )
-        """
-    )
-
     rpc_server = PingRPCServer(
         os.environ["RABBITMQ_USERNAME"],
         os.environ["RABBITMQ_PASSWORD"],
