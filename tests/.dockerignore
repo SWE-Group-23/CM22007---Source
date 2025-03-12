@@ -1,0 +1,7 @@
+**/.venv
+.venv
+*.sh
+**/*.yaml
+*.yaml
+**/__pycache__
+.python-version
