@@ -1,16 +1,23 @@
+"""
+Defines a Valkey credentials operator for creating
+new users for each service with permissions
+"""
+
 import secrets
-from base64 import b32hexencode, b64decode
+from base64 import b64decode
 import threading
 import sys
-import os
 import time
 import logging
-from functools import partial
 
 import valkey
 from kubernetes import client, config, watch
 
 class ValkeyCredsOperator:
+    """
+    Valkey credentials operator for creating
+    new users for each service with permissions.
+    """
 
     def __init__(self):
         config.load_incluster_config()
@@ -44,7 +51,7 @@ class ValkeyCredsOperator:
         logging.info("Using data: %s", str(data))
 
         password = secrets.token_hex(32)
-        
+
         su_password = b64decode(
             self.api_instance.read_namespaced_secret(
                 data["valkeyClusterReference"], namespace).data["password"]
@@ -93,7 +100,7 @@ class ValkeyCredsOperator:
         logging.info("Using data: %s", str(data))
 
         logging.info("Deleting secret for user %s.", name)
-        
+
 
         su_password = b64decode(
             self.api_instance.read_namespaced_secret(
