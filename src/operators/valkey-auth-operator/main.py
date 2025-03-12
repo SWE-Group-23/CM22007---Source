@@ -13,6 +13,7 @@ import logging
 import valkey
 from kubernetes import client, config, watch
 
+
 class ValkeyCredsOperator:
     """
     Valkey credentials operator for creating
@@ -54,11 +55,13 @@ class ValkeyCredsOperator:
 
         su_password = b64decode(
             self.api_instance.read_namespaced_secret(
-                data["valkeyClusterReference"], namespace).data["password"]
-            ).decode()
+                data["valkeyClusterReference"], namespace
+            ).data["password"]
+        ).decode()
 
         r = valkey.Valkey(
-            host=f"{data['valkeyClusterReference']}.{namespace}.svc.cluster.local",
+            host=f"{data['valkeyClusterReference']}.{
+                namespace}.svc.cluster.local",
             port="6379",
             db=0,
             username="default",
@@ -66,11 +69,11 @@ class ValkeyCredsOperator:
         )
 
         r.acl_setuser(
-                username=name,
-                enabled=True,
-                passwords="+" + password,
-                keys="*",
-                commands=data["commands"].split(" ")
+            username=name,
+            enabled=True,
+            passwords="+" + password,
+            keys="*",
+            commands=data["commands"].split(" "),
         )
 
         logging.info("Creating secret for user: %s.", name)
@@ -78,6 +81,10 @@ class ValkeyCredsOperator:
         body.string_data = {"username": name, "password": password}
         metadata = client.V1ObjectMeta()
         metadata.name = f"{name}-valkey-creds"
+        metadata.labels = {
+            "app.kubernetes.io/component": "valkey",
+            "app.kubernetes.io/instance": data["valkeyClusterReference"],
+        }
         body.metadata = metadata
 
         try:
@@ -101,14 +108,15 @@ class ValkeyCredsOperator:
 
         logging.info("Deleting secret for user %s.", name)
 
-
         su_password = b64decode(
             self.api_instance.read_namespaced_secret(
-                data["valkeyClusterReference"], namespace).data["password"]
-            ).decode()
+                data["valkeyClusterReference"], namespace
+            ).data["password"]
+        ).decode()
 
         r = valkey.Valkey(
-            host=f"{data['valkeyClusterNamespace']}.{namespace}.svc.cluster.local",
+            host=f"{data['valkeyClusterNamespace']}.{
+                namespace}.svc.cluster.local",
             port="6379",
             db=0,
             username="default",
@@ -137,17 +145,16 @@ class ValkeyCredsOperator:
         """
         while True:
             stream = watch.Watch().stream(
-
                 self.objects_api_instance.list_cluster_custom_object,
                 self.config["group"],
                 self.config["version"],
                 "valkeyusers",
             )
             for event in stream:
-                custom_resource = event['object']
-                name = custom_resource['metadata']['name']
-                namespace = custom_resource['metadata']['namespace']
-                data = custom_resource.get('spec', {})
+                custom_resource = event["object"]
+                name = custom_resource["metadata"]["name"]
+                namespace = custom_resource["metadata"]["namespace"]
+                data = custom_resource.get("spec", {})
 
                 match event["type"]:
                     case "ADDED":

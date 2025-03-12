@@ -109,6 +109,8 @@ kind: Deployment
 metadata:
   name: valkey-auth-operator
   namespace: valkey-auth
+  labels:
+    component: valkey
 spec:
   replicas: 1
   selector:
@@ -117,6 +119,7 @@ spec:
   template:
     metadata:
       labels:
+        app.kubernetes.io/component: valkey
         app: valkey-auth-operator
     spec:
       serviceAccountName: valkey-operator-sa
