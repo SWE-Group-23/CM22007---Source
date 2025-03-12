@@ -58,7 +58,7 @@ class ValkeyCredsOperator:
             ).decode()
 
         r = valkey.Valkey(
-            host=f"valkey-example.{namespace}.svc.cluster.local",
+            host=f"{data['valkeyClusterReference']}.{namespace}.svc.cluster.local",
             port="6379",
             db=0,
             username="default",
@@ -108,7 +108,7 @@ class ValkeyCredsOperator:
             ).decode()
 
         r = valkey.Valkey(
-            host=f"valkey-example.{namespace}.svc.cluster.local",
+            host=f"{data['valkeyClusterNamespace']}.{namespace}.svc.cluster.local",
             port="6379",
             db=0,
             username="default",
