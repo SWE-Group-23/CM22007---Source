@@ -1,7 +1,7 @@
 [project]
-name = "example-service"
+name = "valkey-auth-operator"
 version = "0.1.0"
-description = "Add your description here"
+description = "Creates and manages users for Valkey clusters."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
