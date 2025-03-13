@@ -171,7 +171,7 @@ class RPCServer(ABC):
             )
 
         ch.basic_publish(
-            exchange="ping-rpc-resp-exc",
+            exchange=f"{self.rpc_prefix}-resp-exc",
             routing_key=props.reply_to,
             properties=pika.BasicProperties(
                 correlation_id=props.correlation_id),
