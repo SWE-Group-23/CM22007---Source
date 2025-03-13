@@ -7,13 +7,19 @@ from cassandra.cqlengine.models import Model
 from cassandra.cqlengine.usertype import UserType
 
 
-class Suspension(UserType):
+class Suspension(UserType):  # pylint: disable=too-few-public-methods
+    """
+    UserDefinedType for a suspension instance.
+    """
     start = columns.DateTime()
     end = columns.DateTime()
     suspended_by = columns.Text()
 
 
-class Accounts(Model):
+class Accounts(Model):  # pylint: disable=too-few-public-methods
+    """
+    The accounts table schema.
+    """
     username = columns.Text(primary_key=True)
     password_hash = columns.Text()
     password_salt = columns.Text()

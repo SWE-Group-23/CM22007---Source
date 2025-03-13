@@ -39,8 +39,7 @@ class RegisterRPCServer(rpcs.RPCServer):
         # can't begin with special characters -_.
         # must only consist of alphanumeric and -_.
         # can't end with special characters -_.
-        pattern = re.compile(
-                r"^(?![-_.]).[0-9A-Za-z-_.]+$.*(?<![-_.])$")
+        pattern = re.compile(r"^(?![-_.]).[0-9A-Za-z-_.]+$.*(?<![-_.])$")
 
         if not pattern.match(username):
             return False
@@ -67,7 +66,8 @@ class RegisterRPCServer(rpcs.RPCServer):
         except query.DoesNotExist:
             # set authUser (should be a session token)
             # register stage in valkey
-            stage = {"stage": "unique", "username": req["data"]["username"]}
+            stage = {"stage": "username-valid",
+                     "username": req["data"]["username"]}
             self.vk.setex(
                 f"register:{req['authUser']}", 60 * 30, json.dumps(stage))
 

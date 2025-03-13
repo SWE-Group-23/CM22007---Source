@@ -15,21 +15,6 @@ from shared.rpcs.register_rpc import RegisterRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
 from shared.models import accounts as models
 
-"""
-class Accounts(Model):
-    username = columns.Text(primary_key=True)
-    password_hash = columns.Text()
-    password_salt = columns.Text()
-    prev_password_hash = columns.Text()
-    prev_password_salt = columns.Text()
-    otp_secret = columns.Text()
-    backup_code_hash = columns.Text()
-    backup_code_salt = columns.Text()
-    created_at = columns.DateTime()
-    last_login = columns.DateTime()
-    suspension_history = columns.List(Suspension)
-"""
-
 
 class RegisterRPCTest(AutocleanTestCase):
     """
@@ -37,8 +22,8 @@ class RegisterRPCTest(AutocleanTestCase):
     in the accounts subsystem.
     """
 
-    def __init__(self, methodName, *args, **kwargs):
-        super().__init__(methodName, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.vk = valkey.Valkey(
             host="accounts-valkey.accounts.svc.cluster.local",
             port="6379",
@@ -200,10 +185,10 @@ class RegisterRPCTest(AutocleanTestCase):
         vk_stage = self.vk.get(f"register:{auth_user}")
         self.assertIsNone(vk_stage)
 
-    def test_check_unique_user(self):
+    def test_check_valid_user(self):
         """
         Tests if the unique user step works
-        correctly on bad input.
+        correctly on good input.
         """
 
         client = RegisterRPCClient(
@@ -225,7 +210,37 @@ class RegisterRPCTest(AutocleanTestCase):
         self.assertEqual(resp["data"]["valid"], True)
 
         stage = json.dumps({
-            "stage": "unique",
+            "stage": "username-valid",
+            "username": "NotExists",
+        })
+        vk_stage = self.vk.get(f"register:{auth_user}")
+        self.assertEqual(stage, vk_stage.decode())
+
+    def test_check_valid_username_call(self):
+        """
+        Tests the helper RPC call
+        for checking for valid username.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc"
+        )
+
+        auth_user = str(uuid.uuid4())
+        resp_raw = client.check_valid_username_call(
+            auth_user,
+            "testing",
+            "NotExists",
+        )
+        resp = json.loads(resp_raw)
+
+        self.assertEqual(resp["status"], 200)
+        self.assertEqual(resp["data"]["valid"], True)
+
+        stage = json.dumps({
+            "stage": "username-valid",
             "username": "NotExists",
         })
         vk_stage = self.vk.get(f"register:{auth_user}")
