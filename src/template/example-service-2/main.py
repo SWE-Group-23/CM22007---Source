@@ -3,6 +3,8 @@ Example service.
 """
 
 import os
+import logging
+import json
 import time
 
 import shared
@@ -29,12 +31,21 @@ def main():
     )
 
     while True:
-        print("[CALLING]")
-        response = ping_rpc.call()
-        print(f"[RECEIVED] {response}")
-        models.Pongs.create(message=response.decode())
+        logging.info("[CALLING]")
+        resp_raw = ping_rpc.call("example-service-2")
+
+        logging.info("[RECEIVED] %s", resp_raw)
+        try:
+            resp = json.loads(resp_raw)
+            models.Pongs.create(message=resp["data"]["message"])
+        except json.JSONDecodeError:
+            logging.warning("[BAD RESPONSE] Couldn't decode JSON.")
+        except KeyError:
+            logging.warning("[BAD RESPONSE] Response not formatted correctly.")
+
         time.sleep(1)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()

@@ -345,7 +345,7 @@ test-unchecked: test-clean
 	@-echo "Done!"
 
 	@-echo "Waiting for all services to be ready..."
-	@-kubectl wait --for=condition=ready pods --all --all-namespaces --timeout=3m
+	@kubectl wait --for=condition=ready pods --all --all-namespaces --timeout=3m
 	@-echo "Done!"
 
 	@-echo "Building test container..."
