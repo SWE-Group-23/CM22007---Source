@@ -24,4 +24,4 @@ class Accounts(Model):
     backup_code_salt = columns.Text()
     created_at = columns.DateTime()
     last_login = columns.DateTime()
-    suspension_history = columns.List(Suspension)
+    suspension_history = columns.List(columns.UserDefinedType(Suspension))
