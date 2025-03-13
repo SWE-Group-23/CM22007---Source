@@ -25,7 +25,7 @@ class PingRPCServer(rpcs.RPCServer):
         Respond with "Pong!", unless message
         isn't "Ping!".
         """
-        logging.info(f"[RECEIVED] {body.decode()}")
+        logging.info("[RECEIVED] %s", body.decode())
 
         # check json parses
         try:

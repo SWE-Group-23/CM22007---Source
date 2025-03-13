@@ -34,7 +34,7 @@ def main():
         logging.info("[CALLING]")
         resp_raw = ping_rpc.call("example-service-2")
 
-        logging.info(f"[RECEIVED] {resp_raw}")
+        logging.info("[RECEIVED] %s", resp_raw)
         try:
             resp = json.loads(resp_raw)
             models.Pongs.create(message=resp["data"]["message"])
