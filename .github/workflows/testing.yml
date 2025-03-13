@@ -7,7 +7,10 @@ permissions:
   contents: read
 
 jobs:
+  pylint:
+    uses: ./.github/workflows/pylint.yml
   test:
+    needs: [pylint]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -17,6 +20,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y make python3-pip curl
+
+      - name: Install Python tools
+        run: pip3 install uv
 
       - name: Install Docker
         run: |
@@ -33,9 +39,6 @@ jobs:
         run: |
           curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
           sudo install minikube-linux-amd64 /usr/local/bin/minikube
-
-      - name: Install Python tools
-        run: pip3 install uv
 
       - name: Install krew
         run: |
