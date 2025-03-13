@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: delete-account
+  namespace: accounts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: delete-account
+  template:
+    metadata:
+      labels:
+        app: delete-account
+    spec:
+      containers:
+        - name: delete-account
+          image: delete-account:latest
+          imagePullPolicy: IfNotPresent
+          tty: true
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /home/user1/.cache/uv
+              name: uv
+            - mountPath: /tmp
+              name: temp
+          env:
+            - name: RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: delete-account-rabbitmq-user-user-credentials
+                  key: username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: delete-account-rabbitmq-user-user-credentials
+                  key: password
+            - name: SCYLLADB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-user-scylla-creds
+                  key: username
+            - name: SCYLLADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-user-scylla-creds
+                  key: password
+            - name: SCYLLADB_KEYSPACE
+              valueFrom:
+                configMapKeyRef:
+                  name: accounts-keyspace
+                  key: keyspace
+      volumes:
+        - emptyDir: {}
+          name: uv
+        - emptyDir: {}
+          name: temp
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: User
+metadata:
+  name: delete-account-rabbitmq-user
+  namespace: accounts
+spec:
+  tags:
+  - policymaker
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Permission
+metadata:
+  name: delete-account-rabbitmq-permission
+  namespace: accounts
+spec:
+  vhost: "/"
+  userReference:
+    name: "delete-account-rabbitmq-user"
+  permissions:
+    write: ""
+    configure: ""
+    read: ""
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq

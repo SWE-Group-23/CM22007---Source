@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: accounts-setup-job
+  namespace: accounts
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: accounts-setup-job
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: accounts-setup-job
+          image: accounts-setup-job:latest
+          imagePullPolicy: IfNotPresent
+          tty: true
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /home/user1/.cache/uv
+              name: uv
+            - mountPath: /tmp
+              name: temp
+          env:
+            - name: SCYLLADB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-user-scylla-creds
+                  key: username
+            - name: SCYLLADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-user-scylla-creds
+                  key: password
+            - name: SCYLLADB_KEYSPACE
+              valueFrom:
+                configMapKeyRef:
+                  name: accounts-keyspace
+                  key: keyspace
+      volumes:
+        - emptyDir: {}
+          name: uv
+        - emptyDir: {}
+          name: temp
