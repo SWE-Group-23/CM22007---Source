@@ -52,6 +52,16 @@ spec:
                 secretKeyRef:
                   name: dev-db-superuser
                   key: password
+            - name: ACCOUNTS_VALKEY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-user-valkey-creds
+                  key: username
+            - name: ACCOUNTS_VALKEY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-user-valkey-creds
+                  key: password
       volumes:
         - emptyDir: {}
           name: uv

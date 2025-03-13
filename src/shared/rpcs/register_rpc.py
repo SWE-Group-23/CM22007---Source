@@ -14,6 +14,7 @@ class RegisterRPCClient(rpcs.RPCClient):
 
     def call(
         self,
+        auth_user: str,
         srv_from: str,
         step: str,
         step_data: dict,
@@ -35,7 +36,7 @@ class RegisterRPCClient(rpcs.RPCClient):
         """
         step_data["step"] = step
         req = rpcs.request(
-            "",
+            auth_user,
             api_version,
             srv_from,
             step_data,

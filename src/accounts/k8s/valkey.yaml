@@ -38,5 +38,5 @@ metadata:
   namespace: accounts
 spec:
   valkeyClusterReference: accounts-valkey
-  commands: "+get +set"
+  commands: "+get +set +setex"
 
