@@ -4,6 +4,8 @@ Example service.
 
 import os
 
+import valkey
+
 import shared
 from shared import rpcs
 from shared.models import template as models
@@ -42,6 +44,16 @@ def main():
         user=os.environ["SCYLLADB_USERNAME"],
         password=os.environ["SCYLLADB_PASSWORD"],
     )
+
+    r = valkey.Valkey(
+        host="valkey-example",
+        port="6379",
+        db=0,
+        username=os.environ["VALKEY_USERNAME"],
+        password=os.environ["VALKEY_PASSWORD"],
+    )
+    r.set("test", "success")
+    print(f"response: {r.get('test')}")
 
     rpc_server = PingRPCServer(
         os.environ["RABBITMQ_USERNAME"],

@@ -93,7 +93,7 @@ minikube: check-docker
 	@if minikube status | grep -q "host: Running"; then \
 		echo "Minikube already running."; \
 	else \
-		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 2; \
+		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 3 --memory 3g; \
 		echo "Done!"; \
 	fi
 
@@ -223,8 +223,13 @@ valkey-setup: minikube
 
 # deletes valkey deployment
 valkey-clean:
-	@echo "Deleting Valkey operator deployment..."
-	@kubectl delete --namespace=valkey-operator-system --all deployment
+	@echo "Deleting Valkey auth namespace..."
+	@-kubectl delete namespace valkey-auth
+	@echo "Deleting Valkey objects..."
+	@-kubectl delete --all-namespaces all -l app.kubernetes.io/component=valkey
+	@-kubectl delete --all-namespaces secrets -l app.kubernetes.io/component=valkey
+	@echo "Deleting Valkey operator namespace..."
+	@-kubectl delete namespace valkey-operator-system
 	@echo "Done!"
 
 # deploys dependencies in parallel
@@ -288,9 +293,12 @@ deploy-unchecked: minikube | build
 		kubectl apply -f "$$config_dir"; \
 	done
 
-	@echo "Waiting for scylla auth operator..."
+	@echo "Waiting for Scylla auth operator..."
 	@kubectl -n scylla-auth rollout status --timeout=5m deployments.apps/scylla-auth-operator
-	@sleep 1
+	@kubectl wait -n scylla-auth secret dev-db-superuser --for=create
+	@echo "Waiting for Valkey auth operator..."
+	@kubectl -n valkey-auth rollout status --timeout=5m deployments.apps/valkey-auth-operator
+	@sleep 3
 	@echo "Done!"
 
 	@echo "Deploying setup jobs..."
