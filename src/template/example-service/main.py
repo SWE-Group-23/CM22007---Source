@@ -4,6 +4,7 @@ Example service.
 
 import json
 import os
+import logging
 
 import valkey
 
@@ -24,7 +25,7 @@ class PingRPCServer(rpcs.RPCServer):
         Respond with "Pong!", unless message
         isn't "Ping!".
         """
-        print(f"[RECEIVED] {body.decode()}")
+        logging.info(f"[RECEIVED] {body.decode()}")
 
         # check json parses
         try:
@@ -95,9 +96,10 @@ def main():
         "ping-rpc",
     )
 
-    print("Consuming...")
+    logging.info("Consuming...")
     rpc_server.channel.start_consuming()
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()

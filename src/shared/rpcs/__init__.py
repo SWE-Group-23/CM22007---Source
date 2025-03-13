@@ -178,7 +178,7 @@ class RPCServer(ABC):
             body=resp,
         )
         logging.info("[to %s, id %s] %s", props.reply_to,
-                     props.correlation_id, response)
+                     props.correlation_id, resp)
 
     @abstractmethod
     def process(self, body):
