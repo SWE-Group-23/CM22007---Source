@@ -2,7 +2,9 @@
 Example service.
 """
 
+import json
 import os
+import logging
 
 import valkey
 
@@ -23,15 +25,48 @@ class PingRPCServer(rpcs.RPCServer):
         Respond with "Pong!", unless message
         isn't "Ping!".
         """
-        print(f"[RECEIVED] {body.decode()}")
-        models.Pings.create(message=body.decode())
+        logging.info("[RECEIVED] %s", body.decode())
 
-        if body.decode() == "Ping!":
-            print("[RESPONDING] Pong!")
-            return "Pong!"
+        # check json parses
+        try:
+            req = json.loads(body)
+        except json.JSONDecodeError:
+            return rpcs.response(
+                400,
+                {"reason": "Bad JSON."},
+            )
 
-        print("[RESPONDING] That's not a ping!")
-        return "That's not a ping!"
+        # parse message
+        try:
+            # version checking
+            if req["version"] != "1.0.0":
+                return rpcs.response(
+                    400,
+                    {"reason": "Bad version."}
+                )
+
+            message = req["data"]["message"]
+            models.Pings.create(
+                message=message,
+            )
+
+            if message == "Ping!":
+                return rpcs.response(
+                    200,
+                    {"message": "Pong!"}
+                )
+
+            return rpcs.response(
+                400,
+                {"message": "That's not a ping!"}
+            )
+
+        # if any keys don't exist then request is malformed
+        except KeyError:
+            return rpcs.response(
+                400,
+                {"reason": "Malformed request."}
+            )
 
 
 def main():
@@ -61,9 +96,10 @@ def main():
         "ping-rpc",
     )
 
-    print("Consuming...")
+    logging.info("Consuming...")
     rpc_server.channel.start_consuming()
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()
