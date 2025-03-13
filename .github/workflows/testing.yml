@@ -18,6 +18,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y make python3-pip curl
 
+      - name: Install Python tools
+        run: |
+          pip3 install uv
+          uv tool install pylint
+
+      - name: Check Pylint
+        run: make pylint
+
       - name: Install Docker
         run: |
           curl -fsSL https://get.docker.com | sudo sh
@@ -33,9 +41,6 @@ jobs:
         run: |
           curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
           sudo install minikube-linux-amd64 /usr/local/bin/minikube
-
-      - name: Install Python tools
-        run: pip3 install uv
 
       - name: Install krew
         run: |
