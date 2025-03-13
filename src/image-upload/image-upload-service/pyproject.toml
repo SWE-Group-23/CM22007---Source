@@ -1,7 +1,7 @@
 [project]
-name = "image-upload-servic"
+name = "image-upload-service"
 version = "0.1.0"
-description = "image upload service"
+description = "image-upload-service"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
