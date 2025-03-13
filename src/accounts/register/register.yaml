@@ -59,6 +59,16 @@ spec:
                 configMapKeyRef:
                   name: accounts-keyspace
                   key: keyspace
+            - name: VALKEY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-user-valkey-creds
+                  key: username
+            - name: VALKEY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-user-valkey-creds
+                  key: password
       volumes:
         - emptyDir: {}
           name: uv

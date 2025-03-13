@@ -1,0 +1,42 @@
+apiVersion: hyperspike.io/v1
+kind: Valkey
+metadata:
+  labels:
+    app.kubernetes.io/name: accounts-valkey
+    app.kubernetes.io/component: valkey
+  name: accounts-valkey
+  namespace: accounts
+spec:
+  nodes: 1
+  replicas: 0
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  volumePermissions: true
+  exporterImage: ghcr.io/hyperspike/valkey-sidecar:latest
+  image: valkey/valkey:latest
+  prometheus: false
+  storage:
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+
+---
+
+apiVersion: custom.local/v1
+kind: ValkeyUser
+metadata:
+  name: accounts-user
+  namespace: accounts
+spec:
+  valkeyClusterReference: accounts-valkey
+  commands: "+get +set"
+

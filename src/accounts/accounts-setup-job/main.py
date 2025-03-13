@@ -7,7 +7,7 @@ import os
 import cassandra.cqlengine.management as cm
 
 import shared
-from shared.models import template as models
+from shared.models import accounts as models
 
 
 def main():
@@ -20,8 +20,9 @@ def main():
         user=os.environ["SCYLLADB_USERNAME"],
         password=os.environ["SCYLLADB_PASSWORD"],
     )
-    
-    # sync tables here
+
+    print("Syncing Accounts schema...")
+    cm.sync_table(models.Accounts)
 
 
 if __name__ == "__main__":
