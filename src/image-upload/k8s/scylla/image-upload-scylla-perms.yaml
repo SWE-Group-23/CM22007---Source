@@ -1,0 +1,31 @@
+apiVersion: custom.local/v1
+kind: ScyllaUser
+metadata:
+  name: image-upload-user
+  namespace: image-upload
+spec:
+  scyllaClusterReference: dev-db
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaKeyspace
+metadata:
+  name: image-upload-keyspace
+  namespace: image-upload
+spec:
+  scyllaClusterReference: dev-db
+  replicationFactor: 3
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaPermission
+metadata:
+  name: image-upload-permission
+  namespace: image-upload
+spec:
+  scyllaClusterReference: dev-db
+  user: image-upload-user
+  keyspace: image-upload-keyspace
+  permission: CREATE

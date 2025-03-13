@@ -1,0 +1,10 @@
+[project]
+name = "image-upload-servic"
+version = "0.1.0"
+description = "image upload service"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pika>=1.3.2",
+    "scylla-driver>=3.28.2",
+]
