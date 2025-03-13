@@ -8,6 +8,7 @@ Provides:
 """
 
 import cassandra.cqlengine.connection as cec
+import cassandra.query as cq
 import cassandra.cluster as cc
 import cassandra.auth as ca
 import cassandra as cs
@@ -86,6 +87,7 @@ def setup_scylla(
 
     session = cluster.connect()
     session.set_keyspace(keyspace)
+    session.row_factory = cq.dict_factory
 
     # set cqlengine session
     cec.set_session(session)
