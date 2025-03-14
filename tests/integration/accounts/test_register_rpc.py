@@ -5,9 +5,11 @@ Integration tests for the register RPC.
 import os
 import json
 import uuid
+import time
 
 import valkey
 import argon2
+import pyotp
 
 from lib import AutocleanTestCase
 import shared
@@ -39,6 +41,184 @@ class RegisterRPCTest(AutocleanTestCase):
         )
         self.ph = argon2.PasswordHasher()
 
+    def test_setup_otp(self):
+        """
+        Tests setting up an OTP.
+        """
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        # get token to correct stage
+        # valid username
+        auth_user = str(uuid.uuid4())
+        _ = client.check_valid_username_call(
+            auth_user,
+            "testing",
+            "NotExists",
+        )
+
+        # set password
+        _ = client.set_password_call(
+            auth_user,
+            "testing",
+            "this-is-a-dummy-value"
+        )
+
+        # setup OTP
+        resp = client.setup_otp_call(
+            auth_user,
+            "testing",
+        )
+
+        # would throw an error if the uri was invalid
+        totp = pyotp.parse_uri(resp["data"]["prov_uri"])
+
+        stage_raw = self.vk.get(f"register:{auth_user}")
+        stage = json.loads(stage_raw)
+
+        self.assertEqual(stage["stage"], "setting-up-otp")
+        self.assertEqual(stage["username"], "NotExists")
+        # check hash still there (would throw KeyError if not)
+        _ = stage["hash"]
+        self.assertEqual(stage["otp_sec"], totp.secret)
+
+    def test_setup_otp_wrong_stage(self):
+        """
+        Tests setting up OTP when at wrong stage.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        # get token to wrong stage
+        # valid username
+        auth_user = str(uuid.uuid4())
+        _ = client.check_valid_username_call(
+            auth_user,
+            "testing",
+            "NotExists",
+        )
+
+        # setup OTP
+        resp = client.setup_otp_call(
+            auth_user,
+            "testing",
+        )
+
+        self.assertEqual(resp["status"], 403)
+        self.assertEqual(resp["data"]["reason"], "Token not at correct step.")
+
+        stage_raw = self.vk.get(f"register:{auth_user}")
+        stage = json.loads(stage_raw)
+
+        self.assertEqual(stage["stage"], "username-valid")
+        self.assertEqual(stage["username"], "NotExists")
+
+    def test_setup_otp_no_stage(self):
+        """
+        Tests setting up an OTP where the token
+        does not have a Valkey stage.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        auth_user = str(uuid.uuid4())
+        resp = client.setup_otp_call(
+            auth_user,
+            "testing",
+        )
+
+        self.assertEqual(resp["status"], 400)
+        self.assertEqual(resp["data"]["reason"], "Token doesn't exist.")
+
+    def test_token_ttl_set_password(self):
+        """
+        Tests if a token times out correctly.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        auth_user = str(uuid.uuid4())
+        stage = json.dumps({
+            "stage": "username-valid",
+            "username": "NotExists",
+        })
+        self.vk.setex(f"register:{auth_user}", 1, stage)
+
+        vk_stage = self.vk.get(f"register:{auth_user}")
+        self.assertIsNotNone(vk_stage)
+
+        time.sleep(2)
+
+        vk_stage = self.vk.get(f"register:{auth_user}")
+        self.assertIsNone(vk_stage)
+
+        resp = client.set_password_call(
+            auth_user,
+            "testing",
+            "this-is-a-dummy-value"
+        )
+
+        self.assertEqual(resp["status"], 400)
+        self.assertEqual(resp["data"]["reason"], "Token doesn't exist.")
+
+    def test_set_password_call(self):
+        """
+        Tests if the set password helper
+        call works.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        # get token to correct stage
+        auth_user = str(uuid.uuid4())
+        resp = client.check_valid_username_call(
+            auth_user,
+            "testing",
+            "NotExists",
+        )
+
+        self.assertEqual(resp["status"], 200)
+        self.assertTrue(resp["data"]["valid"])
+
+        # set password
+        resp = client.set_password_call(
+            auth_user,
+            "testing",
+            "this-is-a-dummy-value"
+        )
+
+        self.assertEqual(resp["status"], 200)
+        self.assertEqual(resp["data"], {})
+
+        # get valkey stage
+        stage_raw = self.vk.get(f"register:{auth_user}")
+        stage = json.loads(stage_raw)
+
+        # test valkey stage is correct
+        self.assertEqual(stage["stage"], "password-set")
+        self.assertEqual(stage["username"], "NotExists")
+        self.assertFalse(self.ph.check_needs_rehash(stage["hash"]))
+        self.assertTrue(self.ph.verify(stage["hash"], "this-is-a-dummy-value"))
+
     def test_set_password(self):
         """
         Tests if the set password step
@@ -62,7 +242,7 @@ class RegisterRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"]["valid"], True)
+        self.assertTrue(resp["data"]["valid"])
 
         # call with dummy already hashed password
         resp_raw = client.call(
@@ -169,7 +349,7 @@ class RegisterRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"]["valid"], True)
+        self.assertTrue(resp["data"]["valid"])
 
         # call with dummy already hashed password
         resp_raw = client.call(
@@ -183,6 +363,9 @@ class RegisterRPCTest(AutocleanTestCase):
 
         self.assertEqual(resp["status"], 400)
         self.assertEqual(resp["data"]["reason"], "Malformed request.")
+
+    def test_set_password_blank_digest(self):
+        pass
 
     def test_set_password_bad_digest(self):
         """
@@ -207,7 +390,7 @@ class RegisterRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"]["valid"], True)
+        self.assertTrue(resp["data"]["valid"])
 
         # call with dummy already hashed password
         resp_raw = client.call(
@@ -218,8 +401,8 @@ class RegisterRPCTest(AutocleanTestCase):
         )
         resp = json.loads(resp_raw)
 
-        self.assertEqual(resp["status"], 500)
-        self.assertEqual(resp["data"]["reason"], "Internal Server Error")
+        self.assertEqual(resp["status"], 400)
+        self.assertEqual(resp["data"]["reason"], "Malformed request.")
 
     def test_check_non_unique_user(self):
         """
@@ -252,7 +435,7 @@ class RegisterRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"]["valid"], False)
+        self.assertFalse(resp["data"]["valid"])
 
         vk_stage = self.vk.get(f"register:{auth_user}")
         self.assertIsNone(vk_stage)
@@ -284,7 +467,7 @@ class RegisterRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"]["valid"], False)
+        self.assertFalse(resp["data"]["valid"])
 
         vk_stage = self.vk.get(f"register:{auth_user}")
         self.assertIsNone(vk_stage)
@@ -300,7 +483,7 @@ class RegisterRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"]["valid"], False)
+        self.assertFalse(resp["data"]["valid"])
 
         vk_stage = self.vk.get(f"register:{auth_user}")
         self.assertIsNone(vk_stage)
@@ -316,7 +499,7 @@ class RegisterRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"]["valid"], False)
+        self.assertFalse(resp["data"]["valid"])
 
         vk_stage = self.vk.get(f"register:{auth_user}")
         self.assertIsNone(vk_stage)
@@ -332,7 +515,7 @@ class RegisterRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"]["valid"], False)
+        self.assertFalse(resp["data"]["valid"])
 
         vk_stage = self.vk.get(f"register:{auth_user}")
         self.assertIsNone(vk_stage)
@@ -348,7 +531,7 @@ class RegisterRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"]["valid"], False)
+        self.assertFalse(resp["data"]["valid"])
 
         vk_stage = self.vk.get(f"register:{auth_user}")
         self.assertIsNone(vk_stage)
@@ -364,7 +547,7 @@ class RegisterRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"]["valid"], False)
+        self.assertFalse(resp["data"]["valid"])
 
         vk_stage = self.vk.get(f"register:{auth_user}")
         self.assertIsNone(vk_stage)
@@ -391,7 +574,7 @@ class RegisterRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"]["valid"], True)
+        self.assertTrue(resp["data"]["valid"])
 
         stage = json.dumps(
             {
@@ -415,15 +598,14 @@ class RegisterRPCTest(AutocleanTestCase):
         )
 
         auth_user = str(uuid.uuid4())
-        resp_raw = client.check_valid_username_call(
+        resp = client.check_valid_username_call(
             auth_user,
             "testing",
             "NotExists",
         )
-        resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"]["valid"], True)
+        self.assertTrue(resp["data"]["valid"])
 
         stage = json.dumps(
             {
@@ -522,9 +704,9 @@ class RegisterRPCTest(AutocleanTestCase):
         self.assertRaises(KeyError, lambda x: x["data"]["message"], resp)
         self.assertEqual(resp["data"]["reason"], "Bad version.")
 
-    def test_register_bad_stage_type(self):
+    def test_register_bad_step_type(self):
         """
-        Tests the case where the stage
+        Tests the case where the step
         is not the correct type.
         """
 

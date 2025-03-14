@@ -9,6 +9,7 @@ import re
 
 import valkey
 import argon2
+import pyotp
 from cassandra.cqlengine import query
 
 import shared
@@ -35,13 +36,14 @@ class RegisterRPCServer(rpcs.RPCServer):
                 [0-9A-Za-z-_.]
             - cannot begin or end with special chars
         """
-        if len(username) <= 5:
+        if len(username) < 5:
             return False
 
         # can't begin with special characters -_.
         # must only consist of alphanumeric and -_.
         # can't end with special characters -_.
-        pattern = re.compile(r"^(?![-_.]).[0-9A-Za-z-_.]+$.*(?<![-_.])$")
+        pattern = re.compile(
+            r"^[A-Za-z0-9](?:[A-Za-z0-9\-._]{0,}[A-Za-z0-9])?$")
 
         if not pattern.match(username):
             return False
@@ -98,20 +100,46 @@ class RegisterRPCServer(rpcs.RPCServer):
         self.ph.verify(hash, req["data"]["password-digest"])
 
         # new stage
-        stage = {
-            "stage": "password-set",
-            "username": cur_stage["username"],
-            "hash": hash,
-        }
+        cur_stage["stage"] = "password-set"
+        cur_stage["hash"] = hash
 
         # set new stage for token
-        self.vk.set(
-            f"register:{req['authUser']}",
-            json.dumps(stage)
-        )
+        self.vk.set(f"register:{req['authUser']}", json.dumps(cur_stage))
 
         del hash
         return rpcs.response(200, {})
+
+    def _setup_otp(self, req: dict) -> str:
+        # get current user state from valkey
+        cur_stage_raw = self.vk.get(f"register:{req['authUser']}")
+
+        # token either timed out or didn't exist
+        if cur_stage_raw is None:
+            return rpcs.response(400, {"reason": "Token doesn't exist."})
+
+        # check token at correct stage
+        cur_stage = json.loads(cur_stage_raw)
+        if cur_stage["stage"] != "password-set":
+            return rpcs.response(403, {"reason": "Token not at correct step."})
+
+        # create new secret and make totp provisioning URI with it
+        secret = pyotp.random_base32()
+        totp = pyotp.totp.TOTP(secret)
+        prov_uri = totp.provisioning_uri(
+            name=cur_stage["username"],
+            issuer_name="App Name Goes Here",
+        )
+
+        # new stage info
+        cur_stage["stage"] = "setting-up-otp"
+        cur_stage["otp_sec"] = secret
+
+        # store new stage info
+        self.vk.set(f"register:{req['authUser']}", json.dumps(cur_stage))
+
+        # return provisioning URI (contains secret)
+        del secret, totp
+        return rpcs.response(200, {"prov_uri": prov_uri})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body)
@@ -133,6 +161,8 @@ class RegisterRPCServer(rpcs.RPCServer):
                     return self._check_valid_username(req)
                 case "set-password":
                     return self._set_password(req)
+                case "setup-otp":
+                    return self._setup_otp(req)
                 case _:
                     return rpcs.response(400, {"reason": "Unknown step."})
 

@@ -47,10 +47,10 @@ Any non 2XX code will have `resp["data"]["reason"]`.
 ```
 
 This will:
-- Check if the user is at the right stage
-- Salt and hash the already hashed (by the public gateway) username:password
-- Store this salt and hash in the users Valkey stage
-- Update the users Valkey stage
+- Check if the token is at the right stage.
+- Salt and hash the already hashed (by the public gateway) username:password.
+- Store this salt and hash in the users Valkey stage.
+- Update the users Valkey stage.
 
 ```json
 {
@@ -59,6 +59,8 @@ This will:
 }
 ```
 
+:::concern - information disclosure 403 vs 400:::
+
 Status will be:
 - 200 if the call was successful.
 - 400 if the request was badly formatted, or the user has no current Valkey stage.
@@ -66,3 +68,42 @@ Status will be:
 - 500 if the service had an exception for some other reason.
 
 Any non 2XX code will have `resp["data"]["reason"]`.
+
+# Set up OTP
+```json
+{
+    "authUser": "token",
+    "version": "1.0.0",
+    "from": "public-gateway",
+    "data": {
+        "step": "setup-otp",
+    }
+}
+```
+
+This will:
+- Check if the token is at the right stage.
+- Generate and store an OTP secret.
+- Create a provisioning URI.
+- Update the users Valkey stage.
+
+```json
+{
+    "status": 200,
+    "data": {
+        "prov_uri": "otpauth://totp/app%20name:username?secret=SECRET&issuer=app%20name"
+    }
+}
+```
+
+:::concern - information disclosure 403 vs 400:::
+
+Status will be:
+- 200 if the call was successful.
+- 400 if the request was badly formatted, or the user has no current Valkey stage.
+- 403 if the user has not got the correct Valkey stage.
+- 500 if the service had an exception for some other reason.
+
+Any non 2XX code will have `resp["data"]["reason"]`.
+
+# Verify OTP
