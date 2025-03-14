@@ -8,6 +8,7 @@ import logging
 import re
 
 import valkey
+import argon2
 from cassandra.cqlengine import query
 
 import shared
@@ -23,6 +24,7 @@ class RegisterRPCServer(rpcs.RPCServer):
     def __init__(self, valkey, rabbitmq_user, rabbitmq_pass, rpc_prefix):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
         self.vk = valkey
+        self.ph = argon2.PasswordHasher()
 
     def _check_username(self, username: str) -> bool:
         """
@@ -60,6 +62,7 @@ class RegisterRPCServer(rpcs.RPCServer):
         try:
             model.Accounts.get(username=req["data"]["username"])
 
+            # account found as DoesNotExist not thrown
             return rpcs.response(200, {"valid": False})
 
         # couldn't get user with username
@@ -68,10 +71,47 @@ class RegisterRPCServer(rpcs.RPCServer):
             # register stage in valkey
             stage = {"stage": "username-valid",
                      "username": req["data"]["username"]}
+
             self.vk.setex(
                 f"register:{req['authUser']}", 60 * 30, json.dumps(stage))
 
             return rpcs.response(200, {"valid": True})
+
+    def _set_password(self, req: dict) -> str:
+        # get current user state from valkey
+        cur_stage_raw = self.vk.get(f"register:{req['authUser']}")
+
+        # token either timed out or didn't exist
+        if cur_stage_raw is None:
+            return rpcs.response(400, {"reason": "Token doesn't exist."})
+
+        # check token at correct stage
+        cur_stage = json.loads(cur_stage_raw)
+        if cur_stage["stage"] != "username-valid":
+            return rpcs.response(403, {"reason": "Token not at correct step."})
+
+        # hash+salt password with argon2
+        hash = self.ph.hash(req["data"]["password-digest"])
+
+        # verify for the sake of ensuring it's right, will throw
+        # an exception which should cause a 500 internal server error
+        self.ph.verify(hash, req["data"]["password-digest"])
+
+        # new stage
+        stage = {
+            "stage": "password-set",
+            "username": cur_stage["username"],
+            "hash": hash,
+        }
+
+        # set new stage for token
+        self.vk.set(
+            f"register:{req['authUser']}",
+            json.dumps(stage)
+        )
+
+        del hash
+        return rpcs.response(200, {})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body)
@@ -91,6 +131,8 @@ class RegisterRPCServer(rpcs.RPCServer):
             match req["data"]["step"]:
                 case "check-valid-username":
                     return self._check_valid_username(req)
+                case "set-password":
+                    return self._set_password(req)
                 case _:
                     return rpcs.response(400, {"reason": "Unknown step."})
 
