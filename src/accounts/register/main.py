@@ -138,8 +138,37 @@ class RegisterRPCServer(rpcs.RPCServer):
         self.vk.set(f"register:{req['authUser']}", json.dumps(cur_stage))
 
         # return provisioning URI (contains secret)
-        del secret, totp
+        del secret, totp, cur_stage
         return rpcs.response(200, {"prov_uri": prov_uri})
+
+    def _verify_otp(self, req: dict) -> str:
+        # get current user state from valkey
+        cur_stage_raw = self.vk.get(f"register:{req['authUser']}")
+
+        # token either timed out or didn't exist
+        if cur_stage_raw is None:
+            return rpcs.response(400, {"reason": "Token doesn't exist."})
+
+        # check token at correct stage
+        cur_stage = json.loads(cur_stage_raw)
+        if cur_stage["stage"] != "setting-up-otp":
+            return rpcs.response(403, {"reason": "Token not at correct step."})
+
+        # create TOTP with stored secret
+        totp = pyotp.totp.TOTP(cur_stage["otp_sec"])
+
+        # check given OTP against stored OTP
+        if not totp.verify(req["data"]["otp"]):
+            return rpcs.response(400, {"reason": "OTP incorrect."})
+
+        # update stage
+        del totp
+        cur_stage["stage"] = "otp-verified"
+
+        self.vk.set(f"register:{req['authUser']}", json.dumps(cur_stage))
+        del cur_stage
+
+        return rpcs.response(200, {})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body)
@@ -163,6 +192,8 @@ class RegisterRPCServer(rpcs.RPCServer):
                     return self._set_password(req)
                 case "setup-otp":
                     return self._setup_otp(req)
+                case "verify-otp":
+                    return self._verify_otp(req)
                 case _:
                     return rpcs.response(400, {"reason": "Unknown step."})
 

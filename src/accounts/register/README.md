@@ -107,3 +107,36 @@ Status will be:
 Any non 2XX code will have `resp["data"]["reason"]`.
 
 # Verify OTP
+```json
+{
+    "authUser": "token",
+    "version": "1.0.0",
+    "from": "public-gateway",
+    "data": {
+        "step": "verify-otp",
+        "otp": "123456",
+    }
+}
+```
+
+This will:
+- Check if the token is at the right stage.
+- Check given OTP with stored TOTP secret.
+- Update the users Valkey stage.
+
+```json
+{
+    "status": 200
+    "data": {}
+}
+```
+
+:::concern - information disclosure 403 vs 400:::
+
+Status will be:
+- 200 if the call was successful.
+- 400 if the request was badly formatted, or the user has no current Valkey stage.
+- 403 if the user has not got the correct Valkey stage.
+- 500 if the service had an exception for some other reason.
+
+Any non 2XX code will have `resp["data"]["reason"]`.

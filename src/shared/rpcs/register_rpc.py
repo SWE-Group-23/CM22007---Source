@@ -162,3 +162,41 @@ class RegisterRPCClient(rpcs.RPCClient):
         )
 
         return json.loads(self._call(body=req))
+
+    def verify_otp_call(
+        self,
+        auth_user: str,
+        srv_from: str,
+        otp: str,
+        api_version="1.0.0",
+    ) -> dict:
+        """
+        Calls the RPC with the verify OTP step.
+        If the token is at the correct step in
+        Valkey, then the given OTP will be
+        verified against the stored TOTP and
+        the token's step will be updated.
+
+        Args:
+            auth_user: str - name of the session token calling.
+            srv_from: str - name of the calling service.
+            api_version="1.0.0" - the API version to call.
+
+        Returns:
+            dict - deserialised JSON response from the server.
+
+        Could throw a json.JSONDecodeError.
+        """
+        step_data = {
+            "step": "verify-otp",
+            "otp": otp,
+        }
+
+        req = rpcs.request(
+            auth_user,
+            api_version,
+            srv_from,
+            step_data,
+        )
+
+        return json.loads(self._call(body=req))

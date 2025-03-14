@@ -41,10 +41,339 @@ class RegisterRPCTest(AutocleanTestCase):
         )
         self.ph = argon2.PasswordHasher()
 
+    def test_verify_otp(self):
+        """
+        Tests verifying an OTP.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        # get token to correct stage
+        # valid username
+        auth_user = str(uuid.uuid4())
+        _ = client.check_valid_username_call(
+            auth_user,
+            "testing",
+            "NotExists",
+        )
+
+        # set password
+        _ = client.set_password_call(
+            auth_user,
+            "testing",
+            "this-is-a-dummy-value"
+        )
+
+        # setup OTP
+        resp = client.setup_otp_call(
+            auth_user,
+            "testing",
+        )
+
+        # create TOTP with prov uri
+        totp = pyotp.parse_uri(resp["data"]["prov_uri"])
+
+        # call with current OTP
+        resp = client.verify_otp_call(
+            auth_user,
+            "testing",
+            totp.now(),
+        )
+
+        self.assertEqual(resp["status"], 200)
+        self.assertEqual(resp["data"], {})
+
+        stage_raw = self.vk.get(f"register:{auth_user}")
+        stage = json.loads(stage_raw)
+
+        self.assertEqual(stage["stage"], "otp-verified")
+        self.assertEqual(stage["username"], "NotExists")
+        # check hash still there (would throw KeyError if not)
+        _ = stage["hash"]
+        self.assertEqual(stage["otp_sec"], totp.secret)
+
+    def test_verify_otp_wrong_otp(self):
+        """
+        Tests verifying an OTP with the wrong
+        OTP.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        # get token to correct stage
+        # valid username
+        auth_user = str(uuid.uuid4())
+        _ = client.check_valid_username_call(
+            auth_user,
+            "testing",
+            "NotExists",
+        )
+
+        # set password
+        _ = client.set_password_call(
+            auth_user,
+            "testing",
+            "this-is-a-dummy-value"
+        )
+
+        # setup OTP
+        resp = client.setup_otp_call(
+            auth_user,
+            "testing",
+        )
+
+        # create TOTP with prov uri
+        totp = pyotp.parse_uri(resp["data"]["prov_uri"])
+
+        otp = "123456"
+
+        # if this ever happens i will buy a lottery ticket
+        if totp.verify(otp):
+            otp = "654321"
+
+        # call with wrong OTP
+        resp = client.verify_otp_call(
+            auth_user,
+            "testing",
+            otp,
+        )
+
+        self.assertEqual(resp["status"], 400)
+        self.assertEqual(resp["data"]["reason"], "OTP incorrect.")
+
+        stage_raw = self.vk.get(f"register:{auth_user}")
+        stage = json.loads(stage_raw)
+
+        self.assertEqual(stage["stage"], "setting-up-otp")
+        self.assertEqual(stage["username"], "NotExists")
+
+    def test_verify_otp_no_otp(self):
+        """
+        Tests verifying an OTP when no
+        OTP given.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        # get token to correct stage
+        # valid username
+        auth_user = str(uuid.uuid4())
+        _ = client.check_valid_username_call(
+            auth_user,
+            "testing",
+            "NotExists",
+        )
+
+        # set password
+        _ = client.set_password_call(
+            auth_user,
+            "testing",
+            "this-is-a-dummy-value"
+        )
+
+        # setup OTP
+        _ = client.setup_otp_call(
+            auth_user,
+            "testing",
+        )
+
+        # call with wrong OTP
+        resp_raw = client.call(
+            auth_user,
+            "testing",
+            "verify-otp",
+            {},
+        )
+        resp = json.loads(resp_raw)
+
+        self.assertEqual(resp["status"], 400)
+        self.assertEqual(resp["data"]["reason"], "Malformed request.")
+
+        stage_raw = self.vk.get(f"register:{auth_user}")
+        stage = json.loads(stage_raw)
+
+        self.assertEqual(stage["stage"], "setting-up-otp")
+        self.assertEqual(stage["username"], "NotExists")
+
+    def test_verify_otp_malformed_otp(self):
+        """
+        Tests verifying an OTP with too long
+        of an OTP.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        # get token to correct stage
+        # valid username
+        auth_user = str(uuid.uuid4())
+        _ = client.check_valid_username_call(
+            auth_user,
+            "testing",
+            "NotExists",
+        )
+
+        # set password
+        _ = client.set_password_call(
+            auth_user,
+            "testing",
+            "this-is-a-dummy-value"
+        )
+
+        # setup OTP
+        _ = client.setup_otp_call(
+            auth_user,
+            "testing",
+        )
+
+        # call with wrong OTP
+        resp = client.verify_otp_call(
+            auth_user,
+            "testing",
+            "1234567",
+        )
+
+        self.assertEqual(resp["status"], 400)
+        self.assertEqual(resp["data"]["reason"], "OTP incorrect.")
+
+        stage_raw = self.vk.get(f"register:{auth_user}")
+        stage = json.loads(stage_raw)
+
+        self.assertEqual(stage["stage"], "setting-up-otp")
+        self.assertEqual(stage["username"], "NotExists")
+
+    def test_verify_otp_int(self):
+        """
+        Tests verifying an OTP with an integer
+        instead.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        # get token to correct stage
+        # valid username
+        auth_user = str(uuid.uuid4())
+        _ = client.check_valid_username_call(
+            auth_user,
+            "testing",
+            "NotExists",
+        )
+
+        # set password
+        _ = client.set_password_call(
+            auth_user,
+            "testing",
+            "this-is-a-dummy-value"
+        )
+
+        # setup OTP
+        resp = client.setup_otp_call(
+            auth_user,
+            "testing",
+        )
+
+        # create TOTP with prov uri
+        totp = pyotp.parse_uri(resp["data"]["prov_uri"])
+
+        # call with wrong OTP
+        resp = client.verify_otp_call(
+            auth_user,
+            "testing",
+            int(totp.now()),
+        )
+
+        self.assertEqual(resp["status"], 200)
+        self.assertEqual(resp["data"], {})
+
+        stage_raw = self.vk.get(f"register:{auth_user}")
+        stage = json.loads(stage_raw)
+
+        self.assertEqual(stage["stage"], "otp-verified")
+        self.assertEqual(stage["username"], "NotExists")
+
+    def test_verify_otp_wrong_stage(self):
+        """
+        Tests verifying an OTP with the wrong
+        Valkey stage.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        # get token to correct stage
+        # valid username
+        auth_user = str(uuid.uuid4())
+        _ = client.check_valid_username_call(
+            auth_user,
+            "testing",
+            "NotExists",
+        )
+
+        # call with current OTP
+        resp = client.verify_otp_call(
+            auth_user,
+            "testing",
+            "123456",
+        )
+
+        self.assertEqual(resp["status"], 403)
+        self.assertEqual(resp["data"]["reason"], "Token not at correct step.")
+
+        stage_raw = self.vk.get(f"register:{auth_user}")
+        stage = json.loads(stage_raw)
+
+        self.assertEqual(stage["stage"], "username-valid")
+        self.assertEqual(stage["username"], "NotExists")
+
+    def test_verify_otp_no_stage(self):
+        """
+        Tests verifying an OTP with no Valkey
+        stage.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        auth_user = str(uuid.uuid4())
+        resp = client.verify_otp_call(
+            auth_user,
+            "testing",
+            "123456",
+        )
+
+        self.assertEqual(resp["status"], 400)
+        self.assertEqual(resp["data"]["reason"], "Token doesn't exist.")
+
     def test_setup_otp(self):
         """
         Tests setting up an OTP.
         """
+
         client = RegisterRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"],
