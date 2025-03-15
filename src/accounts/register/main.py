@@ -26,9 +26,9 @@ class RegisterRPCServer(rpcs.RPCServer):
     Serves the register RPC.
     """
 
-    def __init__(self, valkey, rabbitmq_user, rabbitmq_pass, rpc_prefix):
+    def __init__(self, vk, rabbitmq_user, rabbitmq_pass, rpc_prefix):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
-        self.vk = valkey
+        self.vk = vk
         self.ph = argon2.PasswordHasher()
 
     def _check_username(self, username: str) -> bool:
@@ -126,20 +126,20 @@ class RegisterRPCServer(rpcs.RPCServer):
             return err
 
         # hash+salt password with argon2
-        hash = self.ph.hash(req["data"]["password-digest"])
+        pw_hash = self.ph.hash(req["data"]["password-digest"])
 
         # verify for the sake of ensuring it's right, will throw
         # an exception which should cause a 500 internal server error
-        self.ph.verify(hash, req["data"]["password-digest"])
+        self.ph.verify(pw_hash, req["data"]["password-digest"])
 
         # new stage
         cur_stage["stage"] = "password-set"
-        cur_stage["hash"] = hash
+        cur_stage["hash"] = pw_hash
 
         # set new stage for token
         self.vk.set(f"register:{req['authUser']}", json.dumps(cur_stage))
 
-        del hash
+        del pw_hash
         return rpcs.response(200, {})
 
     def _setup_otp(self, req: dict) -> str:
@@ -257,20 +257,26 @@ class RegisterRPCServer(rpcs.RPCServer):
             if req["version"] != "1.0.0":
                 return rpcs.response(400, {"reason": "Bad version."})
 
-            # do stuff based on step
+            # default response is error, should never get returned
+            resp = rpcs.response(500, {"reason": "Internal Server Error"})
+
+            # get response based on step
             match req["data"]["step"]:
                 case "check-valid-username":
-                    return self._check_valid_username(req)
+                    resp = self._check_valid_username(req)
                 case "set-password":
-                    return self._set_password(req)
+                    resp = self._set_password(req)
                 case "setup-otp":
-                    return self._setup_otp(req)
+                    resp = self._setup_otp(req)
                 case "verify-otp":
-                    return self._verify_otp(req)
+                    resp = self._verify_otp(req)
                 case "backup-code":
-                    return self._backup_code(req)
+                    resp = self._backup_code(req)
                 case _:
-                    return rpcs.response(400, {"reason": "Unknown step."})
+                    resp = rpcs.response(400, {"reason": "Unknown step."})
+
+            # return response
+            return resp
 
         except KeyError:
             return rpcs.response(400, {"reason": "Malformed request."})
@@ -296,7 +302,7 @@ def main():
     )
 
     rpc_server = RegisterRPCServer(
-        valkey=vk,
+        vk=vk,
         rabbitmq_user=os.environ["RABBITMQ_USERNAME"],
         rabbitmq_pass=os.environ["RABBITMQ_PASSWORD"],
         rpc_prefix="register-rpc",
