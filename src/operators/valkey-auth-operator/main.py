@@ -45,15 +45,15 @@ class ValkeyCredsOperator:
         """
         Retrieves the superuser password.
         """
-        su_secret_name = data["valkeyClusterReference"]
+        cluster_name = data["valkeyClusterReference"]
         try:
             su_secret = self.api_instance.read_namespaced_secret(
-                su_secret_name, namespace
+                cluster_name, namespace
             )
             return b64decode(su_secret.data["password"]).decode()
         except client.exceptions.ApiException as e:
             logging.error(
-                "Failed to read superuser secret %s: %s", su_secret_name, e)
+                "Failed to read superuser secret %s: %s", cluster_name, e)
             raise e
 
     def _create_or_update_user_secret(self, namespace, name, data, password):
@@ -186,8 +186,10 @@ class ValkeyCredsOperator:
 
     def delete_user(self, namespace, name, data):
         """
-        Deletes a user in Valkey and their associated secret.
+        Deletes a user in the cluster (if they exist),
+        also removing their credentials.
         """
+
         logging.info("Deleting user: %s", name)
         logging.info("Using data: %s", str(data))
 
@@ -256,10 +258,12 @@ class ValkeyCredsOperator:
         """
         Sets up and runs the operator.
         """
+
         user_thread = threading.Thread(
             target=self.process_users,
             daemon=True,
         )
+
         user_thread.start()
 
         while not self.failed:
