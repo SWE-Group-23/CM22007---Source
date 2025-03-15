@@ -1,11 +1,15 @@
 """
 Handles the multi-stage registration process.
+
+TODO: allow a user to go back through stages if needed.
 """
 
 import os
 import json
 import logging
 import re
+import secrets
+import datetime
 
 import valkey
 import argon2
@@ -50,6 +54,31 @@ class RegisterRPCServer(rpcs.RPCServer):
 
         return True
 
+    def _check_stage(
+            self,
+            req: dict,
+            stage: str,
+    ) -> tuple[str | None, None | dict]:
+        """
+        Checks if the token is at the correct stage,
+        returning either an error response or the
+        current stage.
+        """
+        cur_stage_raw = self.vk.get(f"register:{req['authUser']}")
+
+        if cur_stage_raw is None:
+            return (
+                rpcs.response(400, {"reason": "Token doesn't exist."}), None)
+
+        cur_stage = json.loads(cur_stage_raw)
+        if cur_stage["stage"] != stage:
+            return (
+                rpcs.response(403, {"reason": "Token not at correct step."}),
+                None
+            )
+
+        return None, cur_stage
+
     def _check_valid_username(self, req: dict) -> str:
         """
         Checks if a username already exists
@@ -57,6 +86,11 @@ class RegisterRPCServer(rpcs.RPCServer):
         and creates a JSON response based
         on if it does.
         """
+
+        # check if already past this step
+        if self.vk.get(f"register:{req['authUser']}") is not None:
+            return rpcs.response(403, {"reason": "Token not at correct step."})
+
         # check username is in valid format
         if not self._check_username(req["data"]["username"]):
             return rpcs.response(200, {"valid": False})
@@ -80,17 +114,16 @@ class RegisterRPCServer(rpcs.RPCServer):
             return rpcs.response(200, {"valid": True})
 
     def _set_password(self, req: dict) -> str:
-        # get current user state from valkey
-        cur_stage_raw = self.vk.get(f"register:{req['authUser']}")
+        """
+        Hashes password digest and stores
+        it in the token's Valkey stage,
+        updating the step.
+        """
 
-        # token either timed out or didn't exist
-        if cur_stage_raw is None:
-            return rpcs.response(400, {"reason": "Token doesn't exist."})
-
-        # check token at correct stage
-        cur_stage = json.loads(cur_stage_raw)
-        if cur_stage["stage"] != "username-valid":
-            return rpcs.response(403, {"reason": "Token not at correct step."})
+        # check at correct stage
+        err, cur_stage = self._check_stage(req, "username-valid")
+        if err:
+            return err
 
         # hash+salt password with argon2
         hash = self.ph.hash(req["data"]["password-digest"])
@@ -110,17 +143,16 @@ class RegisterRPCServer(rpcs.RPCServer):
         return rpcs.response(200, {})
 
     def _setup_otp(self, req: dict) -> str:
-        # get current user state from valkey
-        cur_stage_raw = self.vk.get(f"register:{req['authUser']}")
-
-        # token either timed out or didn't exist
-        if cur_stage_raw is None:
-            return rpcs.response(400, {"reason": "Token doesn't exist."})
-
-        # check token at correct stage
-        cur_stage = json.loads(cur_stage_raw)
-        if cur_stage["stage"] != "password-set":
-            return rpcs.response(403, {"reason": "Token not at correct step."})
+        """
+        Generates an OTP secret for a token,
+        stores it in the token's Valkey stage,
+        updating the step. Sends provisioning
+        URI.
+        """
+        # check at correct stage
+        err, cur_stage = self._check_stage(req, "password-set")
+        if err:
+            return err
 
         # create new secret and make totp provisioning URI with it
         secret = pyotp.random_base32()
@@ -142,17 +174,16 @@ class RegisterRPCServer(rpcs.RPCServer):
         return rpcs.response(200, {"prov_uri": prov_uri})
 
     def _verify_otp(self, req: dict) -> str:
-        # get current user state from valkey
-        cur_stage_raw = self.vk.get(f"register:{req['authUser']}")
-
-        # token either timed out or didn't exist
-        if cur_stage_raw is None:
-            return rpcs.response(400, {"reason": "Token doesn't exist."})
-
-        # check token at correct stage
-        cur_stage = json.loads(cur_stage_raw)
-        if cur_stage["stage"] != "setting-up-otp":
-            return rpcs.response(403, {"reason": "Token not at correct step."})
+        """
+        Verifies that the user has their
+        OTP set up correctly by checking
+        an OTP against the stored one.
+        Updates tokens step in Valkey stage.
+        """
+        # check at correct stage
+        err, cur_stage = self._check_stage(req, "setting-up-otp")
+        if err:
+            return err
 
         # create TOTP with stored secret
         totp = pyotp.totp.TOTP(cur_stage["otp_sec"])
@@ -169,6 +200,48 @@ class RegisterRPCServer(rpcs.RPCServer):
         del cur_stage
 
         return rpcs.response(200, {})
+
+    def _backup_code(self, req: dict) -> str:
+        """
+        Generates backup codes and gives them
+        to the user, then adds their account
+        to the database, removing their stage
+        from Valkey.
+        """
+        # check at correct stage
+        err, cur_stage = self._check_stage(req, "otp-verified")
+        if err:
+            return err
+
+        # generate backup code
+        backup_code = (
+            secrets.token_hex(8)
+            + "-"
+            + secrets.token_hex(8)
+            + "-"
+            + secrets.token_hex(8)
+            + "-"
+            + secrets.token_hex(8)
+        )
+
+        # hash backup code for storage
+        backup_hash = self.ph.hash(backup_code)
+        self.ph.verify(backup_hash, backup_code)
+
+        # add user to database
+        (model.Accounts.if_not_exists()
+            .create(
+                    username=cur_stage["username"],
+                    password_hash=cur_stage["hash"],
+                    otp_secret=cur_stage["otp_sec"],
+                    backup_code_hash=backup_hash,
+                    created_at=datetime.datetime.now()
+                ))
+
+        # delete user stage in valkey
+        self.vk.delete(f"register:{req['authUser']}")
+
+        return rpcs.response(200, {"backup_code": backup_code})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body)
@@ -194,6 +267,8 @@ class RegisterRPCServer(rpcs.RPCServer):
                     return self._setup_otp(req)
                 case "verify-otp":
                     return self._verify_otp(req)
+                case "backup-code":
+                    return self._backup_code(req)
                 case _:
                     return rpcs.response(400, {"reason": "Unknown step."})
 

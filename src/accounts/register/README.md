@@ -26,9 +26,12 @@ This will:
 }
 ```
 
+:::concern - information disclosure 403 vs 400:::
+
 Status will be:
 - 200 if the service ran ok.
 - 400 if the request was badly formatted.
+- 403 if the token exists in Valkey already.
 - 500 if the service had an exception for some other reason.
 
 Any non 2XX code will have `resp["data"]["reason"]`.
@@ -126,7 +129,7 @@ This will:
 
 ```json
 {
-    "status": 200
+    "status": 200,
     "data": {}
 }
 ```
@@ -140,3 +143,39 @@ Status will be:
 - 500 if the service had an exception for some other reason.
 
 Any non 2XX code will have `resp["data"]["reason"]`.
+
+# Get Backup Code
+```json
+{
+    "authUser": "token",
+    "version": "1.0.0",
+    "from": "public-gateway",
+    "data": {
+        "step": "backup-code"
+    }
+}
+```
+
+This will:
+- Check if the token is at the right stage.
+- Create a backup code.
+- Add the user to the database.
+- Remove the token from the Valkey.
+- Return the backup code.
+
+```json
+{
+    "status": 200,
+    "data": {
+        "backup_code": "87041187b323e644-ca65ef9f70ee8aab-bf58b5d30287a7f2-8d3d3f60f4646b03"
+    }
+}
+```
+
+:::concern - information disclosure 403 vs 400:::
+
+Status will be:
+- 200 if the call was successful.
+- 400 if the request was badly formatted, or the user has no current Valkey stage.
+- 403 if the user has not got the correct Valkey stage.
+- 500 if the service had an exception for some other reason.

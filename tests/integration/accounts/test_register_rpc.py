@@ -6,6 +6,7 @@ import os
 import json
 import uuid
 import time
+import logging
 
 import valkey
 import argon2
@@ -27,6 +28,11 @@ class RegisterRPCTest(AutocleanTestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # suppress new default session warning
+        logging.getLogger(
+            "cassandra.cqlengine.connection").setLevel(logging.ERROR)
+
         self.vk = valkey.Valkey(
             host="accounts-valkey.accounts.svc.cluster.local",
             port="6379",
@@ -40,6 +46,126 @@ class RegisterRPCTest(AutocleanTestCase):
             password=os.environ["SCYLLADB_PASSWORD"],
         )
         self.ph = argon2.PasswordHasher()
+
+    def test_backup_code(self):
+        """
+        Tests getting a backup code.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        # get token to correct stage
+        # valid username
+        auth_user = str(uuid.uuid4())
+        _ = client.check_valid_username_call(
+            auth_user,
+            "testing",
+            "NotExists",
+        )
+
+        # set password
+        _ = client.set_password_call(
+            auth_user, "testing", "this-is-a-dummy-value")
+
+        # setup OTP
+        resp = client.setup_otp_call(
+            auth_user,
+            "testing",
+        )
+
+        # create TOTP with prov uri
+        totp = pyotp.parse_uri(resp["data"]["prov_uri"])
+
+        # call with current OTP
+        _ = client.verify_otp_call(
+            auth_user,
+            "testing",
+            totp.now(),
+        )
+
+        resp = client.backup_code_call(auth_user, "testing")
+
+        self.assertEqual(resp["status"], 200)
+        self.assertRegex(
+            resp["data"]["backup_code"],
+            "^[0-9a-f]{16}-[0-9a-f]{16}-[0-9a-f]{16}-[0-9a-f]{16}$",
+        )
+
+        # would throw query.DoesNotExist if user didn't exist
+        user = models.Accounts.get(username="NotExists")
+
+        # check database
+        self.assertEqual(user["otp_secret"], totp.secret)
+        self.assertTrue(self.ph.verify(
+            user["password_hash"], "this-is-a-dummy-value"))
+        self.assertTrue(
+            self.ph.verify(user["backup_code_hash"],
+                           resp["data"]["backup_code"])
+        )
+        self.assertIsNotNone(user["created_at"])
+        self.assertIsNone(user["last_login"])
+        self.assertIsNone(user["prev_password_hash"])
+
+        # check valkey
+        self.assertIsNone(self.vk.get(f"register:{auth_user}"))
+
+    def test_backup_code_wrong_stage(self):
+        """
+        Tests getting a backup code with the wrong
+        Valkey stage.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        # get token to first stage
+        auth_user = str(uuid.uuid4())
+        _ = client.check_valid_username_call(
+            auth_user,
+            "testing",
+            "NotExists",
+        )
+
+        # try to get a backup code
+        resp = client.backup_code_call(auth_user, "testing")
+
+        self.assertEqual(resp["status"], 403)
+        self.assertEqual(resp["data"]["reason"], "Token not at correct step.")
+
+        vk_stage_raw = self.vk.get(f"register:{auth_user}")
+        vk_stage = json.loads(vk_stage_raw)
+
+        self.assertEqual(vk_stage["stage"], "username-valid")
+
+    def test_backup_code_no_stage(self):
+        """
+        Tests getting a backup code with no
+        Valkey stage.
+        """
+
+        client = RegisterRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "register-rpc",
+        )
+
+        auth_user = str(uuid.uuid4())
+
+        # try to get a backup code
+        resp = client.backup_code_call(auth_user, "testing")
+
+        self.assertEqual(resp["status"], 400)
+        self.assertEqual(resp["data"]["reason"], "Token doesn't exist.")
+
+        vk_stage_raw = self.vk.get(f"register:{auth_user}")
+        self.assertIsNone(vk_stage_raw)
 
     def test_verify_otp(self):
         """
@@ -63,10 +189,7 @@ class RegisterRPCTest(AutocleanTestCase):
 
         # set password
         _ = client.set_password_call(
-            auth_user,
-            "testing",
-            "this-is-a-dummy-value"
-        )
+            auth_user, "testing", "this-is-a-dummy-value")
 
         # setup OTP
         resp = client.setup_otp_call(
@@ -119,10 +242,7 @@ class RegisterRPCTest(AutocleanTestCase):
 
         # set password
         _ = client.set_password_call(
-            auth_user,
-            "testing",
-            "this-is-a-dummy-value"
-        )
+            auth_user, "testing", "this-is-a-dummy-value")
 
         # setup OTP
         resp = client.setup_otp_call(
@@ -178,10 +298,7 @@ class RegisterRPCTest(AutocleanTestCase):
 
         # set password
         _ = client.set_password_call(
-            auth_user,
-            "testing",
-            "this-is-a-dummy-value"
-        )
+            auth_user, "testing", "this-is-a-dummy-value")
 
         # setup OTP
         _ = client.setup_otp_call(
@@ -230,10 +347,7 @@ class RegisterRPCTest(AutocleanTestCase):
 
         # set password
         _ = client.set_password_call(
-            auth_user,
-            "testing",
-            "this-is-a-dummy-value"
-        )
+            auth_user, "testing", "this-is-a-dummy-value")
 
         # setup OTP
         _ = client.setup_otp_call(
@@ -280,10 +394,7 @@ class RegisterRPCTest(AutocleanTestCase):
 
         # set password
         _ = client.set_password_call(
-            auth_user,
-            "testing",
-            "this-is-a-dummy-value"
-        )
+            auth_user, "testing", "this-is-a-dummy-value")
 
         # setup OTP
         resp = client.setup_otp_call(
@@ -391,10 +502,7 @@ class RegisterRPCTest(AutocleanTestCase):
 
         # set password
         _ = client.set_password_call(
-            auth_user,
-            "testing",
-            "this-is-a-dummy-value"
-        )
+            auth_user, "testing", "this-is-a-dummy-value")
 
         # setup OTP
         resp = client.setup_otp_call(
@@ -482,10 +590,12 @@ class RegisterRPCTest(AutocleanTestCase):
         )
 
         auth_user = str(uuid.uuid4())
-        stage = json.dumps({
-            "stage": "username-valid",
-            "username": "NotExists",
-        })
+        stage = json.dumps(
+            {
+                "stage": "username-valid",
+                "username": "NotExists",
+            }
+        )
         self.vk.setex(f"register:{auth_user}", 1, stage)
 
         vk_stage = self.vk.get(f"register:{auth_user}")
@@ -497,10 +607,7 @@ class RegisterRPCTest(AutocleanTestCase):
         self.assertIsNone(vk_stage)
 
         resp = client.set_password_call(
-            auth_user,
-            "testing",
-            "this-is-a-dummy-value"
-        )
+            auth_user, "testing", "this-is-a-dummy-value")
 
         self.assertEqual(resp["status"], 400)
         self.assertEqual(resp["data"]["reason"], "Token doesn't exist.")
@@ -530,10 +637,7 @@ class RegisterRPCTest(AutocleanTestCase):
 
         # set password
         resp = client.set_password_call(
-            auth_user,
-            "testing",
-            "this-is-a-dummy-value"
-        )
+            auth_user, "testing", "this-is-a-dummy-value")
 
         self.assertEqual(resp["status"], 200)
         self.assertEqual(resp["data"], {})
@@ -610,10 +714,7 @@ class RegisterRPCTest(AutocleanTestCase):
 
         # create bad stage
         auth_user = str(uuid.uuid4())
-        stage_bad = json.dumps({
-            "stage": "not-a-stage",
-            "username": "foobar"
-        })
+        stage_bad = json.dumps({"stage": "not-a-stage", "username": "foobar"})
 
         # set stage in valkey
         self.vk.setex(f"register:{auth_user}", 60 * 30, stage_bad)
