@@ -53,14 +53,11 @@ spec:
                   name: dev-db-superuser
                   key: password
             - name: ACCOUNTS_VALKEY_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: accounts-user-valkey-creds
-                  key: username
+              value: "default"
             - name: ACCOUNTS_VALKEY_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: accounts-user-valkey-creds
+                  name: accounts-valkey
                   key: password
       volumes:
         - emptyDir: {}
