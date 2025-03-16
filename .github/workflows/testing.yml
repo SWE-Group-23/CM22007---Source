@@ -64,5 +64,8 @@ jobs:
           minikube version
           uv --version
 
+      - name: Deploy
+        run: make deploy -j8
+
       - name: Run tests
         run: make test
