@@ -14,6 +14,9 @@ class RegisterRPCClient(rpcs.RPCClient):
     from the accounts subsystem.
     """
 
+    def __init__(self, *args, rpc_prefix="register-rpc", **kwargs):
+        super().__init__(*args, rpc_prefix, **kwargs)
+
     def call(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         auth_user: str,

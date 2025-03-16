@@ -53,7 +53,6 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         self.reg_client = RegisterRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"],
-            "register-rpc",
         )
 
         self.test_client = TestRPCClient(

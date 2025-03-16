@@ -26,7 +26,14 @@ class RegisterRPCServer(rpcs.RPCServer):
     Serves the register RPC.
     """
 
-    def __init__(self, vk, rabbitmq_user, rabbitmq_pass, rpc_prefix):
+    def __init__(
+        self,
+        vk,
+        rabbitmq_user,
+        rabbitmq_pass,
+        *,
+        rpc_prefix="register-rpc"
+    ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
         self.vk = vk
         self.ph = argon2.PasswordHasher()
@@ -284,15 +291,18 @@ class RegisterRPCServer(rpcs.RPCServer):
 
 def main():
     """
-    Add appropriate docs here.
+    Sets up Scylla, Valkey, and the RPC server, then starts consuming
+    the RPC call queue.
     """
 
+    logging.info("Connecting to ScyllaDB...")
     _ = shared.setup_scylla(
         keyspace=os.environ["SCYLLADB_KEYSPACE"],
         user=os.environ["SCYLLADB_USERNAME"],
         password=os.environ["SCYLLADB_PASSWORD"],
     )
 
+    logging.info("Connecting to Valkey...")
     vk = valkey.Valkey(
         host="accounts-valkey",
         port="6379",
@@ -301,11 +311,11 @@ def main():
         password=os.environ["VALKEY_PASSWORD"],
     )
 
+    logging.info("Setting up RPC server...")
     rpc_server = RegisterRPCServer(
         vk=vk,
         rabbitmq_user=os.environ["RABBITMQ_USERNAME"],
         rabbitmq_pass=os.environ["RABBITMQ_PASSWORD"],
-        rpc_prefix="register-rpc",
     )
 
     logging.info("Consuming...")

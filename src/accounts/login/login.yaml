@@ -59,6 +59,16 @@ spec:
                 configMapKeyRef:
                   name: accounts-keyspace
                   key: keyspace
+            - name: VALKEY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-user-valkey-creds
+                  key: username
+            - name: VALKEY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-user-valkey-creds
+                  key: password
       volumes:
         - emptyDir: {}
           name: uv
@@ -91,9 +101,9 @@ spec:
   userReference:
     name: "login-rabbitmq-user"
   permissions:
-    write: ""
+    write: "login-rpc-resp-exc"
     configure: ""
-    read: ""
+    read: "login-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq
