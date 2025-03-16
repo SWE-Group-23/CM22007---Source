@@ -91,9 +91,9 @@ spec:
   userReference:
     name: "send-message-rabbitmq-user"
   permissions:
-    write: ""
+    write: "sendmessage-rpc-resp-exc"
     configure: ""
-    read: ""
+    read: "sendmessage-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq
