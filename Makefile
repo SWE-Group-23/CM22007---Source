@@ -9,23 +9,34 @@
 DOCKER_RUNTIME ?= docker
 MINIKUBE_DRIVER ?= docker
 
-# paths to Dockerfiles for each service
-SERVICES=$(wildcard src/*/*/Dockerfile)
-# names of services
-SERVICE_NAMES=$(notdir $(patsubst %/Dockerfile, %, $(SERVICES)))
+# set resource usage, these are minimums but can be redefined in .build_config.mk
+MINIKUBE_CPU ?= 3
+MINIKUBE_MEM ?= 4g
 
-# service k8s configs
-K8S_CFGS=$(wildcard src/*/*/*.yaml)
+# service locations
+SERVICES := $(wildcard src/*/*/Dockerfile)
+SERVICE_DIRS := $(patsubst %/Dockerfile,%,$(SERVICES))
+SERVICE_NAMES := $(notdir $(SERVICE_DIRS))
+STAMPS := $(patsubst %,stamps/%.stamp,$(SERVICE_NAMES))
 
+# shared files that trigger rebuilds for all services
+SHARED_FILES := $(wildcard src/shared/*.py)
+
+# kubernetes configurations
+K8S_CFGS := $(wildcard src/*/*/*.yaml)
+
+.PHONY: all
 all: deploy
 
 ##
 # Util
 ##
 
+.PHONY: rabbitmq-manage
 rabbitmq-manage:
 	@kubectl rabbitmq -n rabbitmq manage rabbitmq
 
+.PHONY: rabbitmq-creds
 rabbitmq-creds:
 	@echo Username:
 	@kubectl get secret -n rabbitmq rabbitmq-default-user -o jsonpath='{.data.username}' | base64 --decode 
@@ -34,6 +45,7 @@ rabbitmq-creds:
 	@kubectl get secret -n rabbitmq rabbitmq-default-user -o jsonpath='{.data.password}' | base64 --decode
 	@echo
 
+.PHONY: scylla-creds
 scylla-creds:
 	@echo Username:
 	@kubectl get secret -n scylla-auth dev-db-superuser -o jsonpath='{.data.username}' | base64 --decode 
@@ -42,6 +54,7 @@ scylla-creds:
 	@kubectl get secret -n scylla-auth dev-db-superuser -o jsonpath='{.data.password}' | base64 --decode
 	@echo
 
+.PHONY: pylint
 pylint:
 	@echo "Running pylint..."
 	@if ! uv tool run pylint $(shell git ls-files '*.py'); then \
@@ -51,18 +64,22 @@ pylint:
 	fi
 
 # just deletes deployments for now
+.PHONY: clean
 clean: deploy-clean test-clean
 
 # deletes minikube (which should delete all deployments)
+.PHONY: clean-all
 clean-all: minikube-clean-full
 
 # print all the services in SERVICES and the path to their Dockerfile
+.PHONY: print-services
 print-services:
-	@for service in $(SERVICES); do \
-		name=$$(basename $$(dirname $$service)); \
-		echo "$$name : $$service"; \
+	@for service in $(SERVICE_DIRS); do \
+		name=$$(basename $$service); \
+		echo "$$name : $$service/Dockerfile"; \
 	done
 
+.PHONY: print-k8s-cfgs
 print-k8s-cfgs:
 	@echo "Service k8s + queues:"
 	@for config in $(K8S_CFGS); do \
@@ -77,8 +94,9 @@ print-k8s-cfgs:
 	done
 
 # check if docker is running
+.PHONY: check-docker
 check-docker:
-	@if ! $(DOCKER_RUNTIME) info > /dev/null 2>&1; then \
+	@if ! $(DOCKER_RUNTIME) info >/dev/null 2>&1; then \
 		echo "Docker isn't running, please start the docker daemon (using systemd: \`sudo systemctl start $(DOCKER_RUNTIME)\`)."; \
 		exit 1; \
 	fi
@@ -88,54 +106,70 @@ check-docker:
 ##
 
 # start minikube if it isn't already running
+.PHONY: minikube
 minikube: check-docker
-	@echo "Starting minikube with $(MINIKUBE_DRIVER) driver..."
-	@if minikube status | grep -q "host: Running"; then \
-		echo "Minikube already running."; \
-	else \
-		minikube start --driver=$(MINIKUBE_DRIVER) --cpus 3 --memory 3g; \
+	@if ! minikube status | grep -q "host: Running"; then \
+		echo "Starting minikube with $(MINIKUBE_DRIVER) driver..."; \
+		minikube start --driver=$(MINIKUBE_DRIVER) --cpus $(MINIKUBE_CPU) --memory $(MINIKUBE_MEM); \
 		echo "Done!"; \
 	fi
 
 # stop minikube
+.PHONY: minikube-clean
 minikube-clean:
 	@echo "Stopping minikube..."
 	@-minikube stop
 	@echo "Done!"
 
 # restart minikube
+.PHONY: minikube-restart
 minikube-restart: minikube-clean | minikube
 
 # delete minikube vm
+.PHONY: minikube-clean-full
 minikube-clean-full: minikube-clean
 	@echo "Deleting minikube..."
 	@-minikube delete
+	@-rm stamps/* 
 	@echo "Done!"
 
 # delete minikube vm then start up a new one
+.PHONY: minikube-reset
 minikube-reset: minikube-clean-full | minikube
 
 ##
-# Build + Deployment
+# Build
 ##
 
-# build all services within minikube
-build: minikube check-docker
-	@echo "Building docker images inside Minikube..."
-	@set -e; for service in $(SERVICES); do \
-		name=$$(basename $$(dirname $$service)); \
-		echo "Building $$name..."; \
-		( \
-			cd $$(dirname $$service); \
-			cp -r ../../shared .; \
-			uv lock; \
-			minikube image build -t $$name .; \
-			rm -r shared/; \
-		); \
-		echo "Done!"; \
-	done
+define BUILD_RULE
+stamps/$(1).stamp: $$(wildcard src/*/$(1)/*) $(SHARED_FILES) | check-docker minikube
+	@echo "Building $(1)..."
+	@mkdir -p stamps
+	@( \
+		cd $$(dir $$(filter %/Dockerfile,$$^)); \
+		cp -r ../../shared .; \
+		uv lock; \
+		minikube image build -t $(1) .; \
+		rm -rf shared; \
+	)
+	@touch $$@
+endef
 
-cert-manager:
+$(foreach service,$(SERVICE_NAMES),$(eval $(call BUILD_RULE,$(service))))
+
+# build all services within minikube
+.PHONY: build
+build: $(STAMPS)
+	@echo "Build complete."
+
+##
+# Deploy
+##
+
+## Cert Manager
+
+.PHONY: cert-manager
+cert-manager: minikube
 	@echo "Install cert-manager..."
 	@# check if cert manager is already installed
 	@if ! kubectl get crd certificates.cert-manager.io &>/dev/null || ! kubectl get deployment -n cert-manager | grep -q 'cert-manager'; then \
@@ -149,6 +183,9 @@ cert-manager:
 	@kubectl -n cert-manager rollout status --timeout=5m deployment.apps/cert-manager-webhook
 	@kubectl -n cert-manager rollout status --timeout=5m deployment.apps/cert-manager-cainjector
 
+## ScyllaDB
+
+.PHONY: scylladb-setup
 scylladb-setup: minikube cert-manager
 	@# @echo "Installing Prometheus Operator..."
 	@#kubectl apply --server-side -f=https://github.com/prometheus-operator/prometheus-operator/releases/latest/download/bundle.yaml
@@ -156,6 +193,7 @@ scylladb-setup: minikube cert-manager
 	kubectl -n=scylla-operator apply --server-side -f=https://raw.githubusercontent.com/scylladb/scylla-operator/refs/heads/v1.15/deploy/operator.yaml
 	@echo "Done!"
 
+.PHONY: scylladb-clean
 scylladb-clean: deploy-clean
 	@echo "Deleting ScyllaDB clusters..."
 	kubectl delete --namespace=scylla --all scyllaclusters.scylla.scylladb.com
@@ -165,12 +203,16 @@ scylladb-clean: deploy-clean
 	kubectl delete secrets template-user-scylla-creds
 	@echo "Done!"
 
+.PHONY: scylladb-clean-full
 scylladb-clean-full: scylladb-clean
 	@echo "Deleting ScyllaDB operators..."
 	kubectl delete --namespace=scylla-operator --all deployment
 	@echo "Done!"
 
+## RabbitMQ
+
 # installs rabbitmq cluster operator, cert-manager, rabbitmq topology operator, then deploys rabbitmq
+.PHONY: rabbitmq-setup
 rabbitmq-setup: minikube cert-manager
 	@echo "Checking rabbitMQ cluster operator..."
 	@if ! kubectl get deployment -n rabbitmq-system | grep -q 'rabbitmq-cluster-operator'; then \
@@ -203,6 +245,7 @@ rabbitmq-setup: minikube cert-manager
 	@echo "Done!"
 
 # delete all deployments made in rabbitmq-setup
+.PHONY: rabbitmq-clean
 rabbitmq-clean: deploy-clean
 	@echo "Deleting rabbitmq deployments..."
 	@kubectl delete -f k8s/rabbit-mq.yaml
@@ -210,7 +253,10 @@ rabbitmq-clean: deploy-clean
 	@echo "Deleting cert-manager deployments..."
 	@kubectl delete --namespace=cert-manager --all deployment
 
+## Valkey
+
 # sets up valkey if it isn't already installed
+.PHONY: valkey-setup
 valkey-setup: minikube
 	@echo "Checking for Valkey operator..."
 	@if kubectl get deployment -n valkey-operator-system | grep -q 'valkey-operator-controller-manager'; then \
@@ -222,6 +268,7 @@ valkey-setup: minikube
 	fi
 
 # deletes valkey deployment
+.PHONY: valkey-clean
 valkey-clean:
 	@echo "Deleting Valkey auth namespace..."
 	@-kubectl delete namespace valkey-auth
@@ -233,8 +280,9 @@ valkey-clean:
 	@echo "Done!"
 
 # deploys dependencies in parallel
+.PHONY: deploy-dependencies _deploy-scylladb _deploy-rabbitmq _deploy-valkey
 deploy-dependencies: cert-manager
-	$(MAKE) -j 4 _deploy-scylladb _deploy-rabbitmq _deploy-valkey _build
+	$(MAKE) -j 3 _deploy-scylladb _deploy-rabbitmq _deploy-valkey 
 
 _deploy-scylladb:
 	$(MAKE) scylladb-setup
@@ -245,10 +293,8 @@ _deploy-rabbitmq:
 _deploy-valkey:
 	$(MAKE) valkey-setup
 
-_build:
-	$(MAKE) build
-
 # deploys the database pod
+.PHONY: deploy-database
 deploy-database: deploy-dependencies
 	@echo "Waiting for ScyllaDB to start..."
 	@kubectl wait --for condition=established crd/scyllaclusters.scylla.scylladb.com
@@ -261,6 +307,7 @@ deploy-database: deploy-dependencies
 	@echo "Done!"
 
 # waits for rabbitmq, valkey, and scylladb to start
+.PHONY: wait-ready
 wait-ready: deploy-dependencies deploy-database
 	@printf "Waiting for rabbitMQ to start"
 	@until kubectl rabbitmq -n rabbitmq list | grep -q -E "rabbitmq +True"; do sleep 1; printf "."; done; printf "\n"
@@ -272,12 +319,14 @@ wait-ready: deploy-dependencies deploy-database
 	@echo "Done!"
 
 # apply all k8s configs in the k8s/ directory
-deploy: minikube | wait-ready
+.PHONY: deploy
+deploy: build wait-ready
 	$(MAKE) deploy-unchecked
 
 # apply all k8s configs in the k8s/ directory without checking
 # if infra is running first. use this target only if you know
 # infra is running.
+.PHONY: deploy-unchecked
 deploy-unchecked: minikube | build
 	@echo "Deploying CRDs..."
 	@kubectl apply -f k8s/crds/
@@ -320,6 +369,7 @@ deploy-unchecked: minikube | build
 	@echo "Done!"
 
 # delete all deployments in each subsystem
+.PHONY: deploy-clean
 deploy-clean:
 	@echo "Deleting deployments in all subsystem namespaces..."
 	@-for subsystem in $$(ls -d src/* | grep -vE 'shared|operators' | xargs -n1 basename); do \
@@ -329,6 +379,7 @@ deploy-clean:
 	@echo "Done!"
 
 # delete all deployments, then rebuild and deploy
+.PHONY: redeploy redeploy-unchecked
 redeploy: deploy-clean | deploy
 redeploy-unchecked: deploy-clean | deploy-unchecked
 
@@ -336,9 +387,11 @@ redeploy-unchecked: deploy-clean | deploy-unchecked
 # Testing
 ##
 
+.PHONY: test
 test: deploy
 	$(MAKE) test-unchecked
 
+.PHONY: test-unchecked
 test-unchecked: test-clean
 	@-echo "Deleting jobs..."
 	@-kubectl delete --all-namespaces jobs.batch --all
@@ -375,7 +428,6 @@ test-unchecked: test-clean
 	
 	@./tests/test-result.sh
 
+.PHONY: test-clean
 test-clean: check-docker
 	@-kubectl delete -f tests/testing.yaml
-
-.PHONY: valkey-clean valkey-setup print-k8s-cfgs scylladb-creds scylladb-clean-full scylladb-clean wait-ready redeploy-unchecked deploy-unchecked scylladb-setup cert-manager rabbitmq-clean rabbitmq-setup rabbitmq-creds all print-services check-docker build deploy deploy-clean redeploy minikube minikube-clean minikube-restart minikube-clean-full minikube-reset clean clean-all
