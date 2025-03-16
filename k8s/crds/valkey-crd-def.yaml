@@ -159,7 +159,7 @@ rules:
   verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["secrets"]
-  verbs: ["create", "delete", "get"]
+  verbs: ["create", "delete", "update", "get"]
 
 ---
 

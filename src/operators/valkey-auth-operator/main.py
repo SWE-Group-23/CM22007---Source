@@ -41,134 +41,218 @@ class ValkeyCredsOperator:
         self.failed = True
         threading.__excepthook__(args)
 
-    def create_user(self, namespace, name, data):
+    def _get_su_password(self, namespace, data):
         """
-        Creates a new user in the cluster (if they don't exist),
-        also creates a new namespaced secret with
-        their credentials.
+        Retrieves the superuser password.
         """
+        cluster_name = data["valkeyClusterReference"]
+        try:
+            su_secret = self.api_instance.read_namespaced_secret(
+                cluster_name, namespace
+            )
+            return b64decode(su_secret.data["password"]).decode()
+        except client.exceptions.ApiException as e:
+            logging.error(
+                "Failed to read superuser secret %s: %s", cluster_name, e)
+            raise e
 
-        logging.info("Creating user: %s.", name)
-        logging.info("Using data: %s", str(data))
-
-        password = secrets.token_hex(32)
-
-        su_password = b64decode(
-            self.api_instance.read_namespaced_secret(
-                data["valkeyClusterReference"], namespace
-            ).data["password"]
-        ).decode()
-
-        r = valkey.Valkey(
-            host=f"{data['valkeyClusterReference']}.{
-                namespace}.svc.cluster.local",
-            port="6379",
-            db=0,
-            username="default",
-            password=su_password,
-        )
-
-        r.acl_setuser(
-            username=name,
-            enabled=True,
-            passwords="+" + password,
-            keys="*",
-            commands=data["commands"].split(" "),
-        )
-
-        logging.info("Creating secret for user: %s.", name)
+    def _create_or_update_user_secret(self, namespace, name, data, password):
+        """
+        Creates or updates a secret with the user's credentials.
+        """
+        secret_name = f"{name}-valkey-creds"
         body = client.V1Secret()
-        body.string_data = {"username": name, "password": password}
-        metadata = client.V1ObjectMeta()
-        metadata.name = f"{name}-valkey-creds"
-        metadata.labels = {
-            "app.kubernetes.io/component": "valkey",
-            "app.kubernetes.io/instance": data["valkeyClusterReference"],
+        body.string_data = {
+            "username": name,
+            "password": password,
         }
+        metadata = client.V1ObjectMeta(
+            name=secret_name,
+            labels={
+                "app.kubernetes.io/component": "valkey",
+                "app.kubernetes.io/instance": data["valkeyClusterReference"],
+            },
+        )
         body.metadata = metadata
 
         try:
             self.api_instance.create_namespaced_secret(namespace, body)
+            logging.info("Created secret for user %s.", name)
         except client.exceptions.ApiException as e:
-            # 409: conflict, e.g. namespaced secret already exists
-            if str(e).find("(409)") == -1:
+            if e.status == 409:
+                # Update existing secret
+                existing_secret = self.api_instance.read_namespaced_secret(
+                    secret_name, namespace
+                )
+                existing_secret.string_data = body.string_data
+                self.api_instance.replace_namespaced_secret(
+                    secret_name, namespace, existing_secret
+                )
+                logging.info("Updated secret for user %s.", name)
+            else:
                 raise e
-            logging.warning("User secret already exists.")
 
-        del password
-        logging.info("Created user: %s.", name)
+    def create_user(self, namespace, name, data):
+        """
+        Creates or updates a user in Valkey and ensures the secret is updated.
+        """
+        logging.info("Creating/updating user: %s.", name)
+        logging.info("Using data: %s", str(data))
+
+        su_password = self._get_su_password(namespace, data)
+
+        # start handling update
+        secret_name = f"{name}-valkey-creds"
+        user_password = None
+
+        # check for existing user secret
+        try:
+            user_secret = self.api_instance.read_namespaced_secret(
+                secret_name, namespace
+            )
+            # if exists, then use password from current secret
+            user_password = b64decode(user_secret.data["password"]).decode()
+            logging.info(
+                "Using existing password for user %s from secret.", name)
+        except client.exceptions.ApiException as e:
+            if e.status == 404:
+                # if it doesn't exist, generate new password
+                user_password = secrets.token_hex(32)
+                logging.info("Generated new password for user %s.", name)
+                self._create_or_update_user_secret(
+                    namespace, name, data, user_password)
+            else:
+                raise e
+
+        # configure user
+        cluster_name = data["valkeyClusterReference"]
+        r = valkey.Valkey(
+            host=f"{cluster_name}.{namespace}.svc.cluster.local",
+            port=6379,
+            username="default",
+            password=su_password,
+        )
+
+        # check if the user exists
+        try:
+            _ = r.acl_getuser(name)
+            user_exists = True
+        except valkey.exceptions.ResponseError as e:
+            if "User " + name + " does not exist" in str(e):
+                user_exists = False
+            else:
+                raise e
+
+        # create or update user password
+        if user_exists:
+            logging.info("Updating existing user %s.", name)
+            r.acl_setuser(
+                username=name,
+                enabled=True,
+                passwords=[f"+{user_password}"],
+                reset_passwords=True,
+                keys="*",
+                commands=data["commands"].split(" "),
+            )
+        else:
+            logging.info("Creating new user %s.", name)
+            r.acl_setuser(
+                username=name,
+                enabled=True,
+                passwords=[f"+{user_password}"],
+                keys="*",
+                commands=data["commands"].split(" "),
+            )
+
+        # ensure secret is up to date
+        try:
+            current_secret = self.api_instance.read_namespaced_secret(
+                secret_name, namespace
+            )
+            current_password = b64decode(
+                current_secret.data["password"]).decode()
+            if current_password != user_password:
+                self._create_or_update_user_secret(
+                    namespace, name, data, user_password)
+        except client.exceptions.ApiException as e:
+            if e.status == 404:
+                self._create_or_update_user_secret(
+                    namespace, name, data, user_password)
+            else:
+                raise e
+
+        logging.info("User %s configured successfully.", name)
+        r.close()
 
     def delete_user(self, namespace, name, data):
         """
         Deletes a user in the cluster (if they exist),
         also removing their credentials.
         """
+
         logging.info("Deleting user: %s", name)
         logging.info("Using data: %s", str(data))
 
-        logging.info("Deleting secret for user %s.", name)
+        # retrieve superuser password
+        su_password = self._get_su_password(namespace, data)
 
-        su_password = b64decode(
-            self.api_instance.read_namespaced_secret(
-                data["valkeyClusterReference"], namespace
-            ).data["password"]
-        ).decode()
-
+        cluster_name = data["valkeyClusterReference"]
         r = valkey.Valkey(
-            host=f"{data['valkeyClusterNamespace']}.{
-                namespace}.svc.cluster.local",
-            port="6379",
-            db=0,
+            host=f"{cluster_name}.{namespace}.svc.cluster.local",
+            port=6379,
             username="default",
             password=su_password,
         )
 
-        r.acl_deluser(name)
-
+        # delete user
         try:
-            self.api_instance.delete_namespaced_secret(
-                f"{name}-scylla-creds",
-                namespace,
-            )
-        except client.exceptions.ApiException as e:
-            # 409: conflict
-            if str(e).find("(409)") == -1:
+            r.acl_deluser(name)
+            logging.info("Deleted user %s from Valkey.", name)
+        except valkey.exceptions.ResponseError as e:
+            if "User " + name + " does not exist" not in str(e):
                 raise e
-            logging.warning("User secret doesn't exist.")
 
-        logging.info("Deleted user: %s.", name)
+        # delete secret
+        secret_name = f"{name}-valkey-creds"
+        try:
+            self.api_instance.delete_namespaced_secret(secret_name, namespace)
+            logging.info("Deleted secret for user %s.", name)
+        except client.exceptions.ApiException as e:
+            if e.status != 404:
+                raise e
+
+        r.close()
 
     def process_users(self):
         """
-        Processes user event stream, supports
-        creating and deleting users.
+        Processes user event stream for create/update/delete events.
         """
+        w = watch.Watch()
         while True:
-            stream = watch.Watch().stream(
+            stream = w.stream(
                 self.objects_api_instance.list_cluster_custom_object,
                 self.config["group"],
                 self.config["version"],
                 "valkeyusers",
             )
             for event in stream:
-                custom_resource = event["object"]
-                name = custom_resource["metadata"]["name"]
-                namespace = custom_resource["metadata"]["namespace"]
-                data = custom_resource.get("spec", {})
+                cr = event["object"]
+                name = cr["metadata"]["name"]
+                namespace = cr["metadata"]["namespace"]
+                data = cr.get("spec", {})
 
-                match event["type"]:
-                    case "ADDED":
-                        self.create_user(
-                            namespace,
-                            name,
-                            data,
-                        )
-                    case "DELETED":
-                        self.delete_user(
-                            namespace,
-                            name,
-                            data,
-                        )
+                event_type = event["type"]
+                logging.info("Handling event %s for user %s", event_type, name)
+
+                try:
+                    if event_type in ("ADDED", "MODIFIED"):
+                        self.create_user(namespace, name, data)
+                    elif event_type == "DELETED":
+                        self.delete_user(namespace, name, data)
+                except Exception as e:
+                    logging.error("Error processing event: %s", e)
+                    self.failed = True
+                    raise
 
     def run(self):
         """
@@ -190,8 +274,7 @@ class ValkeyCredsOperator:
 
 def main():
     """
-    Sets up login, then starts processing
-    user, keyspace, and permission streams.
+    Sets up logging, then runs the operator.
     """
     logging.basicConfig(level=logging.INFO)
     operator = ValkeyCredsOperator()
