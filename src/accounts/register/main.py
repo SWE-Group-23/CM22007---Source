@@ -224,13 +224,13 @@ class RegisterRPCServer(rpcs.RPCServer):
 
         # generate backup code
         backup_code = (
-            secrets.token_hex(8)
+            secrets.token_hex(3)
             + "-"
-            + secrets.token_hex(8)
+            + secrets.token_hex(3)
             + "-"
-            + secrets.token_hex(8)
+            + secrets.token_hex(3)
             + "-"
-            + secrets.token_hex(8)
+            + secrets.token_hex(3)
         )
 
         # hash backup code for storage
