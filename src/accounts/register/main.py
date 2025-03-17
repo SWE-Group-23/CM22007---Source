@@ -198,7 +198,7 @@ class RegisterRPCServer(rpcs.RPCServer):
         totp = pyotp.totp.TOTP(cur_stage["otp_sec"])
 
         # check given OTP against stored OTP
-        if not totp.verify(req["data"]["otp"]):
+        if not totp.verify(req["data"]["otp"], valid_window=1):
             return rpcs.response(400, {"reason": "OTP incorrect."})
 
         # update stage
