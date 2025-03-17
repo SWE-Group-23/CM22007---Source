@@ -92,6 +92,29 @@ class LoginRPCTest(AutocleanTestCase):
 
         return pw_digest
 
+    def _advance_to_otp(self):
+        pw_digest = self._create_user()
+        token = str(uuid.uuid4())
+
+        resp = self.login_client.user_pw_call(
+            token,
+            "testing",
+            "Exists",
+            pw_digest,
+        )
+
+        self.assertEqual(resp["status"], 200)
+        self.assertTrue(resp["data"]["correct"])
+
+        return {
+            "token": token,
+            "username": "Exists",
+            "password_digest": pw_digest,
+            "otp_secret": model.Accounts.objects.only(
+                ["otp_secret"],
+            ).get(username="Exists")["otp_secret"],
+        }
+
     def test_username_password(self):
         """
         Tests checking good/bad username/password
@@ -229,3 +252,55 @@ class LoginRPCTest(AutocleanTestCase):
 
         vk_raw = self.vk.get(f"login:{token}")
         self.assertEqual(stage, vk_raw.decode())
+
+    def test_verify_otp(self):
+        """
+        Tests the verify OTP call with
+        a correct OTP.
+        """
+        ctx = self._advance_to_otp()
+
+        totp = pyotp.totp.TOTP(ctx["otp_secret"])
+
+        resp = self.login_client.verify_otp_call(
+            ctx["token"],
+            "testing",
+            totp.now(),
+        )
+
+        self.assertEqual(resp["status"], 200)
+        self.assertTrue(resp["data"]["correct"])
+        self.assertIsNone(self.vk.get(f"login:{ctx['token']}"))
+
+    def test_verify_otp_incorrect(self):
+        """
+        Tests the verify OTP call with
+        incorrect OTPs.
+        """
+
+        ctx = self._advance_to_otp()
+
+        totp = pyotp.totp.TOTP(ctx["otp_secret"])
+
+        # wrong OTP
+        otp = "123456"
+
+        # this probably will not happen
+        if totp.verify(otp, valid_window=1):
+            otp = "654321"
+
+            # if this happens i will buy two lottery tickets
+            if totp.verify(otp, valid_window=1):
+                otp = "123321"
+
+        resp = self.login_client.verify_otp_call(
+            ctx["token"],
+            "testing",
+            otp,
+        )
+
+        self.assertEqual(resp["status"], 200)
+        self.assertFalse(resp["data"]["correct"])
+        vk_stage = json.loads(self.vk.get(f"login:{ctx['token']}"))
+        self.assertEqual(vk_stage["stage"], "username-password")
+        self.assertEqual(vk_stage["username"], ctx["username"])

@@ -43,7 +43,7 @@ class LoginRPCServer(rpcs.RPCServer):
         returning either an error response or the
         current stage.
         """
-        cur_stage_raw = self.vk.get(f"register:{req['authUser']}")
+        cur_stage_raw = self.vk.get(f"login:{req['authUser']}")
 
         if cur_stage_raw is None:
             return (
@@ -121,14 +121,20 @@ class LoginRPCServer(rpcs.RPCServer):
         input the correct OTP.
         """
         # check at correct stage
-        err, cur_stage = self._check_stage(req, "setting-up-otp")
+        err, cur_stage = self._check_stage(req, "username-password")
         if err:
             return err
 
         try:
-            otp_sec = model.Accounts.get(
-                cur_stage["username"],
-            ).only("otp_secret")
+            otp_sec = (
+                model.Accounts.objects()
+                .only(
+                    ["otp_secret"],
+                )
+                .get(
+                    username=cur_stage["username"],
+                )["otp_secret"]
+            )
         except query.DoesNotExist:
             self.vk.delete(f"login:{req['authUser']}")
             return rpcs.response(400, {"reason": "User no longer exists."})
@@ -144,6 +150,8 @@ class LoginRPCServer(rpcs.RPCServer):
         # OTP correct so clean up
         self.vk.delete(f"login:{req['authUser']}")
         del totp, cur_stage, otp_sec
+
+        # TODO: set last login
         return rpcs.response(200, {"correct": True})
 
     def process(self, body: bytes) -> str:

@@ -91,3 +91,39 @@ class LoginRPCClient(rpcs.RPCClient):
         )
 
         return json.loads(self._call(body=req))
+
+    def verify_otp_call(
+        self,
+        auth_user: str,
+        srv_from: str,
+        otp: str | int,
+        api_version="1.0.0",
+    ) -> dict:
+        """
+        Calls the verify OTP stage of the login RPC.
+
+        Args:
+            auth_user: str - session token calling.
+            srv_from: str - name of the calling service.
+            otp: str | int - the OTP to verify.
+            api_version="1.0.0" - the API version to call.
+
+        Returns:
+            dict - deserialised JSON response from the server.
+
+        Could throw a json.JSONDecodeError.
+        """
+
+        step_data = {
+            "step": "verify-otp",
+            "otp": otp,
+        }
+
+        req = rpcs.request(
+            auth_user,
+            api_version,
+            srv_from,
+            step_data,
+        )
+
+        return json.loads(self._call(body=req))
