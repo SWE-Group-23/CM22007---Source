@@ -93,7 +93,7 @@ spec:
   permissions:
     write: "sendmessage-rpc-resp-exc"
     configure: ""
-    read: "sendmessage-rpc-call-q"
+    read: "send-message-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq

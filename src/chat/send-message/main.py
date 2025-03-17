@@ -76,7 +76,7 @@ def main():
     rpc_server = SendMessageRPCServer(
         os.environ["RABBITMQ_USERNAME"],
         os.environ["RABBITMQ_PASSWORD"],
-        "sendmessage-rpc",
+        "send-message-rpc",
     )
 
     logging.info("Consuming...")

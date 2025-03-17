@@ -1,0 +1,58 @@
+# call exchange
+apiVersion: rabbitmq.com/v1beta1
+kind: Exchange
+metadata:
+  name: send-message-rpc-call-exc
+spec:
+  name: send-message-rpc-call-exc
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+# response exchange
+apiVersion: rabbitmq.com/v1beta1
+kind: Exchange
+metadata:
+  name: send-message-rpc-resp-exc
+spec:
+  name: send-message-rpc-resp-exc
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+# call queue
+apiVersion: rabbitmq.com/v1beta1
+kind: Queue
+metadata:
+  name: send-message-rpc-call-q
+spec:
+  name: send-message-rpc-call-q
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+# sendmessage-rpc-call-exc -> sendmessage-rpc-call-q
+apiVersion: rabbitmq.com/v1beta1
+kind: Binding
+metadata:
+  name: sendmessage-rpc-call-bind
+spec:
+  source: sendmessage-rpc-call-exc
+  destination: send-message-rpc-call-q
+  routingKey: "send-message-rpc-call-q"
+  destinationType: queue
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
