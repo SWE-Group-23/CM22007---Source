@@ -272,6 +272,9 @@ class LoginRPCTest(AutocleanTestCase):
         self.assertTrue(resp["data"]["correct"])
         self.assertIsNone(self.vk.get(f"login:{ctx['token']}"))
 
+        user = model.Accounts.get(username=ctx["username"])
+        self.assertIsNotNone(user["last_login"])
+
     def test_verify_otp_incorrect(self):
         """
         Tests the verify OTP call with

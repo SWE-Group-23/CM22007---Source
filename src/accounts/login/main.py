@@ -5,6 +5,7 @@ Handles the multi-stage login process.
 import os
 import logging
 import json
+import datetime
 
 import argon2
 import valkey
@@ -149,9 +150,13 @@ class LoginRPCServer(rpcs.RPCServer):
 
         # OTP correct so clean up
         self.vk.delete(f"login:{req['authUser']}")
-        del totp, cur_stage, otp_sec
 
-        # TODO: set last login
+        # set last login
+        model.Accounts.get(
+            username=cur_stage["username"],
+        ).update(last_login=datetime.datetime.now())
+
+        del totp, cur_stage, otp_sec
         return rpcs.response(200, {"correct": True})
 
     def process(self, body: bytes) -> str:
