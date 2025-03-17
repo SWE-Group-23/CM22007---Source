@@ -4,3 +4,4 @@
 **/*.yaml
 *.yaml
 **/__pycache__
+.python-version
