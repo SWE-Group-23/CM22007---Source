@@ -32,7 +32,7 @@ class RegisterRPCServer(rpcs.RPCServer):
         rabbitmq_user,
         rabbitmq_pass,
         *,
-        rpc_prefix="register-rpc"
+        rpc_prefix="register-rpc",
     ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
         self.vk = vk
@@ -62,9 +62,9 @@ class RegisterRPCServer(rpcs.RPCServer):
         return True
 
     def _check_stage(
-            self,
-            req: dict,
-            stage: str,
+        self,
+        req: dict,
+        stage: str,
     ) -> tuple[str | None, None | dict]:
         """
         Checks if the token is at the correct stage,
@@ -75,13 +75,15 @@ class RegisterRPCServer(rpcs.RPCServer):
 
         if cur_stage_raw is None:
             return (
-                rpcs.response(400, {"reason": "Token doesn't exist."}), None)
+                rpcs.response(400, {"reason": "Token doesn't exist."}),
+                None,
+            )
 
         cur_stage = json.loads(cur_stage_raw)
         if cur_stage["stage"] != stage:
             return (
                 rpcs.response(403, {"reason": "Token not at correct step."}),
-                None
+                None,
             )
 
         return None, cur_stage
@@ -236,14 +238,15 @@ class RegisterRPCServer(rpcs.RPCServer):
         self.ph.verify(backup_hash, backup_code)
 
         # add user to database
-        (model.Accounts.if_not_exists()
-            .create(
-                    username=cur_stage["username"],
-                    password_hash=cur_stage["hash"],
-                    otp_secret=cur_stage["otp_sec"],
-                    backup_code_hash=backup_hash,
-                    created_at=datetime.datetime.now()
-                ))
+        (
+            model.Accounts.if_not_exists().create(
+                username=cur_stage["username"],
+                password_hash=cur_stage["hash"],
+                otp_secret=cur_stage["otp_sec"],
+                backup_code_hash=backup_hash,
+                created_at=datetime.datetime.now(),
+            )
+        )
 
         # delete user stage in valkey
         self.vk.delete(f"register:{req['authUser']}")

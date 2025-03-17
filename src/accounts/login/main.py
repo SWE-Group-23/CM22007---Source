@@ -8,6 +8,7 @@ import json
 
 import argon2
 import valkey
+from cassandra.cqlengine import query
 
 import shared
 from shared import rpcs
@@ -21,17 +22,64 @@ class LoginRPCServer(rpcs.RPCServer):
 
     def __init__(
         self,
-        vk,
-        rabbitmq_user,
-        rabbitmq_pass,
+        vk: valkey.Valkey,
+        rabbitmq_user: str,
+        rabbitmq_pass: str,
         *,
-        rpc_prefix="login-rpc"
+        rpc_prefix="login-rpc",
     ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
         self.vk = vk
         self.ph = argon2.PasswordHasher()
 
-    def process(self, body):
+    def _username_password(self, req: dict) -> str:
+        """
+        Handles the first stage of the login
+        process where the username and
+        password are entered.
+
+        NOTE: This is not designed to be
+        secure against side-channel attacks.
+        """
+        # check if token at correct step
+        if self.vk.get(f"login:{req['authUser']}") is not None:
+            return rpcs.response(403, {"reason": "Token not at correct step."})
+
+        try:
+            user = model.Accounts.get(username=req["data"]["username"])
+            pw_hash = user["password_hash"]
+
+            try:
+                pw_correct = self.ph.verify(
+                    pw_hash, req["data"]["password_digest"])
+            except argon2.exceptions.VerifyMismatchError:
+                pw_correct = False
+
+        except query.DoesNotExist:
+            user = None
+            pw_hash = None
+            pw_correct = False
+
+        # if password is correct and needs rehash,
+        # we should do it now while we have it
+        if pw_correct and self.ph.check_needs_rehash(pw_hash):
+            user["password_hash"] = self.ph.hash(
+                req["data"]["password_digest"])
+            user.save()
+
+        login_success = (True if user is not None else False) and pw_correct
+
+        del pw_hash, user
+
+        if login_success:
+            stage = {"stage": "username-password",
+                     "username": req["data"]["username"]}
+            self.vk.setex(f"login:{req['authUser']}",
+                          60 * 30, json.dumps(stage))
+
+        return rpcs.response(200, {"correct": login_success})
+
+    def process(self, body: bytes) -> str:
         logging.info("[RECEIVED] %s", body)
 
         # decode json
@@ -50,6 +98,8 @@ class LoginRPCServer(rpcs.RPCServer):
 
             # get response based on step
             match req["data"]["step"]:
+                case "username-password":
+                    resp = self._username_password(req)
                 case _:
                     resp = rpcs.response(400, {"reason": "Unknown step."})
 

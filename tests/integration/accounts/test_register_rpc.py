@@ -28,6 +28,9 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
     """
 
     def setUp(self):  # pylint: disable=invalid-name
+        """
+        Sets up Valkey, Scylla, RPC Clients, and Argon2.
+        """
         super().setUp()
 
         # suppress new default session warning
