@@ -67,7 +67,7 @@ class LoginRPCServer(rpcs.RPCServer):
                 req["data"]["password_digest"])
             user.save()
 
-        login_success = (True if user is not None else False) and pw_correct
+        login_success = (user is not None) and pw_correct
 
         del pw_hash, user
 
