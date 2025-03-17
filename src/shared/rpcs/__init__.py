@@ -1,5 +1,5 @@
 """
-Base classes for RPC clients and servers.
+Base classes and helper functions for RPC clients and servers.
 
 RPC naming convention:
     - {rpc_prefix}-resp-q-{UUID} - name of the queue an RPC server should
@@ -25,6 +25,7 @@ are fine).
 
 import logging
 import uuid
+import json
 from abc import ABC, abstractmethod
 
 import pika
@@ -97,10 +98,13 @@ class RPCClient(ABC):
             ),
             body=body,
         )
+
         logging.info("[to %s-call-q, id %s] %s",
                      self.rpc_prefix, self.corr_id, body)
+
         while self.response is None:
             self.connection.process_data_events(time_limit=1)
+
         return self.response
 
     @abstractmethod
@@ -157,16 +161,24 @@ class RPCServer(ABC):
         called whenever a message is received in the
         call queue.
         """
-        response = self.process(body)
+        try:
+            resp = self.process(body)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(e)
+            resp = response(
+                500,
+                {"reason": "Internal Server Error"}
+            )
+
         ch.basic_publish(
-            exchange="ping-rpc-resp-exc",
+            exchange=f"{self.rpc_prefix}-resp-exc",
             routing_key=props.reply_to,
             properties=pika.BasicProperties(
                 correlation_id=props.correlation_id),
-            body=response,
+            body=resp,
         )
         logging.info("[to %s, id %s] %s", props.reply_to,
-                     props.correlation_id, response)
+                     props.correlation_id, resp)
 
     @abstractmethod
     def process(self, body):
@@ -176,3 +188,85 @@ class RPCServer(ABC):
         and then return the response.
         """
         raise NotImplementedError
+
+
+def response(status: int, data: dict) -> str:
+    """
+    Forms a JSON string response.
+
+    Args:
+        status: int - the status code.
+        data: dict - the json object for the
+                     data field of the response
+                     as a dict.
+
+    Returns:
+        str - formatted JSON response.
+    """
+    return json.dumps(
+        {
+            "status": status,
+            "data": data,
+        }
+    )
+
+
+def request(
+    auth_user: str,
+    version: str,
+    from_svc: str,
+    data: dict,
+) -> str:
+    """
+    Forms a JSON string request.
+
+    Args:
+        auth_user: str - the authenticated user making
+                         the request.
+        version: str - the API version number (e.g. 1.0.0).
+        from_svc: str - the name of the service the request
+                    is coming from.
+        data: dict - the json object for the data field of
+                     the request as a dict.
+
+    Returns:
+        str - formatted JSON request.
+    """
+    return json.dumps(
+        {
+            "authUser": auth_user,
+            "version": version,
+            "from": from_svc,
+            "data": data,
+        }
+    )
+
+
+def request_unauth(
+    sid: str,
+    version: str,
+    from_svc: str,
+    data: dict,
+) -> str:
+    """
+    Forms a JSON string request (unauthenticated).
+
+    Args:
+        sid: str - the session ID making the request.
+        version: str - the API version number (e.g. 1.0.0).
+        from_svc: str - the name of the service the request
+                    is coming from.
+        data: dict - the json object for the data field of
+                     the request as a dict.
+
+    Returns:
+        str - formatted JSON request.
+    """
+    return json.dumps(
+        {
+            "sid": sid,
+            "version": version,
+            "from": from_svc,
+            "data": data,
+        }
+    )
