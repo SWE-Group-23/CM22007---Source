@@ -1,0 +1,31 @@
+apiVersion: custom.local/v1
+kind: ScyllaUser
+metadata:
+  name: profile-user
+  namespace: profile
+spec:
+  scyllaClusterReference: dev-db
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaKeyspace
+metadata:
+  name: profile-keyspace
+  namespace: profile
+spec:
+  scyllaClusterReference: dev-db
+  replicationFactor: 3
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaPermission
+metadata:
+  name: profile-permission
+  namespace: profile
+spec:
+  scyllaClusterReference: dev-db
+  user: profile-user
+  keyspace: profile-keyspace
+  permission: CREATE
