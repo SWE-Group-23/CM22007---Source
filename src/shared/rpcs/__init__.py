@@ -245,3 +245,33 @@ def request(
             "data": data,
         }
     )
+
+
+def request_unauth(
+    sid: str,
+    version: str,
+    from_svc: str,
+    data: dict,
+) -> str:
+    """
+    Forms a JSON string request (unauthenticated).
+
+    Args:
+        sid: str - the session ID making the request.
+        version: str - the API version number (e.g. 1.0.0).
+        from_svc: str - the name of the service the request
+                    is coming from.
+        data: dict - the json object for the data field of
+                     the request as a dict.
+
+    Returns:
+        str - formatted JSON request.
+    """
+    return json.dumps(
+        {
+            "sid": sid,
+            "version": version,
+            "from": from_svc,
+            "data": data,
+        }
+    )
