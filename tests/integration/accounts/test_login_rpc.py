@@ -7,7 +7,6 @@ import json
 import uuid
 import logging
 import datetime
-import time
 
 import valkey
 import argon2
