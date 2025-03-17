@@ -1,0 +1,185 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: valkey-auth
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress
+  namespace: valkey-auth
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-egress
+  namespace: valkey-auth
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+
+---
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: valkeyusers.custom.local
+spec:
+  group: custom.local
+  names:
+    kind: ValkeyUser
+    plural: valkeyusers
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              properties:
+                valkeyClusterReference:
+                  type: string
+                commands:
+                  type: string
+
+---
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: valkeypermissions.custom.local
+spec:
+  group: custom.local
+  names:
+    kind: ValkeyPermission
+    plural: valkeypermissions
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              properties:
+                valkeyClusterReference:
+                  type: string
+                user:
+                  type: string
+                permission:
+                  type: string
+
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: valkey-auth-operator
+  namespace: valkey-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: valkey-auth-operator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: valkey
+        app: valkey-auth-operator
+    spec:
+      serviceAccountName: valkey-operator-sa
+      containers:
+        - name: valkey-auth-operator
+          image: valkey-auth-operator:latest
+          imagePullPolicy: IfNotPresent
+          tty: true
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /home/user1/.cache/uv
+              name: uv
+            - mountPath: /tmp
+              name: temp
+      volumes:
+        - emptyDir: {}
+          name: uv
+        - emptyDir: {}
+          name: temp
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: valkey-operator-role
+rules:
+- apiGroups: ["custom.local"]
+  resources: ["valkeyusers", "valkeypermissions"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "delete", "update", "get"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: valkey-operator-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: valkey-operator-sa
+  namespace: valkey-auth
+roleRef:
+  kind: ClusterRole
+  name: valkey-operator-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: valkey-operator-sa
+  namespace: valkey-auth
