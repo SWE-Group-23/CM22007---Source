@@ -6,6 +6,7 @@ testing classes.
 import json
 import os
 from unittest import TestCase
+import time
 
 import cassandra as cs
 import cassandra.auth as ca
@@ -68,6 +69,15 @@ class AutocleanTestCase(TestCase):
             for table in tables:
                 # print(f"Truncating {keyspace}.{str(table.table_name)}...")
                 session.execute(f"TRUNCATE {keyspace}.{table.table_name};")
+                result = session.execute(
+                    f"SELECT COUNT(*) FROM {keyspace}.{table.table_name};"
+                ).one()
+                while result[0] != 0:
+                    time.sleep(0.1)
+                    session.execute(f"TRUNCATE {keyspace}.{table.table_name};")
+                    result = session.execute(
+                        f"SELECT COUNT(*) FROM {keyspace}.{table.table_name};"
+                    ).one()
 
     def _tear_down_rabbitmq(self):
         """

@@ -126,6 +126,19 @@ class LoginRPCServer(rpcs.RPCServer):
         if err:
             return err
 
+        if not (
+            isinstance(
+                req["data"]["otp"],
+                int,
+            )
+            or isinstance(
+                req["data"]["otp"],
+                str,
+            )
+        ):
+            del cur_stage
+            return rpcs.response(400, {"reason": "Malformed request."})
+
         try:
             otp_sec = (
                 model.Accounts.objects()

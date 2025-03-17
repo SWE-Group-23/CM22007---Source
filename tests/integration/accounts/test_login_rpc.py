@@ -7,6 +7,7 @@ import json
 import uuid
 import logging
 import datetime
+import time
 
 import valkey
 import argon2
@@ -81,7 +82,7 @@ class LoginRPCTest(AutocleanTestCase):
         )
 
         (
-            model.Accounts.if_not_exists().create(
+            model.Accounts.create(
                 username=username,
                 password_hash=self.ph.hash(pw_digest),
                 otp_secret=pyotp.random_base32(),
@@ -307,3 +308,54 @@ class LoginRPCTest(AutocleanTestCase):
         vk_stage = json.loads(self.vk.get(f"login:{ctx['token']}"))
         self.assertEqual(vk_stage["stage"], "username-password")
         self.assertEqual(vk_stage["username"], ctx["username"])
+
+    def test_verify_otp_int(self):
+        """
+        Tests the verify OTP call with a
+        correct OTP in int form.
+        """
+        ctx = self._advance_to_otp()
+
+        totp = pyotp.totp.TOTP(ctx["otp_secret"])
+
+        resp = self.login_client.verify_otp_call(
+            ctx["token"],
+            "testing",
+            int(totp.now()),
+        )
+
+        self.assertEqual(resp["status"], 200)
+        self.assertTrue(resp["data"]["correct"])
+        self.assertIsNone(self.vk.get(f"login:{ctx['token']}"))
+
+        user = model.Accounts.get(username=ctx["username"])
+        self.assertIsNotNone(user["last_login"])
+
+    def test_verify_otp_malformed(self):
+        """
+        Tests the verify OTP call with
+        bad values.
+        """
+
+        otps = [1234567, 123456.0, False, "DUMMY", ["test"], {"test": "test"}]
+        status = [200, 400, 200, 200, 400, 400]
+
+        for otp, status in zip(otps, status):
+            with self.subTest(otp=otp, status=status):
+                ctx = self._advance_to_otp()
+
+                resp = self.login_client.verify_otp_call(
+                    ctx["token"],
+                    "testing",
+                    otp,
+                )
+
+                if status == 200:
+                    self.assertEqual(resp["status"], status)
+                    self.assertFalse(resp["data"]["correct"])
+                else:
+                    self.assertEqual(resp["status"], status)
+                    self.assertEqual(
+                        resp["data"]["reason"],
+                        "Malformed request.",
+                    )
