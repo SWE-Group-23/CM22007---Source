@@ -32,7 +32,9 @@ class LoginRPCTest(AutocleanTestCase):
         super().setUp()
 
         # suppress new default session warning
-        logging.getLogger("cassandra.cqlengine.connection").setLevel(logging.ERROR)
+        logging.getLogger(
+            "cassandra.cqlengine.connection",
+        ).setLevel(logging.ERROR)
 
         # setup valkey
         self.vk = valkey.Valkey(

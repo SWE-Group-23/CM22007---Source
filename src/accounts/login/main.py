@@ -8,6 +8,7 @@ import json
 
 import argon2
 import valkey
+import pyotp
 from cassandra.cqlengine import query
 
 import shared
@@ -32,6 +33,33 @@ class LoginRPCServer(rpcs.RPCServer):
         self.vk = vk
         self.ph = argon2.PasswordHasher()
 
+    def _check_stage(
+        self,
+        req: dict,
+        stage: str,
+    ) -> tuple[str | None, None | dict]:
+        """
+        Checks if the token is at the correct stage,
+        returning either an error response or the
+        current stage.
+        """
+        cur_stage_raw = self.vk.get(f"register:{req['authUser']}")
+
+        if cur_stage_raw is None:
+            return (
+                rpcs.response(400, {"reason": "Token doesn't exist."}),
+                None,
+            )
+
+        cur_stage = json.loads(cur_stage_raw)
+        if cur_stage["stage"] != stage:
+            return (
+                rpcs.response(403, {"reason": "Token not at correct step."}),
+                None,
+            )
+
+        return None, cur_stage
+
     def _username_password(self, req: dict) -> str:
         """
         Handles the first stage of the login
@@ -51,7 +79,9 @@ class LoginRPCServer(rpcs.RPCServer):
 
             try:
                 pw_correct = self.ph.verify(
-                    pw_hash, req["data"]["password_digest"])
+                    pw_hash,
+                    req["data"]["password_digest"],
+                )
             except argon2.exceptions.VerifyMismatchError:
                 pw_correct = False
 
@@ -64,7 +94,8 @@ class LoginRPCServer(rpcs.RPCServer):
         # we should do it now while we have it
         if pw_correct and self.ph.check_needs_rehash(pw_hash):
             user["password_hash"] = self.ph.hash(
-                req["data"]["password_digest"])
+                req["data"]["password_digest"],
+            )
             user.save()
 
         login_success = (user is not None) and pw_correct
@@ -72,12 +103,48 @@ class LoginRPCServer(rpcs.RPCServer):
         del pw_hash, user
 
         if login_success:
-            stage = {"stage": "username-password",
-                     "username": req["data"]["username"]}
-            self.vk.setex(f"login:{req['authUser']}",
-                          60 * 30, json.dumps(stage))
+            stage = {
+                "stage": "username-password",
+                "username": req["data"]["username"],
+            }
+            self.vk.setex(
+                f"login:{req['authUser']}",
+                60 * 30,
+                json.dumps(stage),
+            )
 
         return rpcs.response(200, {"correct": login_success})
+
+    def _verify_otp(self, req: dict) -> str:
+        """
+        Verifies that a user has
+        input the correct OTP.
+        """
+        # check at correct stage
+        err, cur_stage = self._check_stage(req, "setting-up-otp")
+        if err:
+            return err
+
+        try:
+            otp_sec = model.Accounts.get(
+                cur_stage["username"],
+            ).only("otp_secret")
+        except query.DoesNotExist:
+            self.vk.delete(f"login:{req['authUser']}")
+            return rpcs.response(400, {"reason": "User no longer exists."})
+
+        # create TOTP with stored secret
+        totp = pyotp.totp.TOTP(otp_sec)
+
+        # check given OTP against stored OTP
+        if not totp.verify(req["data"]["otp"], valid_window=1):
+            del totp, cur_stage, otp_sec
+            return rpcs.response(200, {"correct": False})
+
+        # OTP correct so clean up
+        self.vk.delete(f"login:{req['authUser']}")
+        del totp, cur_stage, otp_sec
+        return rpcs.response(200, {"correct": True})
 
     def process(self, body: bytes) -> str:
         logging.info("[RECEIVED] %s", body)
@@ -100,6 +167,8 @@ class LoginRPCServer(rpcs.RPCServer):
             match req["data"]["step"]:
                 case "username-password":
                     resp = self._username_password(req)
+                case "verify-otp":
+                    resp = self._verify_otp(req)
                 case _:
                     resp = rpcs.response(400, {"reason": "Unknown step."})
 

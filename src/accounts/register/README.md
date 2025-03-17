@@ -130,7 +130,9 @@ This will:
 ```json
 {
     "status": 200,
-    "data": {}
+    "data": {
+        "correct": false
+    }
 }
 ```
 

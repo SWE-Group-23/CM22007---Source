@@ -199,7 +199,7 @@ class RegisterRPCServer(rpcs.RPCServer):
 
         # check given OTP against stored OTP
         if not totp.verify(req["data"]["otp"], valid_window=1):
-            return rpcs.response(400, {"reason": "OTP incorrect."})
+            return rpcs.response(200, {"correct": False})
 
         # update stage
         del totp
@@ -208,7 +208,7 @@ class RegisterRPCServer(rpcs.RPCServer):
         self.vk.set(f"register:{req['authUser']}", json.dumps(cur_stage))
         del cur_stage
 
-        return rpcs.response(200, {})
+        return rpcs.response(200, {"correct": True})
 
     def _backup_code(self, req: dict) -> str:
         """

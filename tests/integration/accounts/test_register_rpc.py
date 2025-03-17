@@ -285,7 +285,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         )
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"], {})
+        self.assertTrue(resp["data"]["correct"])
 
         self._assert_vk_stage(ctx.auth_user, "otp-verified", ctx.username)
         # check hash still there (would throw KeyError if not)
@@ -315,8 +315,8 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
             otp,
         )
 
-        self.assertEqual(resp["status"], 400)
-        self.assertEqual(resp["data"]["reason"], "OTP incorrect.")
+        self.assertEqual(resp["status"], 200)
+        self.assertFalse(resp["data"]["correct"])
 
         self._assert_vk_stage(ctx.auth_user, "setting-up-otp", ctx.username)
 
@@ -356,8 +356,8 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
             "1234567",
         )
 
-        self.assertEqual(resp["status"], 400)
-        self.assertEqual(resp["data"]["reason"], "OTP incorrect.")
+        self.assertEqual(resp["status"], 200)
+        self.assertFalse(resp["data"]["correct"])
 
         self._assert_vk_stage(ctx.auth_user, "setting-up-otp", ctx.username)
 
@@ -380,7 +380,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         )
 
         self.assertEqual(resp["status"], 200)
-        self.assertEqual(resp["data"], {})
+        self.assertTrue(resp["data"]["correct"])
 
         self._assert_vk_stage(ctx.auth_user, "otp-verified", ctx.username)
         # check hash still there (would throw KeyError if not)
