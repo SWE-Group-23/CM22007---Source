@@ -71,7 +71,7 @@ class RegisterRPCServer(rpcs.RPCServer):
         returning either an error response or the
         current stage.
         """
-        cur_stage_raw = self.vk.get(f"register:{req['authUser']}")
+        cur_stage_raw = self.vk.get(f"register:{req['sid']}")
 
         if cur_stage_raw is None:
             return (
@@ -97,7 +97,7 @@ class RegisterRPCServer(rpcs.RPCServer):
         """
 
         # check if already past this step
-        if self.vk.get(f"register:{req['authUser']}") is not None:
+        if self.vk.get(f"register:{req['sid']}") is not None:
             return rpcs.response(403, {"reason": "Token not at correct step."})
 
         # check username is in valid format
@@ -112,13 +112,13 @@ class RegisterRPCServer(rpcs.RPCServer):
 
         # couldn't get user with username
         except query.DoesNotExist:
-            # set authUser (should be a session token)
+            # set sid (should be a session token)
             # register stage in valkey
             stage = {"stage": "username-valid",
                      "username": req["data"]["username"]}
 
             self.vk.setex(
-                f"register:{req['authUser']}", 60 * 30, json.dumps(stage))
+                f"register:{req['sid']}", 60 * 30, json.dumps(stage))
 
             return rpcs.response(200, {"valid": True})
 
@@ -146,7 +146,7 @@ class RegisterRPCServer(rpcs.RPCServer):
         cur_stage["hash"] = pw_hash
 
         # set new stage for token
-        self.vk.set(f"register:{req['authUser']}", json.dumps(cur_stage))
+        self.vk.set(f"register:{req['sid']}", json.dumps(cur_stage))
 
         del pw_hash
         return rpcs.response(200, {})
@@ -176,7 +176,7 @@ class RegisterRPCServer(rpcs.RPCServer):
         cur_stage["otp_sec"] = secret
 
         # store new stage info
-        self.vk.set(f"register:{req['authUser']}", json.dumps(cur_stage))
+        self.vk.set(f"register:{req['sid']}", json.dumps(cur_stage))
 
         # return provisioning URI (contains secret)
         del secret, totp, cur_stage
@@ -205,7 +205,7 @@ class RegisterRPCServer(rpcs.RPCServer):
         del totp
         cur_stage["stage"] = "otp-verified"
 
-        self.vk.set(f"register:{req['authUser']}", json.dumps(cur_stage))
+        self.vk.set(f"register:{req['sid']}", json.dumps(cur_stage))
         del cur_stage
 
         return rpcs.response(200, {"correct": True})
@@ -249,7 +249,7 @@ class RegisterRPCServer(rpcs.RPCServer):
         )
 
         # delete user stage in valkey
-        self.vk.delete(f"register:{req['authUser']}")
+        self.vk.delete(f"register:{req['sid']}")
 
         return rpcs.response(200, {"backup_code": backup_code})
 

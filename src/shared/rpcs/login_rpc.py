@@ -19,7 +19,7 @@ class LoginRPCClient(rpcs.RPCClient):
 
     def call(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        auth_user: str,
+        sid: str,
         srv_from: str,
         step: str,
         step_data: dict,
@@ -29,8 +29,7 @@ class LoginRPCClient(rpcs.RPCClient):
         Calls the login RPC.
 
         Args:
-            auth_user: str - name of the authenticated
-                             user / session token calling.
+            sid: str - session ID calling.
             srv_from: str - name of the calling service.
             step: str - the step through the login
                         process.
@@ -42,8 +41,8 @@ class LoginRPCClient(rpcs.RPCClient):
             bytes - the raw response from the RPC server.
         """
         step_data["step"] = step
-        req = rpcs.request(
-            auth_user,
+        req = rpcs.request_unauth(
+            sid,
             api_version,
             srv_from,
             step_data,
@@ -53,7 +52,7 @@ class LoginRPCClient(rpcs.RPCClient):
 
     def user_pw_call(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        auth_user: str,
+        sid: str,
         srv_from: str,
         username: str,
         password_digest: str,
@@ -64,7 +63,7 @@ class LoginRPCClient(rpcs.RPCClient):
         the login RPC.
 
         Args:
-            auth_user: str - session token calling.
+            sid: str - session ID calling.
             srv_from: str - name of the calling service.
             username: str - username of the account.
             password_digest: str - the digest of the password
@@ -83,8 +82,8 @@ class LoginRPCClient(rpcs.RPCClient):
             "password_digest": password_digest,
         }
 
-        req = rpcs.request(
-            auth_user,
+        req = rpcs.request_unauth(
+            sid,
             api_version,
             srv_from,
             step_data,
@@ -94,7 +93,7 @@ class LoginRPCClient(rpcs.RPCClient):
 
     def verify_otp_call(
         self,
-        auth_user: str,
+        sid: str,
         srv_from: str,
         otp: str | int,
         api_version="1.0.0",
@@ -103,7 +102,7 @@ class LoginRPCClient(rpcs.RPCClient):
         Calls the verify OTP stage of the login RPC.
 
         Args:
-            auth_user: str - session token calling.
+            sid: str - session ID calling.
             srv_from: str - name of the calling service.
             otp: str | int - the OTP to verify.
             api_version="1.0.0" - the API version to call.
@@ -119,8 +118,8 @@ class LoginRPCClient(rpcs.RPCClient):
             "otp": otp,
         }
 
-        req = rpcs.request(
-            auth_user,
+        req = rpcs.request_unauth(
+            sid,
             api_version,
             srv_from,
             step_data,

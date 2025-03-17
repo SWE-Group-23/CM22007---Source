@@ -84,7 +84,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
 
         Returns:
             SimpleNamespace - the context, has:
-                auth_user - the user token used.
+                sid - the session ID used.
                 username - same as given in args.
                 password - same as given in args.
                 otp_uri - the OTP uri if past "setting-up-otp"
@@ -94,7 +94,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         """
         # ad-hoc obj to store context
         context = SimpleNamespace(
-            auth_user=str(uuid.uuid4()),
+            sid=str(uuid.uuid4()),
             username=username,
             password=password,
             otp_uri=None,
@@ -108,7 +108,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
             "username-valid": {
                 "execute": lambda: (
                     self.reg_client.check_valid_username_call(
-                        context.auth_user, "testing", context.username
+                        context.sid, "testing", context.username
                     )
                 ),
                 "post": None,
@@ -116,14 +116,14 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
 
             "password-set": {
                 "execute": lambda: self.reg_client.set_password_call(
-                    context.auth_user, "testing", context.password
+                    context.sid, "testing", context.password
                 ),
                 "post": None,
             },
 
             "setting-up-otp": {
                 "execute": lambda: self.reg_client.setup_otp_call(
-                    context.auth_user, "testing"
+                    context.sid, "testing"
                 ),
                 "post": lambda resp: (
                     setattr(context, "otp_uri", resp["data"]["prov_uri"]),
@@ -136,7 +136,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
 
             "otp-verified": {
                 "execute": lambda: self.reg_client.verify_otp_call(
-                    context.auth_user, "testing", pyotp.TOTP(
+                    context.sid, "testing", pyotp.TOTP(
                         context.otp_secret).now()
                 ),
                 "post": None,
@@ -144,7 +144,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
 
             "backup-code-generated": {
                 "execute": lambda: self.reg_client.backup_code_call(
-                    context.auth_user, "testing"
+                    context.sid, "testing"
                 ),
                 "post": lambda resp: setattr(
                     context, "backup_code", resp["data"]["backup_code"]
@@ -177,28 +177,28 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
                 stages[stage]["post"](response)
 
             # update Valkey data snapshot
-            context.vk_data = self._get_vk_data(context.auth_user)
+            context.vk_data = self._get_vk_data(context.sid)
 
         return context
 
-    def _get_vk_data(self, auth_user: str) -> dict | None:
+    def _get_vk_data(self, sid: str) -> dict | None:
         """
         Get the valkey data as a dict if
         possible.
         """
-        vk_raw = self.vk.get(f"register:{auth_user}")
+        vk_raw = self.vk.get(f"register:{sid}")
         return json.loads(vk_raw) if vk_raw else None
 
     def _assert_vk_stage(
         self,
-        auth_user: str,
+        sid: str,
         expected_stage: str,
         expected_username: str
     ) -> None:
         """
         Asserts that the Valkey stage is correct.
         """
-        stage_raw = self.vk.get(f"register:{auth_user}")
+        stage_raw = self.vk.get(f"register:{sid}")
         self.assertIsNotNone(stage_raw, "Valkey stage not found.")
         stage = json.loads(stage_raw)
         self.assertEqual(stage["stage"], expected_stage)
@@ -209,15 +209,15 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         Tests getting a backup code.
         """
         ctx = self._advance_to_stage("otp-verified")
-        resp = self.reg_client.backup_code_call(ctx.auth_user, "testing")
+        resp = self.reg_client.backup_code_call(ctx.sid, "testing")
 
         # update valkey data
-        ctx.vk_data = self._get_vk_data(ctx.auth_user)
+        ctx.vk_data = self._get_vk_data(ctx.sid)
 
         self.assertEqual(resp["status"], 200)
         self.assertRegex(
             resp["data"]["backup_code"],
-            "^[0-9a-f]{16}-[0-9a-f]{16}-[0-9a-f]{16}-[0-9a-f]{16}$",
+            "^[0-9a-f]{6}-[0-9a-f]{6}-[0-9a-f]{6}-[0-9a-f]{6}$",
         )
 
         # would throw query.DoesNotExist if user didn't exist
@@ -246,26 +246,26 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         ctx = self._advance_to_stage("username-valid")
 
         # try to get a backup code
-        resp = self.reg_client.backup_code_call(ctx.auth_user, "testing")
+        resp = self.reg_client.backup_code_call(ctx.sid, "testing")
 
         self.assertEqual(resp["status"], 403)
         self.assertEqual(resp["data"]["reason"], "Token not at correct step.")
-        self._assert_vk_stage(ctx.auth_user, "username-valid", ctx.username)
+        self._assert_vk_stage(ctx.sid, "username-valid", ctx.username)
 
     def test_backup_code_no_stage(self):
         """
         Tests getting a backup code with no
         Valkey stage.
         """
-        auth_user = str(uuid.uuid4())
+        sid = str(uuid.uuid4())
 
         # try to get a backup code
-        resp = self.reg_client.backup_code_call(auth_user, "testing")
+        resp = self.reg_client.backup_code_call(sid, "testing")
 
         self.assertEqual(resp["status"], 400)
         self.assertEqual(resp["data"]["reason"], "Token doesn't exist.")
 
-        vk_stage_raw = self.vk.get(f"register:{auth_user}")
+        vk_stage_raw = self.vk.get(f"register:{sid}")
         self.assertIsNone(vk_stage_raw)
 
     def test_verify_otp(self):
@@ -279,7 +279,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
 
         # call with current OTP
         resp = self.reg_client.verify_otp_call(
-            ctx.auth_user,
+            ctx.sid,
             "testing",
             totp.now(),
         )
@@ -287,7 +287,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         self.assertEqual(resp["status"], 200)
         self.assertTrue(resp["data"]["correct"])
 
-        self._assert_vk_stage(ctx.auth_user, "otp-verified", ctx.username)
+        self._assert_vk_stage(ctx.sid, "otp-verified", ctx.username)
         # check hash still there (would throw KeyError if not)
         _ = ctx.vk_data["hash"]
         self.assertEqual(ctx.vk_data["otp_sec"], totp.secret)
@@ -310,7 +310,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
 
         # call with wrong OTP
         resp = self.reg_client.verify_otp_call(
-            ctx.auth_user,
+            ctx.sid,
             "testing",
             otp,
         )
@@ -318,7 +318,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         self.assertEqual(resp["status"], 200)
         self.assertFalse(resp["data"]["correct"])
 
-        self._assert_vk_stage(ctx.auth_user, "setting-up-otp", ctx.username)
+        self._assert_vk_stage(ctx.sid, "setting-up-otp", ctx.username)
 
     def test_verify_otp_no_otp(self):
         """
@@ -329,7 +329,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
 
         # call with wrong OTP
         resp_raw = self.reg_client.call(
-            ctx.auth_user,
+            ctx.sid,
             "testing",
             "verify-otp",
             {},
@@ -339,7 +339,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         self.assertEqual(resp["status"], 400)
         self.assertEqual(resp["data"]["reason"], "Malformed request.")
 
-        self._assert_vk_stage(ctx.auth_user, "setting-up-otp", ctx.username)
+        self._assert_vk_stage(ctx.sid, "setting-up-otp", ctx.username)
 
     def test_verify_otp_malformed_otp(self):
         """
@@ -351,7 +351,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
 
         # call with malformed OTP
         resp = self.reg_client.verify_otp_call(
-            ctx.auth_user,
+            ctx.sid,
             "testing",
             "1234567",
         )
@@ -359,7 +359,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         self.assertEqual(resp["status"], 200)
         self.assertFalse(resp["data"]["correct"])
 
-        self._assert_vk_stage(ctx.auth_user, "setting-up-otp", ctx.username)
+        self._assert_vk_stage(ctx.sid, "setting-up-otp", ctx.username)
 
     def test_verify_otp_int(self):
         """
@@ -374,7 +374,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
 
         # call with current OTP
         resp = self.reg_client.verify_otp_call(
-            ctx.auth_user,
+            ctx.sid,
             "testing",
             int(totp.now()),
         )
@@ -382,7 +382,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         self.assertEqual(resp["status"], 200)
         self.assertTrue(resp["data"]["correct"])
 
-        self._assert_vk_stage(ctx.auth_user, "otp-verified", ctx.username)
+        self._assert_vk_stage(ctx.sid, "otp-verified", ctx.username)
         # check hash still there (would throw KeyError if not)
         _ = ctx.vk_data["hash"]
         self.assertEqual(ctx.vk_data["otp_sec"], totp.secret)
@@ -397,7 +397,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
 
         # call with an OTP
         resp = self.reg_client.verify_otp_call(
-            ctx.auth_user,
+            ctx.sid,
             "testing",
             "123456",
         )
@@ -405,7 +405,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         self.assertEqual(resp["status"], 403)
         self.assertEqual(resp["data"]["reason"], "Token not at correct step.")
 
-        self._assert_vk_stage(ctx.auth_user, "username-valid", ctx.username)
+        self._assert_vk_stage(ctx.sid, "username-valid", ctx.username)
 
     def test_verify_otp_no_stage(self):
         """
@@ -413,9 +413,9 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         stage.
         """
 
-        auth_user = str(uuid.uuid4())
+        sid = str(uuid.uuid4())
         resp = self.reg_client.verify_otp_call(
-            auth_user,
+            sid,
             "testing",
             "123456",
         )
@@ -431,19 +431,19 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
 
         # setup OTP
         resp = self.reg_client.setup_otp_call(
-            ctx.auth_user,
+            ctx.sid,
             "testing",
         )
 
         self.assertEqual(resp["status"], 200)
 
         # update Valkey data
-        ctx.vk_data = self._get_vk_data(ctx.auth_user)
+        ctx.vk_data = self._get_vk_data(ctx.sid)
 
         # would throw an error if the uri was invalid
         totp = pyotp.parse_uri(resp["data"]["prov_uri"])
 
-        self._assert_vk_stage(ctx.auth_user, "setting-up-otp", ctx.username)
+        self._assert_vk_stage(ctx.sid, "setting-up-otp", ctx.username)
         # check hash still there (would throw KeyError if not)
         _ = ctx.vk_data["hash"]
         self.assertEqual(ctx.vk_data["otp_sec"], totp.secret)
@@ -455,22 +455,22 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         ctx = self._advance_to_stage("username-valid")
 
         resp = self.reg_client.setup_otp_call(
-            ctx.auth_user,
+            ctx.sid,
             "testing",
         )
 
         self.assertEqual(resp["status"], 403)
         self.assertEqual(resp["data"]["reason"], "Token not at correct step.")
-        self._assert_vk_stage(ctx.auth_user, "username-valid", ctx.username)
+        self._assert_vk_stage(ctx.sid, "username-valid", ctx.username)
 
     def test_setup_otp_no_stage(self):
         """
         Tests setting up an OTP where the token
         does not have a Valkey stage.
         """
-        auth_user = str(uuid.uuid4())
+        sid = str(uuid.uuid4())
         resp = self.reg_client.setup_otp_call(
-            auth_user,
+            sid,
             "testing",
         )
 
@@ -481,25 +481,25 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         """
         Tests if a token times out correctly.
         """
-        auth_user = str(uuid.uuid4())
+        sid = str(uuid.uuid4())
         stage = json.dumps(
             {
                 "stage": "username-valid",
                 "username": "NotExists",
             }
         )
-        self.vk.setex(f"register:{auth_user}", 1, stage)
+        self.vk.setex(f"register:{sid}", 1, stage)
 
-        vk_stage = self.vk.get(f"register:{auth_user}")
+        vk_stage = self.vk.get(f"register:{sid}")
         self.assertIsNotNone(vk_stage)
 
         time.sleep(2)
 
-        vk_stage = self.vk.get(f"register:{auth_user}")
+        vk_stage = self.vk.get(f"register:{sid}")
         self.assertIsNone(vk_stage)
 
         resp = self.reg_client.set_password_call(
-            auth_user, "testing", "this-is-a-dummy-value")
+            sid, "testing", "this-is-a-dummy-value")
 
         self.assertEqual(resp["status"], 400)
         self.assertEqual(resp["data"]["reason"], "Token doesn't exist.")
@@ -512,12 +512,12 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         ctx = self._advance_to_stage("username-valid")
 
         resp = self.reg_client.set_password_call(
-            ctx.auth_user, "testing", "dummy-password")
+            ctx.sid, "testing", "dummy-password")
 
-        ctx.vk_data = self._get_vk_data(ctx.auth_user)
+        ctx.vk_data = self._get_vk_data(ctx.sid)
 
         self.assertEqual(resp["status"], 200)
-        self._assert_vk_stage(ctx.auth_user, "password-set", ctx.username)
+        self._assert_vk_stage(ctx.sid, "password-set", ctx.username)
         self.assertFalse(self.ph.check_needs_rehash(ctx.vk_data["hash"]))
         self.assertTrue(self.ph.verify(ctx.vk_data["hash"], "dummy-password"))
 
@@ -527,12 +527,12 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         allow a user to set their password
         until their username has been validated.
         """
-        auth_user = str(uuid.uuid4())
+        sid = str(uuid.uuid4())
         stage_bad = json.dumps({"stage": "bad-stage", "username": "test"})
-        self.vk.setex(f"register:{auth_user}", 60*30, stage_bad)
+        self.vk.setex(f"register:{sid}", 60*30, stage_bad)
 
         resp = self.reg_client.set_password_call(
-            auth_user, "testing", "dummy-password")
+            sid, "testing", "dummy-password")
 
         self.assertEqual(resp["status"], 403)
         self.assertEqual(resp["data"]["reason"], "Token not at correct step.")
@@ -543,9 +543,9 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         not allow a user to set their password
         if they have no stage set.
         """
-        auth_user = str(uuid.uuid4())
+        sid = str(uuid.uuid4())
         resp = self.reg_client.set_password_call(
-            auth_user, "testing", "dummy-password")
+            sid, "testing", "dummy-password")
 
         self.assertEqual(resp["status"], 400)
         self.assertEqual(resp["data"]["reason"], "Token doesn't exist.")
@@ -558,7 +558,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         ctx = self._advance_to_stage("username-valid")
 
         resp_raw = self.reg_client.call(
-            ctx.auth_user,
+            ctx.sid,
             "testing",
             "set-password",
             {"password": "dummy-password"},
@@ -577,7 +577,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         ctx = self._advance_to_stage("username-valid")
 
         resp_raw = self.reg_client.call(
-            ctx.auth_user,
+            ctx.sid,
             "testing",
             "set-password",
             {"password-digest": True},
@@ -596,16 +596,16 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
             username="Exists",
         )
 
-        auth_user = str(uuid.uuid4())
+        sid = str(uuid.uuid4())
         resp = self.reg_client.check_valid_username_call(
-            auth_user,
+            sid,
             "testing",
             "Exists",
         )
 
         self.assertEqual(resp["status"], 200)
         self.assertFalse(resp["data"]["valid"])
-        self.assertIsNone(self.vk.get(f"register:{auth_user}"))
+        self.assertIsNone(self.vk.get(f"register:{sid}"))
 
     def test_check_bad_username(self):
         """
@@ -618,15 +618,15 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
 
         for username in test_cases:
             with self.subTest(username=username):
-                auth_user = str(uuid.uuid4())
+                sid = str(uuid.uuid4())
                 resp = self.reg_client.check_valid_username_call(
-                    auth_user,
+                    sid,
                     "testing",
                     username,
                 )
                 self.assertEqual(resp["status"], 200)
                 self.assertFalse(resp["data"]["valid"])
-                self.assertIsNone(self.vk.get(f"register:{auth_user}"))
+                self.assertIsNone(self.vk.get(f"register:{sid}"))
 
     def test_check_valid_user(self):
         """
@@ -634,16 +634,16 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         correctly on unique and valid username.
         """
 
-        auth_user = str(uuid.uuid4())
+        sid = str(uuid.uuid4())
         resp = self.reg_client.check_valid_username_call(
-            auth_user,
+            sid,
             "testing",
             "NotExists",
         )
 
         self.assertEqual(resp["status"], 200)
         self.assertTrue(resp["data"]["valid"])
-        self._assert_vk_stage(auth_user, "username-valid", "NotExists")
+        self._assert_vk_stage(sid, "username-valid", "NotExists")
 
     def test_check_unique_none(self):
         """
@@ -693,7 +693,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         Tests the case where the version
         is not supported.
         """
-        req = rpcs.request(
+        req = rpcs.request_unauth(
             "testing",
             "200",
             "testing",

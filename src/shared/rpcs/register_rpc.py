@@ -19,7 +19,7 @@ class RegisterRPCClient(rpcs.RPCClient):
 
     def call(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
-        auth_user: str,
+        sid: str,
         srv_from: str,
         step: str,
         step_data: dict,
@@ -29,8 +29,7 @@ class RegisterRPCClient(rpcs.RPCClient):
         Calls the register RPC.
 
         Args:
-            auth_user: str - name of the authenticated
-                             user / session token calling.
+            sid: str - the session ID calling.
             srv_from: str - name of the calling service.
             step: str - the step through the registration
                         process.
@@ -42,8 +41,8 @@ class RegisterRPCClient(rpcs.RPCClient):
             bytes - the raw response from the RPC server.
         """
         step_data["step"] = step
-        req = rpcs.request(
-            auth_user,
+        req = rpcs.request_unauth(
+            sid,
             api_version,
             srv_from,
             step_data,
@@ -53,7 +52,7 @@ class RegisterRPCClient(rpcs.RPCClient):
 
     def check_valid_username_call(
         self,
-        auth_user: str,
+        sid: str,
         srv_from: str,
         username: str,
         api_version="1.0.0",
@@ -67,7 +66,7 @@ class RegisterRPCClient(rpcs.RPCClient):
         for what "valid" means.
 
         Args:
-            auth_user: str - name of the session token calling.
+            sid: str - the session ID calling.
             srv_from: str - name of the calling service.
             username: str - the username to check.
             api_version="1.0.0" - the API version to call.
@@ -82,8 +81,8 @@ class RegisterRPCClient(rpcs.RPCClient):
             "username": username,
         }
 
-        req = rpcs.request(
-            auth_user,
+        req = rpcs.request_unauth(
+            sid,
             api_version,
             srv_from,
             step_data,
@@ -93,7 +92,7 @@ class RegisterRPCClient(rpcs.RPCClient):
 
     def set_password_call(
         self,
-        auth_user: str,
+        sid: str,
         srv_from: str,
         password_digest: str,
         api_version="1.0.0",
@@ -106,7 +105,7 @@ class RegisterRPCClient(rpcs.RPCClient):
         and the step will be updated.
 
         Args:
-            auth_user: str - name of the session token calling.
+            sid: str - the session ID calling.
             srv_from: str - name of the calling service,
             username: str - the username to check.
             api_version="1.0.0" - the API version to call.
@@ -121,8 +120,8 @@ class RegisterRPCClient(rpcs.RPCClient):
             "password-digest": password_digest,
         }
 
-        req = rpcs.request(
-            auth_user,
+        req = rpcs.request_unauth(
+            sid,
             api_version,
             srv_from,
             step_data,
@@ -132,7 +131,7 @@ class RegisterRPCClient(rpcs.RPCClient):
 
     def setup_otp_call(
         self,
-        auth_user: str,
+        sid: str,
         srv_from: str,
         api_version="1.0.0",
     ) -> dict:
@@ -144,7 +143,7 @@ class RegisterRPCClient(rpcs.RPCClient):
         will be updated.
 
         Args:
-            auth_user: str - name of the session token calling.
+            sid: str - the session ID calling.
             srv_from: str - name of the calling service.
             api_version="1.0.0" - the API version to call.
 
@@ -157,8 +156,8 @@ class RegisterRPCClient(rpcs.RPCClient):
             "step": "setup-otp",
         }
 
-        req = rpcs.request(
-            auth_user,
+        req = rpcs.request_unauth(
+            sid,
             api_version,
             srv_from,
             step_data,
@@ -168,7 +167,7 @@ class RegisterRPCClient(rpcs.RPCClient):
 
     def verify_otp_call(
         self,
-        auth_user: str,
+        sid: str,
         srv_from: str,
         otp: str,
         api_version="1.0.0",
@@ -181,7 +180,7 @@ class RegisterRPCClient(rpcs.RPCClient):
         the token's step will be updated.
 
         Args:
-            auth_user: str - name of the session token calling.
+            sid: str - the session ID calling.
             srv_from: str - name of the calling service.
             otp: str - the OTP to verify.
             api_version="1.0.0" - the API version to call.
@@ -196,8 +195,8 @@ class RegisterRPCClient(rpcs.RPCClient):
             "otp": otp,
         }
 
-        req = rpcs.request(
-            auth_user,
+        req = rpcs.request_unauth(
+            sid,
             api_version,
             srv_from,
             step_data,
@@ -207,7 +206,7 @@ class RegisterRPCClient(rpcs.RPCClient):
 
     def backup_code_call(
         self,
-        auth_user: str,
+        sid: str,
         srv_from: str,
         api_version="1.0.0",
     ) -> dict:
@@ -219,7 +218,7 @@ class RegisterRPCClient(rpcs.RPCClient):
         code.
 
         Args:
-            auth_user: str - name of the session token calling.
+            sid: str - the session ID calling.
             srv_from: str - name of the calling service.
             api_version="1.0.0" - the API version to call.
 
@@ -232,8 +231,8 @@ class RegisterRPCClient(rpcs.RPCClient):
             "step": "backup-code"
         }
 
-        req = rpcs.request(
-            auth_user,
+        req = rpcs.request_unauth(
+            sid,
             api_version,
             srv_from,
             step_data,

@@ -44,7 +44,7 @@ class LoginRPCServer(rpcs.RPCServer):
         returning either an error response or the
         current stage.
         """
-        cur_stage_raw = self.vk.get(f"login:{req['authUser']}")
+        cur_stage_raw = self.vk.get(f"login:{req['sid']}")
 
         if cur_stage_raw is None:
             return (
@@ -71,7 +71,7 @@ class LoginRPCServer(rpcs.RPCServer):
         secure against side-channel attacks.
         """
         # check if token at correct step
-        if self.vk.get(f"login:{req['authUser']}") is not None:
+        if self.vk.get(f"login:{req['sid']}") is not None:
             return rpcs.response(403, {"reason": "Token not at correct step."})
 
         try:
@@ -109,7 +109,7 @@ class LoginRPCServer(rpcs.RPCServer):
                 "username": req["data"]["username"],
             }
             self.vk.setex(
-                f"login:{req['authUser']}",
+                f"login:{req['sid']}",
                 60 * 30,
                 json.dumps(stage),
             )
@@ -150,7 +150,7 @@ class LoginRPCServer(rpcs.RPCServer):
                 )["otp_secret"]
             )
         except query.DoesNotExist:
-            self.vk.delete(f"login:{req['authUser']}")
+            self.vk.delete(f"login:{req['sid']}")
             return rpcs.response(400, {"reason": "User no longer exists."})
 
         # create TOTP with stored secret
@@ -162,7 +162,7 @@ class LoginRPCServer(rpcs.RPCServer):
             return rpcs.response(200, {"correct": False})
 
         # OTP correct so clean up
-        self.vk.delete(f"login:{req['authUser']}")
+        self.vk.delete(f"login:{req['sid']}")
 
         # set last login
         model.Accounts.get(

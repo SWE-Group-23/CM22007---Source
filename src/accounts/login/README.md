@@ -1,7 +1,7 @@
 # Username and Password
 ```json
 {
-    "authUser": "token",
+    "sid": "token",
     "from": "public-gateway",
     "version": "1.0.0",
     "data": {
@@ -33,7 +33,7 @@ Status will be:
 # Verify OTP
 ```json
 {
-    "authUser": "token",
+    "sid": "token",
     "from": "public-gateway",
     "version": "1.0.0",
     "data": {
