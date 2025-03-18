@@ -91,9 +91,9 @@ spec:
   userReference:
     name: "create-profile-rabbitmq-user"
   permissions:
-    write: ""
+    write: "create-profile-rpc-resp-exc"
     configure: ""
-    read: ""
+    read: "create-profile-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq

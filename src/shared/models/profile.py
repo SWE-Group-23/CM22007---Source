@@ -1,3 +1,4 @@
+"""Set up tables for profile subsystem."""
 from cassandra.cqlengine.models import Model
 from cassandra.cqlengine import columns
 
@@ -17,4 +18,3 @@ class Profile(Model): # pylint: disable=too-few-public-methods
     bio = columns.Text()
     food_preferences = columns.Text()
     censor = columns.Boolean(default=False)
-

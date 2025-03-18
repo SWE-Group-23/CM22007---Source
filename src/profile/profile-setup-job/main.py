@@ -20,10 +20,9 @@ def main():
         user=os.environ["SCYLLADB_USERNAME"],
         password=os.environ["SCYLLADB_PASSWORD"],
     )
-    
+
     print("Setting up Profile  table...")
     cm.sync_table(models.Profile)
-
 
 if __name__ == "__main__":
     os.environ["CQLENG_ALLOW_SCHEMA_MANAGEMENT"] = "1"
