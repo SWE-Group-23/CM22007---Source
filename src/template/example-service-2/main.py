@@ -3,11 +3,13 @@ Example service.
 """
 
 import os
+import logging
+import json
 import time
-import uuid
 
 import shared
 from shared.rpcs.ping_rpc import PingRPCClient
+from shared.models import template as models
 
 
 def main():
@@ -16,20 +18,10 @@ def main():
     """
 
     # Set up database session
-    session = shared.setup_scylla(
+    _ = shared.setup_scylla(
         keyspace=os.environ["SCYLLADB_KEYSPACE"],
         user=os.environ["SCYLLADB_USERNAME"],
         password=os.environ["SCYLLADB_PASSWORD"],
-    )
-
-    # Create table to store pongs
-    session.execute(
-        """
-        CREATE TABLE IF NOT EXISTS pongs (
-            id UUID PRIMARY KEY,
-            message text,
-        )
-        """
     )
 
     ping_rpc = PingRPCClient(
@@ -39,20 +31,21 @@ def main():
     )
 
     while True:
-        response = ping_rpc.call()
-        print(f"[RECEIVED] {response}")
-        message = {
-            "id": uuid.uuid4(),
-            "message": response.decode(),
-        }
-        query = session.prepare(
-            """
-            INSERT INTO pongs (id, message) VALUES (?, ?);
-            """
-        )
-        session.execute(query, message.values())
+        logging.info("[CALLING]")
+        resp_raw = ping_rpc.call("example-service-2")
+
+        logging.info("[RECEIVED] %s", resp_raw)
+        try:
+            resp = json.loads(resp_raw)
+            models.Pongs.create(message=resp["data"]["message"])
+        except json.JSONDecodeError:
+            logging.warning("[BAD RESPONSE] Couldn't decode JSON.")
+        except KeyError:
+            logging.warning("[BAD RESPONSE] Response not formatted correctly.")
+
         time.sleep(1)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()

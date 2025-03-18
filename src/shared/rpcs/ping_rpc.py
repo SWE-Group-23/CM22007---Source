@@ -3,18 +3,26 @@ Example implementation of an extremely
 simple "ping - pong" RPC client.
 """
 
+from shared import rpcs
 
-from shared.rpcs import RPCClient
 
-
-class PingRPCClient(RPCClient):
+class PingRPCClient(rpcs.RPCClient):
     """
     Sub-class of RPC client which just
     sends "Ping!".
     """
 
-    def call(self, *args, **kwargs):
+    def call(self, service, *args, **kwargs):
         """
         Send "Ping!" to server.
         """
-        return self._call(body="Ping!")
+        req = rpcs.request(
+            "",
+            "1.0.0",
+            service,
+            data={
+                "message": "Ping!"
+            }
+        )
+
+        return self._call(body=req)
