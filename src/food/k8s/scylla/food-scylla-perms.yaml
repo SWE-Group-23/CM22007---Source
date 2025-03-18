@@ -1,0 +1,31 @@
+apiVersion: custom.local/v1
+kind: ScyllaUser
+metadata:
+  name: food-user
+  namespace: food
+spec:
+  scyllaClusterReference: dev-db
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaKeyspace
+metadata:
+  name: food-keyspace
+  namespace: food
+spec:
+  scyllaClusterReference: dev-db
+  replicationFactor: 3
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaPermission
+metadata:
+  name: food-permission
+  namespace: food
+spec:
+  scyllaClusterReference: dev-db
+  user: food-user
+  keyspace: food-keyspace
+  permission: CREATE
