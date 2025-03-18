@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: image-upload-service
+  name: upload-image
   namespace: image-upload
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: image-upload-service
+      app: upload-image
   template:
     metadata:
       labels:
-        app: image-upload-service
+        app: upload-image
     spec:
       containers:
-        - name: image-upload-service
-          image: image-upload-service:latest
+        - name: upload-image
+          image: upload-image:latest
           imagePullPolicy: IfNotPresent
           tty: true
           securityContext:
@@ -37,12 +37,12 @@ spec:
             - name: RABBITMQ_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: image-upload-service-rabbitmq-user-user-credentials
+                  name: upload-image-rabbitmq-user-user-credentials
                   key: username
             - name: RABBITMQ_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: image-upload-service-rabbitmq-user-user-credentials
+                  name: upload-image-rabbitmq-user-user-credentials
                   key: password
             - name: SCYLLADB_USERNAME
               valueFrom:
@@ -70,7 +70,7 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: User
 metadata:
-  name: image-upload-service-rabbitmq-user
+  name: upload-image-rabbitmq-user
   namespace: image-upload
 spec:
   tags:
@@ -84,12 +84,12 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: Permission
 metadata:
-  name: image-upload-service-rabbitmq-permission
+  name: upload-image-rabbitmq-permission
   namespace: image-upload
 spec:
   vhost: "/"
   userReference:
-    name: "image-upload-service-rabbitmq-user"
+    name: "upload-image-rabbitmq-user"
   permissions:
     write: ""
     configure: ""
