@@ -5,7 +5,7 @@ chat subsystem.
 
 import uuid
 from shared import rpcs
-
+import logging
 
 class SendMessageRPCClient(rpcs.RPCClient):
     """
@@ -31,8 +31,7 @@ class SendMessageRPCClient(rpcs.RPCClient):
                     "message": message
                 }
             )
-            print(f"Json formatted data: {req}")
         except Exception as e:
-            print(f"Error calling rpcs.request(): {e}")
+            logging.info(f"Error calling rpcs.request(): {e}")
 
         return self._call(body=req)

@@ -75,9 +75,9 @@ class SendMessageRPCTest(AutocleanTestCase):
             "send-message-rpc",
         )
 
-        response = client.call("")
+        resp_raw = client.call("")
+        response = json.loads(resp_raw)
 
-        response_json = json.loads(response)
         logging.info(f"Response: {response}")
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response_json, {"reason": "Malformed request."})
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(response["data"]["reason"], "Bad JSON.")
