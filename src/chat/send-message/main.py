@@ -14,6 +14,9 @@ class SendMessageRPCServer(rpcs.RPCServer):
     """
     Subclass of RPCServer ...
     """
+    def __init__(self, rabbitmq_user: str, rabbitmq_pass: str, *, rpc_prefix="send-message-rpc",):
+        logging.info("Initialised...")
+        super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
     def _add_message(self, chat_id, sender_id, time_sent, message):
         """
@@ -32,8 +35,7 @@ class SendMessageRPCServer(rpcs.RPCServer):
 
     def process(self, body, *args, **kwargs):
         """
-        Respond with "Pong!", unless message
-        isn't "Ping!".
+        Docs
         """
         logging.info("[RECEIVED] %s", body.decode())
 
@@ -75,10 +77,10 @@ def main():
 
     rpc_server = SendMessageRPCServer(
         os.environ["RABBITMQ_USERNAME"],
-        os.environ["RABBITMQ_PASSWORD"],
-        "send-message-rpc",
+        os.environ["RABBITMQ_PASSWORD"]
     )
 
+    
     logging.info("Consuming...")
     rpc_server.channel.start_consuming()
 

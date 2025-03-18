@@ -43,13 +43,13 @@ spec:
 
 ---
 
-# sendmessage-rpc-call-exc -> sendmessage-rpc-call-q
+# send-message-rpc-call-exc -> send-message-rpc-call-q
 apiVersion: rabbitmq.com/v1beta1
 kind: Binding
 metadata:
-  name: sendmessage-rpc-call-bind
+  name: send-message-rpc-call-bind
 spec:
-  source: sendmessage-rpc-call-exc
+  source: send-message-rpc-call-exc
   destination: send-message-rpc-call-q
   routingKey: "send-message-rpc-call-q"
   destinationType: queue
