@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: add-alert
+  namespace: alerts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: add-alert
+  template:
+    metadata:
+      labels:
+        app: add-alert
+    spec:
+      containers:
+        - name: add-alert
+          image: add-alert:latest
+          imagePullPolicy: IfNotPresent
+          tty: true
+          volumeMounts:
+            - mountPath: /home/user1/.cache/uv
+              name: uv
+            - mountPath: /tmp
+              name: temp
+          env:
+            - name: RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: add-alert-rabbitmq-user-user-credentials
+                  key: username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: add-alert-rabbitmq-user-user-credentials
+                  key: password
+            - name: SCYLLADB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: alerts-user-scylla-creds
+                  key: username
+            - name: SCYLLADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: alerts-user-scylla-creds
+                  key: password
+            - name: SCYLLADB_KEYSPACE
+              valueFrom:
+                configMapKeyRef:
+                  name: alerts-keyspace
+                  key: keyspace
+      volumes:
+        - emptyDir: {}
+          name: uv
+        - emptyDir: {}
+          name: temp
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: User
+metadata:
+  name: add-alert-rabbitmq-user
+  namespace: alerts
+spec:
+  tags:
+  - policymaker
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Permission
+metadata:
+  name: add-alert-rabbitmq-permission
+  namespace: alerts
+spec:
+  vhost: "/"
+  userReference:
+    name: "add-alert-rabbitmq-user"
+  permissions:
+    write: ""
+    configure: ""
+    read: ""
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq

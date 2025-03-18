@@ -1,0 +1,31 @@
+apiVersion: custom.local/v1
+kind: ScyllaUser
+metadata:
+  name: alerts-user
+  namespace: alerts
+spec:
+  scyllaClusterReference: dev-db
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaKeyspace
+metadata:
+  name: alerts-keyspace
+  namespace: alerts
+spec:
+  scyllaClusterReference: dev-db
+  replicationFactor: 3
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaPermission
+metadata:
+  name: alerts-permission
+  namespace: alerts
+spec:
+  scyllaClusterReference: dev-db
+  user: alerts-user
+  keyspace: alerts-keyspace
+  permission: CREATE

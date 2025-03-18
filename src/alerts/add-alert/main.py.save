@@ -1,0 +1,73 @@
+"""
+Adds an alert to the database
+
+To do: set up rpc call and test the code!
+"""
+
+
+
+import os
+import json
+import shared
+from shared import rpcs
+
+#def addAlert(alertString,userId,alertType,read,async=False):
+
+class PingRPCServer(rpcs.RPCServer):
+    """
+    Subclass of RPCServer which
+    adds an alert
+    """
+
+    def add_alert(self, data):
+	"""
+	Adds the passed alert into the database
+	"""
+
+	# adds the alert if all required fields are filled
+	user = data.get("authUser")
+	if userID is None:
+	   return rpcs.response(400, {"reason": "No authUser"}
+
+	origin = data.get("from")
+	if service is None:
+	    return rpcs.response(400, {"reason": "No specified origin service"}
+
+	body = data.get("data",{}).get("message")
+	if userID is None:
+	    return rpcs.response(400, {"reason": "No alert"}
+
+	models.Alerts.create(userID=user,message=body,service=origin,read=False)
+	return rpcs.response(200, {"reason": "alert added succesfully"}
+
+
+    def process(self, body):
+        """
+        Responds appropriately if an alert has been
+	added or not.
+        """
+
+	try:
+            # Loads the data if it is valid JSON
+            data = json.loads(body)
+        except json.JSONDecodeError:
+            return rpcs.response(400, {"reason": "Invalid JSON"})
+	return self.add_alert
+
+def main():
+    """
+    Add appropriate docs here.
+    """
+
+   # Set up database session
+    _ = shared.setup_scylla(
+        keyspace=os.environ["SCYLLADB_KEYSPACE"],
+        user=os.environ["SCYLLADB_USERNAME"],
+        password=os.environ["SCYLLADB_PASSWORD"],
+    )
+
+
+   raise NotImplementedError
+
+if __name__ == "__main__":
+    main()
