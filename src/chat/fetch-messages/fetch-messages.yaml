@@ -91,9 +91,9 @@ spec:
   userReference:
     name: "fetch-messages-rabbitmq-user"
   permissions:
-    write: ""
+    write: "fetch-messages-rpc-resp-exc"
     configure: ""
-    read: ""
+    read: "fetch-messages-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq
