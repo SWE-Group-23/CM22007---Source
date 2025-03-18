@@ -7,8 +7,8 @@ import uuid
 import time
 import json
 import logging
+
 from lib import AutocleanTestCase
-import shared
 from shared.rpcs.send_message_rpc import SendMessageRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
 
@@ -19,9 +19,6 @@ class SendMessageRPCTest(AutocleanTestCase):
     """
 
     def setUp(self):
-        """
-        Does a set up
-        """
         super().setUp()
 
         # suppress new default session warning
@@ -43,10 +40,9 @@ class SendMessageRPCTest(AutocleanTestCase):
 
     def test_send_message(self):
         """
-        Docs
+        Tests sending a valid message
         """
         logging.info("Starting the test_send_message test.")
-        print("Starting the test_send_message test.")
         client = self.send_message_client
 
         chat_id = uuid.uuid4()
@@ -64,14 +60,14 @@ class SendMessageRPCTest(AutocleanTestCase):
             )
         
         response = json.loads(resp_raw)
-        print(f"Response {response}")
+        logging.info(f"Response {response}")
 
         self.assertEqual(response["status"], 200)
         self.assertEqual(response["data"]["message"], "Message sent")
 
     def test_send_nothing(self):
         """
-        Docs
+        Tests sending a poorly formed message request
         """
         client = TestRPCClient(
             os.environ["RABBITMQ_USERNAME"],

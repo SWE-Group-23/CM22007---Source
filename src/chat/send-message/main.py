@@ -1,5 +1,5 @@
 """
-Add some service docs here.
+Handles a message sent by the user
 """
 
 import os
@@ -12,7 +12,7 @@ from shared.models import chat as models
 
 class SendMessageRPCServer(rpcs.RPCServer):
     """
-    Subclass of RPCServer ...
+    Subclass of RPCServer
     """
     def __init__(self, rabbitmq_user: str, rabbitmq_pass: str, *, rpc_prefix="send-message-rpc",):
         logging.info("Initialised...")
@@ -20,7 +20,7 @@ class SendMessageRPCServer(rpcs.RPCServer):
 
     def _add_message(self, chat_id, sender_id, time_sent, message):
         """
-        Lil description
+        Attempts to add a message to the messages table
         """
         try:
             models.Messages.create(
@@ -34,9 +34,6 @@ class SendMessageRPCServer(rpcs.RPCServer):
             return rpcs.response(400, {"message": "Unable to send message"})
 
     def process(self, body, *args, **kwargs):
-        """
-        Docs
-        """
         logging.info("[RECEIVED] %s", body.decode())
 
         try:
@@ -65,9 +62,6 @@ class SendMessageRPCServer(rpcs.RPCServer):
     
 
 def main():
-    """
-    Add appropriate docs here.
-    """
     # Set up database session
     _ = shared.setup_scylla(
         keyspace=os.environ["SCYLLADB_KEYSPACE"],
