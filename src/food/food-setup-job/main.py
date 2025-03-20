@@ -22,7 +22,7 @@ def main():
     )
     
     # sync tables here
-    print("Settung up Food database...")
+    print("Setting up Food database...")
     cm.sync_table(models.Food)
 
 
