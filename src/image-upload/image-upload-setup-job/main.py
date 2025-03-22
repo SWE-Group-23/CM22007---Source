@@ -7,7 +7,7 @@ import os
 import cassandra.cqlengine.management
 
 import shared
-from shared.models import as models
+from shared.models import models
 
 
 def main():
