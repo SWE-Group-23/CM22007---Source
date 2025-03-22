@@ -3,10 +3,13 @@ import os
 import logging
 import uuid
 import json
-from shared.models import image_upload as model
+from shared.models import image as model
 
 from shared import rpcs
 import shared
+"""
+Module handling image upload processing.
+"""
 class ImageRPCServer(rpcs.RPCServer):
     """
     Subclass of RPCServer which creates image items when added.
