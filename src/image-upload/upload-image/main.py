@@ -1,14 +1,11 @@
 
 import os
 import logging
-import uuid
-from datetime import datetime
-
 import shared
 from shared import rpcs
-from shared.models import food as models
+from shared.models import image_upload as model
 import json
-
+import uuid
 
 class ImageRPCServer(rpcs.RPCServer):
     """
@@ -22,25 +19,24 @@ class ImageRPCServer(rpcs.RPCServer):
     ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
     
-    def _add_image(self, image_id, user_id, food_name) -> str:
+def _add_image(self, food_id, label, img_id) -> str:
+    try:
+        model.Image.if_not_exists().create(
+            food_id=food_id,
+            user_id=user_id,
+            label=label,
+            img_id=img_id
+        )
+        return rpcs.response(200, {"message": "Successfully created Image item"})
 
-        (
-            model.Image.if_not_exists().create(
-                food_id = data["food_id"],
-                user_id = data["user_id"],
-                label = data["food_name"],
-                img_id = data["img_id"]
-            )
-            return rpcs.response(200, {"message" : "Successfully created Image item"})
-
-        except Exception as e:
-            logging.error("[DB ERROR] %s", e, exc_info=True)
-            return rpcs.response(400, {"reason": "Unable to create Image item"})
+    except Exception as e:
+        logging.error("[DB ERROR] %s", e, exc_info=True)
+        return rpcs.response(400, {"reason": "Unable to create Image item"})
     
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
 
-        # check json parses
+        # Check if JSON parses
         try:
             req = json.loads(body)
         except json.JSONDecodeError:
@@ -50,18 +46,16 @@ class ImageRPCServer(rpcs.RPCServer):
             if req["version"] != "1.0.0":
                 return rpcs.response(400, {"reason": "Bad version."})
 
-            response = rpcs.response(500, {"reason": "Internal Server Error"})
-
             user_id = uuid.UUID(req["data"]["user_id"])
             food_id = uuid.UUID(req["data"]["food_id"])
             img_id = uuid.UUID(req["data"]["img_id"])
             label = req["data"]["label"]
 
-            response = self.create_food_item(food_id, user_id, label, useby_date, img_id)
-            
+            response = self._add_image(food_id, user_id, label, img_id)
             return response
+
         except KeyError:
-            return rpcs.response(400,{"reason": "Malformed request."})
+            return rpcs.response(400, {"reason": "Malformed request."})
 
 
 
