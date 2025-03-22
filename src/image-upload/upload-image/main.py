@@ -1,6 +1,3 @@
-"""
-Adds a food item to the user's private inventory.
-"""
 
 import os
 import logging
@@ -13,16 +10,19 @@ from shared.models import food as models
 import json
 
 
-class UploadImageRPCServer(rpcs.RPCServer):
+class ImageRPCServer(rpcs.RPCServer):
     """
-    Subclass of RPCServer which creates food items when added.
+    Subclass of RPCServer which creates image items when added.
     """
-
-    def __init__(self, rabbitmq_user, rabbitmq_pass, rpc_prefix):
+    def __init__(
+        self,
+        rabbitmq_user: str,
+        rabbitmq_pass: str,
+        rpc_prefix="create-image-rpc",
+    ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
     
     def _add_image(self, image_id, user_id, food_name) -> str:
-
 
         (
             model.Image.if_not_exists().create(
@@ -31,11 +31,11 @@ class UploadImageRPCServer(rpcs.RPCServer):
                 label = data["food_name"],
                 img_id = data["img_id"]
             )
-            return rpcs.response(200, {"message" : "Successfully created Image"})
+            return rpcs.response(200, {"message" : "Successfully created Image item"})
 
         except Exception as e:
             logging.error("[DB ERROR] %s", e, exc_info=True)
-            return rpcs.response(400, {"reason": "Unable to create Image"})
+            return rpcs.response(400, {"reason": "Unable to create Image item"})
     
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
@@ -77,8 +77,8 @@ def main():
         password=os.environ["SCYLLADB_PASSWORD"],
     )
 
-    # create food rpc
-    rpc_server = UploadImageRPCServer(
+    # create image rpc
+    rpc_server = ImageRPCServer(
        os.environ["RABBITMQ_USERNAME"],
        os.environ["RABBITMQ_PASSWORD"],
     )
