@@ -271,8 +271,9 @@ main {
 .listings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
+    gap: 2rem;
     padding: 20px;
+    margin: 1rem 0;
 }
 
 .listing-card {
@@ -312,7 +313,7 @@ main {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
-    margin: 2rem 0;
+    margin: 1rem 0;
 }
 
 .detail-image-container {
