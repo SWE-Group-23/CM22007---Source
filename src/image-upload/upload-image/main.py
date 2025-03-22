@@ -1,12 +1,12 @@
 
 import os
 import logging
-import shared
-from shared import rpcs
-from shared.models import image_upload as model
-import json
 import uuid
+import json
+from shared.models import image_upload as model
 
+from shared import rpcs
+import shared
 class ImageRPCServer(rpcs.RPCServer):
     """
     Subclass of RPCServer which creates image items when added.
@@ -19,7 +19,7 @@ class ImageRPCServer(rpcs.RPCServer):
     ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
     
-    def _add_image(self, food_id, label, img_id) -> str:
+    def _add_image(self, food_id, label, img_id, user_id) -> str:
         try:
             model.Image.if_not_exists().create(
                 food_id=food_id,
