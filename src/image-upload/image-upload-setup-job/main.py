@@ -4,11 +4,6 @@ Sets up ScyllaDB for the subsystem.
 
 import os
 
-import cassandra.cqlengine.management
-
-import shared
-from shared.models import models
-
 
 def main():
     """
