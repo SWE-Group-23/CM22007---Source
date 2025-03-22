@@ -4,10 +4,10 @@ Sets up ScyllaDB for the subsystem.
 
 import os
 
-import cassandra.cqlengine.management as cm
+import cassandra.cqlengine.management
 
 import shared
-from shared.models import template as models
+from shared.models import as models
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
         user=os.environ["SCYLLADB_USERNAME"],
         password=os.environ["SCYLLADB_PASSWORD"],
     )
-    
+
     # sync tables here
 
 

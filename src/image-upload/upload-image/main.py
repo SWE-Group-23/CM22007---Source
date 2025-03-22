@@ -1,4 +1,4 @@
-
+"""Module responsible for handling image uploads."""
 import os
 import logging
 import uuid
@@ -7,9 +7,7 @@ from shared.models import image as model
 
 from shared import rpcs
 import shared
-"""
-Module handling image upload processing.
-"""
+
 class ImageRPCServer(rpcs.RPCServer):
     """
     Subclass of RPCServer which creates image items when added.
@@ -21,21 +19,17 @@ class ImageRPCServer(rpcs.RPCServer):
         rpc_prefix="create-image-rpc",
     ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
-    
-    def _add_image(self, food_id, user_id, label, img_id) -> str:
-        try:
-            model.Image.if_not_exists().create(
-                food_id=food_id,
-                user_id=user_id,
-                label=label,
-                img_id=img_id
-            )
-            return rpcs.response(200, {"message": "Successfully created Image item"})
 
-        except Exception as e:
-            logging.error("[DB ERROR] %s", e, exc_info=True)
-            return rpcs.response(400, {"reason": "Unable to create Image item"})
-    
+    def _add_image(self, food_id, user_id, label, img_id) -> str:
+
+        model.Image.if_not_exists().create(
+            food_id=food_id,
+            user_id=user_id,
+            label=label,
+            img_id=img_id
+        )
+        return rpcs.response(200, {"message": "Successfully created Image item"})
+
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
 
