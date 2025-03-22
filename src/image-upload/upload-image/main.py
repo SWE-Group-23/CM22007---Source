@@ -61,7 +61,7 @@ def main():
     Add appropriate docs here.
     """
 
-    # setup database session 
+    # setup database session
     _ = shared.setup_scylla(
         keyspace=os.environ["SCYLLADB_KEYSPACE"],
         user=os.environ["SCYLLADB_USERNAME"],
