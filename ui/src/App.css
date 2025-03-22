@@ -1,5 +1,6 @@
 :root {
     --deep-green: #1e4d2b;
+    --input-grey: #444;
     --light-green: #c2c5aa;
     --pale-white: #faf5e4;
     --warm-brown: #b19c91;
@@ -220,6 +221,10 @@ main {
     box-shadow: 0 0 8px rgba(30, 77, 43, 0.6);
 }
 
+.profile-textarea::placeholder {
+    color: var(--input-grey)
+}
+
 .profile-input {
     margin-top: 8px;
     padding: 10px;
@@ -233,20 +238,29 @@ main {
     resize: none;
 }
 
-.save-btn {
+.profile-input::placeholder {
+    color: var(--input-grey)
+}
+
+.profile-input:focus {
+    border-color: var(--light-green);
+    box-shadow: 0 0 8px rgba(30, 77, 43, 0.6);
+}
+
+.profile-save-btn {
     margin-top: 15px;
     padding: 10px 20px;
-    background-color: var(--deep-green);
-    color: var(--light-green);
+    background-color: var(--warm-brown);
+    color: #000;
     font-size: 1.2rem;
     border: 2px solid var(--deep-green);
     border-radius: 20px;
     cursor: pointer;
 }
 
-.save-btn:hover {
-    color: var(--deep-green);
-    background-color: var(--light-green);
+.profile-save-btn:hover {
+    color: #000;
+    background-color: var(--light-yellow);
 
 }
 
@@ -381,7 +395,7 @@ main {
 
 .save-button {
     background-color: var(--warm-brown);
-    color: var(--deep-green);
+    color: #000;
 }
 
 .contact-button:hover {

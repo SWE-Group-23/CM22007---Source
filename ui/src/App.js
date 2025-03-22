@@ -21,7 +21,7 @@ function Listings() {
             id: 1,
             title: "Bananas",
             image: "/bananas.jpg",
-            distance: (Math.random() * 10).toFixed(1),
+            distance: (Math.random()).toFixed(1),
             description: "A bunch of ripe bananas, only bought recently.",
             lat: 51.3766938,
             lon: -2.3234206,
@@ -32,7 +32,7 @@ function Listings() {
             id: 2,
             title: "Bread",
             image: "/bread.jpg",
-            distance: (Math.random() * 10).toFixed(1),
+            distance: (Math.random()).toFixed(1),
             description: "Baked too much bread, so giving some away!",
             lat: 51.3766938,
             lon: -2.3234206,
@@ -43,7 +43,7 @@ function Listings() {
             id: 3,
             title: "Potatoes",
             image: "/potato.jpg",
-            distance: (Math.random() * 10).toFixed(1),
+            distance: (Math.random()).toFixed(1),
             description: "Spare potatoes I won't use.",
             lat: 51.3766938,
             lon: -2.3234206,
@@ -54,7 +54,7 @@ function Listings() {
             id: 4,
             title: "Tomatoes",
             image: "/tomato.jpg",
-            distance: (Math.random() * 10).toFixed(1),
+            distance: (Math.random()).toFixed(1),
             description: "Tomatoes, bought too many for making pico de gallo.",
             lat: 51.3766938,
             lon: -2.3234206,
@@ -89,7 +89,7 @@ function Profile() {
             <textarea type="text" className="profile-textarea" id="profile-bio" placeholder="Edit your biography..."/>
             <label htmlFor="profile-pref" className="profile-label">Dietary Requirements</label>
             <input type="text" className="profile-input" id="profile-pref" placeholder="Enter your dietary requirements..."/>
-            <button className="save-btn">Save changes</button>
+            <button className="profile-save-btn">Save changes</button>
         </div>
         </div>
 }
