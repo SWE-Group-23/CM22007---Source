@@ -3,7 +3,7 @@ Sets up ScyllaDB for the subsystem.
 """
 
 import os
-
+import shared
 
 def main():
     """
