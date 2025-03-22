@@ -19,19 +19,19 @@ class ImageRPCServer(rpcs.RPCServer):
     ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
     
-def _add_image(self, food_id, label, img_id) -> str:
-    try:
-        model.Image.if_not_exists().create(
-            food_id=food_id,
-            user_id=user_id,
-            label=label,
-            img_id=img_id
-        )
-        return rpcs.response(200, {"message": "Successfully created Image item"})
+    def _add_image(self, food_id, label, img_id) -> str:
+        try:
+            model.Image.if_not_exists().create(
+                food_id=food_id,
+                user_id=user_id,
+                label=label,
+                img_id=img_id
+            )
+            return rpcs.response(200, {"message": "Successfully created Image item"})
 
-    except Exception as e:
-        logging.error("[DB ERROR] %s", e, exc_info=True)
-        return rpcs.response(400, {"reason": "Unable to create Image item"})
+        except Exception as e:
+            logging.error("[DB ERROR] %s", e, exc_info=True)
+            return rpcs.response(400, {"reason": "Unable to create Image item"})
     
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
