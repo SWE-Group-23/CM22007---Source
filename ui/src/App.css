@@ -1,6 +1,7 @@
 * {
     margin: 0;
     padding: 0;
+    font-family: "Trebuchet MS", sans-serif;
 }
 
 .background {
@@ -108,4 +109,69 @@
     display: flex;
     justify-content: center;
     color: #fff;
+}
+
+body {
+    background-color: #c2c5aa;
+    height: 100%;
+}
+
+main {
+    height: 100%;
+}
+
+.title-page {
+    display: flex;
+    flex-direction: column;
+    background-image: url("home.jpeg");
+    height: calc(100vh - 66px);
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+.profile-page {
+    display: flex;
+    flex-direction: column;
+}
+
+.title-box {
+    background-color: #1e4d2b;
+    color: #c2c5aa;
+    align-self: center;
+    font-size: 140px;
+    font-weight: 900;
+    padding: 40px 60px;
+    margin-top: 200px;
+    border-radius: 120px; 
+}
+
+.title-text {
+    background-color: #1e4d2b;
+    color: #c2c5aa;
+    align-self: center;
+    font-size: 70px;
+    font-weight: 900;
+    text-align: center;
+    padding: 40px 60px;
+    margin: 20px;
+    border-radius: 120px;
+    width: 800px;
+    margin-top: 140px; 
+}
+
+.profile-image {
+    align-self: center;
+    width: 300px;
+    border-width: 20px;
+    border-color: #1e4d2b;
+    border-style: solid;
+    border-radius: 600px;
+    margin-top: 60px;
+}
+
+.profile-page {
+    color: #1e4d2b;
+    align-self: center;
+    text-align: center;
+    font-size: 40px;
 }

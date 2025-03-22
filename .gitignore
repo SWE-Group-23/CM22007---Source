@@ -6,3 +6,5 @@
 **/__pycache__
 **/.python-version
 stamps/
+ui/node_modules
+ui/package-lock.json
