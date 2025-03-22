@@ -571,6 +571,10 @@ check-str-concat-over-line-jumps=no
 # produce valid context managers.
 contextmanager-decorators=contextlib.contextmanager
 
+# Whitelists the Cassandra package
+extension-pkg-allow-list=cassandra.query
+
+
 # List of members which are set dynamically and missed by pylint inference
 # system, and so shouldn't trigger E1101 when accessed. Python regular
 # expressions are accepted.
