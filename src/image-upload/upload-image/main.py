@@ -22,7 +22,7 @@ class ImageRPCServer(rpcs.RPCServer):
     ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
     
-    def _add_image(self, food_id, label, img_id, user_id) -> str:
+    def _add_image(self, food_id, user_id, label, img_id) -> str:
         try:
             model.Image.if_not_exists().create(
                 food_id=food_id,
