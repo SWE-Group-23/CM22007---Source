@@ -97,6 +97,9 @@ function Profile() {
 function App() {
   return (
     <Router>
+      <head>
+          <title>OpenPantry - Save Food, Save Money</title>
+      </head>
       <NavBar />
       <Routes>
         <Route path="/" element={<Home />} />
