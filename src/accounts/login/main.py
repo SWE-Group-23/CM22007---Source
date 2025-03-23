@@ -126,16 +126,7 @@ class LoginRPCServer(rpcs.RPCServer):
         if err:
             return err
 
-        if not (
-            isinstance(
-                req["data"]["otp"],
-                int,
-            )
-            or isinstance(
-                req["data"]["otp"],
-                str,
-            )
-        ):
+        if not isinstance(req["data"]["otp"], (int, str)):
             del cur_stage
             return rpcs.response(400, {"reason": "Malformed request."})
 
