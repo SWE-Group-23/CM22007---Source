@@ -18,7 +18,7 @@ class CreateFoodRPCServer(rpcs.RPCServer):
     Subclass of RPCServer which creates food items when added.
     """
 
-    def __init__(self, rabbitmq_user, rabbitmq_pass, rpc_prefix):
+    def __init__(self, rabbitmq_user, rabbitmq_pass, rpc_prefix="create-food-rpc"):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
     
     def create_food_item(self, food_id, user_id, food_name, useby_date, img_id):
@@ -90,4 +90,5 @@ def main():
     rpc_server.channel.start_consuming()
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()

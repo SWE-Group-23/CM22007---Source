@@ -7,7 +7,7 @@ import os
 import cassandra.cqlengine.management as cm
 
 import shared
-from shared.models import template as models
+from shared.models import food as models
 
 
 def main():

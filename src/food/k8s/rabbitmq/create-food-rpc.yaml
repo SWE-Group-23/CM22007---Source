@@ -1,0 +1,54 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: Exchange
+metadata:
+  name: create-food-rpc-call-exc
+spec:
+  name: create-food-rpc-call-exc
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Exchange
+metadata:
+  name: create-food-rpc-resp-exc
+spec:
+  name: create-food-rpc-resp-exc
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Queue
+metadata:
+  name: create-food-rpc-call-q
+spec:
+  name: create-food-rpc-call-q
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Binding
+metadata:
+  name: create-food-rpc-call-bind
+spec:
+  source: create-food-rpc-call-exc
+  destination: create-food-rpc-call-q
+  routingKey: "create-food-rpc-call-q"
+  destinationType: queue
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq

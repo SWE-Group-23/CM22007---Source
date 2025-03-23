@@ -91,9 +91,9 @@ spec:
   userReference:
     name: "create-food-item-rabbitmq-user"
   permissions:
-    write: ""
+    write: "create-food-rpc-resp-exc"
     configure: ""
-    read: ""
+    read: "create-food-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq
