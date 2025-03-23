@@ -1,5 +1,5 @@
 # CM22007---Source
-Source code for the project.
+Source code for the project. CI/CD demno!
 
 ## Requirements
 You will need to run this on a Linux machine as GNU make is a requirement.
