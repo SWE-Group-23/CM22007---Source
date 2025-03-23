@@ -1,5 +1,5 @@
 # CM22007---Source
-Source code for the project. This is a demo of the CI/CD system.
+Source code for the project. This is a demo of the CI/CD system :).
 
 ## Requirements
 You will need to run this on a Linux machine as GNU make is a requirement.
