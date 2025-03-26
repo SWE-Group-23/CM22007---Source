@@ -7,7 +7,7 @@
   "data": {
     "chat_id": "chat_id",
     "sender_id": "user_id",
-    "time_sent": time_sent,
+    "time_sent": "time_sent",
     "message": "sample chat message"
   }
 }
