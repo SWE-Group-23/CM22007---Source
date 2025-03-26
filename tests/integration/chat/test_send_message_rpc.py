@@ -61,7 +61,7 @@ class SendMessageRPCTest(AutocleanTestCase):
             timestamp,
             message
             )
-        
+
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)
 

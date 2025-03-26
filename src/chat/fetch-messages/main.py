@@ -43,7 +43,7 @@ class FetchMessagesRPCServer(rpcs.RPCServer):
             req = json.loads(body)
         except json.JSONDecodeError:
             return rpcs.response(400, {"reason": "Bad JSON."})
-        
+
         try:
             if req["version"] != "1.0.0":
                 return rpcs.response(400, {"reason": "Bad version."})

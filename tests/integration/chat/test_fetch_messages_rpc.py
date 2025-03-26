@@ -54,7 +54,7 @@ class FetchMessagesRPCTest(AutocleanTestCase):
             "testing",
             chat_id
             )
-        
+
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)
         logging.info("Data received: %s", response["data"])

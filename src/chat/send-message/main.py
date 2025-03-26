@@ -31,7 +31,7 @@ class SendMessageRPCServer(rpcs.RPCServer):
                 message = message
             )
             return rpcs.response(200, {"message": "Message sent"})
-        except models.InvalidRequest as e:
+        except ConnectionError as e:
             logging.error("[DB ERROR] %s", e, exc_info=True)
             return rpcs.response(400, {"message": "Unable to send message"})
 
@@ -42,7 +42,7 @@ class SendMessageRPCServer(rpcs.RPCServer):
             req = json.loads(body)
         except json.JSONDecodeError:
             return rpcs.response(400, {"reason": "Bad JSON."})
-        
+
         try:
             if req["version"] != "1.0.0":
                 return rpcs.response(400, {"reason": "Bad version."})
@@ -57,7 +57,7 @@ class SendMessageRPCServer(rpcs.RPCServer):
             resp = self._add_message(chat_id, sender_id, time_sent, message)
 
             return resp
-        
+
         except KeyError:
             return rpcs.response(400, {"reason": "Malformed request."})
 
