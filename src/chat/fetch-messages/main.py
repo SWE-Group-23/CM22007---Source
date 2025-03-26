@@ -24,12 +24,12 @@ class FetchMessagesRPCServer(rpcs.RPCServer):
         """
         try:
             q = models.Messages.objects.filter(chat_id=chat_id)
-            data = [{"msg_id": msg.msg_id, 
-                     "chat_id": msg.chat_id,
-                     "sender_id": msg.sender_id,
-                     "sent_time": msg.sent_time,
+            data = [{"msg_id": str(msg.msg_id), 
+                     "chat_id": str(msg.chat_id),
+                     "sender_id": str(msg.sender_id),
+                     "sent_time": str(msg.sent_time),
                      "message": msg.message, 
-                     "reported": msg.reported} 
+                     "reported": str(msg.reported)} 
                      for msg in q]
             return rpcs.response(200, {"data": data})
         except Exception as e:

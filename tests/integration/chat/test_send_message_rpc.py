@@ -18,7 +18,7 @@ class SendMessageRPCTest(AutocleanTestCase):
     Integration tests for the send message RPC.
     """
 
-    def setUp(self):
+    def setUp(self):    # pylint: disable=invalid-name
         super().setUp()
 
         # suppress new default session warning

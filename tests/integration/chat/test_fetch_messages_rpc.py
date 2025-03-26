@@ -18,7 +18,7 @@ class FetchMessagesRPCTest(AutocleanTestCase):
     Integration tests for the fetch messages RPC.
     """
 
-    def setUp(self):
+    def setUp(self):    # pylint: disable=invalid-name
         super().setUp()
 
         # suppress new default session warning
@@ -58,7 +58,6 @@ class FetchMessagesRPCTest(AutocleanTestCase):
         logging.info(f"Data received: {response["data"]}")
 
         self.assertEqual(response["status"], 200)
-        #self.assertEqual(response["data"]["message"], "Message sent")
 
     def test_send_nothing(self):
         """
