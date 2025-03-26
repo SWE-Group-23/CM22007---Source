@@ -17,8 +17,8 @@ class Chats(Model):  # pylint: disable=too-few-public-methods
         blocked - Boolean
     """
     chat_id = columns.UUID(primary_key=True, default=uuid.uuid4)
-    user1 = columns.UUID()
-    user2 = columns.UUID()
+    user1 = columns.UUID(index=True)
+    user2 = columns.UUID(index=True)
     blocked = columns.Boolean(default=False)
 
 
