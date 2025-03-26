@@ -91,9 +91,9 @@ spec:
   userReference:
     name: "view-chats-rabbitmq-user"
   permissions:
-    write: ""
+    write: "view-chats-rpc-resp-exc"
     configure: ""
-    read: ""
+    read: "view-chats-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq

@@ -34,7 +34,7 @@ class ViewChatsRPCServer(rpcs.RPCServer):
             return rpcs.response(200, {"data": data})
         except q1.DoesNotExist as e:
             logging.error("[DB ERROR] %s", e, exc_info=True)
-            return rpcs.response(400, {"message": "Unable to fetch messages"})
+            return rpcs.response(400, {"message": "Unable to fetch chats"})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
@@ -51,8 +51,9 @@ class ViewChatsRPCServer(rpcs.RPCServer):
             resp = rpcs.response(500, {"reason": "Internal Server Error"})
 
             user_id = uuid.UUID(req["data"]["user_id"])
+            logging.info("User ID: %s", user_id)
 
-            resp = self._fetch_messages(user_id)
+            resp = self._fetch_chats(user_id)
 
             return resp
         except KeyError:
