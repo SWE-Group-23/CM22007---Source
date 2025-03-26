@@ -24,11 +24,17 @@ class FetchMessagesRPCServer(rpcs.RPCServer):
         """
         try:
             q = models.Messages.objects.filter(chat_id=chat_id)
-            # TODO Convert q to json??
-            return rpcs.response(200, {"data": q})
+            data = [{"msg_id": msg.msg_id, 
+                     "chat_id": msg.chat_id,
+                     "sender_id": msg.sender_id,
+                     "sent_time": msg.sent_time,
+                     "message": msg.message, 
+                     "reported": msg.reported} 
+                     for msg in q]
+            return rpcs.response(200, {"data": data})
         except Exception as e:
             logging.error("[DB ERROR] %s", e, exc_info=True)
-            return rpcs.response(400, {"message": "Unable to send message"})
+            return rpcs.response(400, {"message": "Unable to fetch messages"})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
