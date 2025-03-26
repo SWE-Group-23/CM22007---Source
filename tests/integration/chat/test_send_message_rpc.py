@@ -19,6 +19,9 @@ class SendMessageRPCTest(AutocleanTestCase):
     """
 
     def setUp(self):    # pylint: disable=invalid-name
+        """
+        Sets up Scylla and RPC Clients.
+        """
         super().setUp()
 
         # suppress new default session warning
@@ -51,8 +54,8 @@ class SendMessageRPCTest(AutocleanTestCase):
         message = "test message"
 
         resp_raw = client.call(
-            "john smith", 
-            "testing", 
+            "john smith",
+            "testing",
             chat_id,
             sender_id,
             timestamp,
@@ -60,7 +63,7 @@ class SendMessageRPCTest(AutocleanTestCase):
             )
         
         response = json.loads(resp_raw)
-        logging.info(f"Response {response}")
+        logging.info("Response: %s", response)
 
         self.assertEqual(response["status"], 200)
         self.assertEqual(response["data"]["message"], "Message sent")
@@ -78,6 +81,6 @@ class SendMessageRPCTest(AutocleanTestCase):
         resp_raw = client.call("")
         response = json.loads(resp_raw)
 
-        logging.info(f"Response: {response}")
+        logging.info("Response: %s", response)
         self.assertEqual(response["status"], 400)
         self.assertEqual(response["data"]["reason"], "Bad JSON.")

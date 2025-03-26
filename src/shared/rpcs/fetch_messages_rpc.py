@@ -5,7 +5,6 @@ chat subsystem.
 
 import uuid
 from shared import rpcs
-import logging
 
 class FetchMessagesRPCClient(rpcs.RPCClient):
     """
@@ -19,16 +18,13 @@ class FetchMessagesRPCClient(rpcs.RPCClient):
         """
         Calls fetch messages RPC
         """
-        try:
-            req = rpcs.request(
-                auth_user,
-                api_version,
-                service,
-                data = {
-                    "chat_id": str(chat_id)
-                }
-            )
-        except Exception as e:
-            logging.info(f"Error calling rpcs.request(): {e}")
+        req = rpcs.request(
+            auth_user,
+            api_version,
+            service,
+            data = {
+                "chat_id": str(chat_id)
+            }
+        )
 
         return self._call(body=req)

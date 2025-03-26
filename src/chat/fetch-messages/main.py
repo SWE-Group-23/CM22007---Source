@@ -24,15 +24,15 @@ class FetchMessagesRPCServer(rpcs.RPCServer):
         """
         try:
             q = models.Messages.objects.filter(chat_id=chat_id)
-            data = [{"msg_id": str(msg.msg_id), 
+            data = [{"msg_id": str(msg.msg_id),
                      "chat_id": str(msg.chat_id),
                      "sender_id": str(msg.sender_id),
                      "sent_time": str(msg.sent_time),
-                     "message": msg.message, 
-                     "reported": str(msg.reported)} 
+                     "message": msg.message,
+                     "reported": str(msg.reported)}
                      for msg in q]
             return rpcs.response(200, {"data": data})
-        except Exception as e:
+        except q.DoesNotExist as e:
             logging.error("[DB ERROR] %s", e, exc_info=True)
             return rpcs.response(400, {"message": "Unable to fetch messages"})
 
@@ -55,14 +55,14 @@ class FetchMessagesRPCServer(rpcs.RPCServer):
             resp = self._fetch_messages(chat_id)
 
             return resp
-        
         except KeyError:
             return rpcs.response(400, {"reason": "Malformed request."})
-        
-    
 
 def main():
-    # Set up database session
+    """
+    Sets up Scylla and the RPC Server, then starts
+    consuming the call queue.
+    """
     _ = shared.setup_scylla(
         keyspace=os.environ["SCYLLADB_KEYSPACE"],
         user=os.environ["SCYLLADB_USERNAME"],
@@ -74,7 +74,6 @@ def main():
         os.environ["RABBITMQ_PASSWORD"]
     )
 
-    
     logging.info("Consuming...")
     rpc_server.channel.start_consuming()
 

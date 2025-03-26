@@ -31,11 +31,11 @@ class SendMessageRPCServer(rpcs.RPCServer):
                 message = message
             )
             return rpcs.response(200, {"message": "Message sent"})
-        except Exception as e:
+        except models.InvalidRequest as e:
             logging.error("[DB ERROR] %s", e, exc_info=True)
             return rpcs.response(400, {"message": "Unable to send message"})
 
-    def process(self, body, *args, **kwargs):
+    def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
 
         try:
@@ -60,11 +60,12 @@ class SendMessageRPCServer(rpcs.RPCServer):
         
         except KeyError:
             return rpcs.response(400, {"reason": "Malformed request."})
-        
-    
 
 def main():
-    # Set up database session
+    """
+    Sets up Scylla, and the RPC Server, then starts
+    consuming the call queue.
+    """
     _ = shared.setup_scylla(
         keyspace=os.environ["SCYLLADB_KEYSPACE"],
         user=os.environ["SCYLLADB_USERNAME"],
@@ -76,7 +77,6 @@ def main():
         os.environ["RABBITMQ_PASSWORD"]
     )
 
-    
     logging.info("Consuming...")
     rpc_server.channel.start_consuming()
 

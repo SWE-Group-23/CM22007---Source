@@ -4,7 +4,6 @@ Integration tests for the fetch messages RPC.
 
 import os
 import uuid
-import time
 import json
 import logging
 
@@ -19,6 +18,9 @@ class FetchMessagesRPCTest(AutocleanTestCase):
     """
 
     def setUp(self):    # pylint: disable=invalid-name
+        """
+        Sets up Scylla and RPC Clients.
+        """
         super().setUp()
 
         # suppress new default session warning
@@ -48,14 +50,14 @@ class FetchMessagesRPCTest(AutocleanTestCase):
         chat_id = uuid.uuid4()
 
         resp_raw = client.call(
-            "john smith", 
-            "testing", 
+            "john smith",
+            "testing",
             chat_id
             )
         
         response = json.loads(resp_raw)
-        logging.info(f"Response {response}")
-        logging.info(f"Data received: {response["data"]}")
+        logging.info("Response: %s", response)
+        logging.info("Data received: %s", response["data"])
 
         self.assertEqual(response["status"], 200)
 
@@ -72,6 +74,6 @@ class FetchMessagesRPCTest(AutocleanTestCase):
         resp_raw = client.call("")
         response = json.loads(resp_raw)
 
-        logging.info(f"Response: {response}")
+        logging.info("Response: %s", response)
         self.assertEqual(response["status"], 400)
         self.assertEqual(response["data"]["reason"], "Bad JSON.")
