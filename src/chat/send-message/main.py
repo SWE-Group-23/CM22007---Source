@@ -35,6 +35,17 @@ class SendMessageRPCServer(rpcs.RPCServer):
             logging.error("[DB ERROR] %s", e, exc_info=True)
             return rpcs.response(400, {"message": "Unable to send message"})
 
+    def _new_chat(self, sender_id, receiver_id):
+        """
+        Creates a new chat if there was not an existing one
+        """
+        chat = models.Chats.create(
+            user1 = sender_id,
+            user2 = receiver_id
+        )
+        chat_id = chat.chat_id
+        return chat_id
+
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
 
@@ -49,10 +60,16 @@ class SendMessageRPCServer(rpcs.RPCServer):
 
             resp = rpcs.response(500, {"reason": "Internal Server Error"})
 
-            chat_id = uuid.UUID(req["data"]["chat_id"])
+            chat_id = req["data"]["chat_id"]
             sender_id = uuid.UUID(req["data"]["sender_id"])
+            receiver_id = uuid.UUID(req["data"]["receiver_id"])
             time_sent = datetime.fromtimestamp(req["data"]["time_sent"] / 1000)
             message= req["data"]["message"]
+
+            if chat_id != "None":
+                chat_id = uuid.UUID(chat_id)
+            else:
+                chat_id = self._new_chat(sender_id, receiver_id)
 
             resp = self._add_message(chat_id, sender_id, time_sent, message)
 

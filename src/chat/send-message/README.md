@@ -7,6 +7,7 @@
   "data": {
     "chat_id": "chat_id",
     "sender_id": "user_id",
+    "receiver_id": "user_id",
     "time_sent": "time_sent",
     "message": "sample chat message"
   }
@@ -16,6 +17,7 @@ Where time_sent is in milliseconds
 
 This should:
 - Add a message sent by a user in a chat to the messages table
+- If chat_id is None then a new chat will be created, and the message will then be sent
 
 ```json
 {

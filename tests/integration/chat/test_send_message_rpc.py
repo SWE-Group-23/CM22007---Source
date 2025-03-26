@@ -50,6 +50,7 @@ class SendMessageRPCTest(AutocleanTestCase):
 
         chat_id = uuid.uuid4()
         sender_id = uuid.uuid4()
+        receiver_id = uuid.uuid4()
         timestamp = int(time.time() * 1000)
         message = "test message"
 
@@ -58,6 +59,36 @@ class SendMessageRPCTest(AutocleanTestCase):
             "testing",
             chat_id,
             sender_id,
+            receiver_id,
+            timestamp,
+            message
+            )
+
+        response = json.loads(resp_raw)
+        logging.info("Response: %s", response)
+
+        self.assertEqual(response["status"], 200)
+        self.assertEqual(response["data"]["message"], "Message sent")
+
+    def test_send_new_chat_message(self):
+        """
+        Tests sending a message to a new chat
+        """
+        logging.info("Starting the test_send_new_chat_message test.")
+        client = self.send_message_client
+
+        chat_id = "None"
+        sender_id = uuid.uuid4()
+        receiver_id = uuid.uuid4()
+        timestamp = int(time.time() * 1000)
+        message = "New chat test message"
+
+        resp_raw = client.call(
+            "john smith",
+            "testing",
+            chat_id,
+            sender_id,
+            receiver_id,
             timestamp,
             message
             )
@@ -72,11 +103,7 @@ class SendMessageRPCTest(AutocleanTestCase):
         """
         Tests sending a poorly formed message request
         """
-        client = TestRPCClient(
-            os.environ["RABBITMQ_USERNAME"],
-            os.environ["RABBITMQ_PASSWORD"],
-            "send-message-rpc",
-        )
+        client = self.test_client
 
         resp_raw = client.call("")
         response = json.loads(resp_raw)
