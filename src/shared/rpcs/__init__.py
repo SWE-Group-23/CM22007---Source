@@ -196,7 +196,7 @@ def response(status: int, data: dict) -> str:
 
     Args:
         status: int - the status code.
-        data: dict - the json object for the
+        data: dict - the JSON object for the
                      data field of the response
                      as a dict.
 
@@ -226,7 +226,7 @@ def request(
         version: str - the API version number (e.g. 1.0.0).
         from_svc: str - the name of the service the request
                     is coming from.
-        data: dict - the json object for the data field of
+        data: dict - the JSON object for the data field of
                      the request as a dict.
 
     Returns:
@@ -256,7 +256,7 @@ def request_unauth(
         version: str - the API version number (e.g. 1.0.0).
         from_svc: str - the name of the service the request
                     is coming from.
-        data: dict - the json object for the data field of
+        data: dict - the JSON object for the data field of
                      the request as a dict.
 
     Returns:
@@ -265,6 +265,36 @@ def request_unauth(
     return json.dumps(
         {
             "sid": sid,
+            "version": version,
+            "from": from_svc,
+            "data": data,
+        }
+    )
+
+
+def request_moderation(
+    auth_mod: str,
+    version: str,
+    from_svc: str,
+    data: dict,
+) -> str:
+    """
+    Forms a JSON string request (authenticated moderator).
+
+    Args:
+        auth_mod: str - the authenticated moderator making the request.
+        version: str - the API version number (e.g. 1.0.0).
+        from_svc: str - the name of the service the request
+                    is coming from.
+        data: dict - the JSON object for the data field of
+                     the request as a dict.
+
+    Returns:
+        str - formatted JSON request.
+    """
+    return json.dumps(
+        {
+            "authMod": auth_mod,
             "version": version,
             "from": from_svc,
             "data": data,
