@@ -254,6 +254,11 @@ class RegisterRPCServer(rpcs.RPCServer):
         return rpcs.response(200, {"backup_code": backup_code})
 
     def process(self, body):
+        """
+        Processes raw requests as they come
+        in from the call queue. Selects
+        the correct step to respond for.
+        """
         logging.info("[RECEIVED] %s", body)
 
         # decode json

@@ -1,0 +1,54 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: Exchange
+metadata:
+  name: suspend-account-rpc-call-exc
+spec:
+  name: suspend-account-rpc-call-exc
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Exchange
+metadata:
+  name: suspend-account-rpc-resp-exc
+spec:
+  name: suspend-account-rpc-resp-exc
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Queue
+metadata:
+  name: suspend-account-rpc-call-q
+spec:
+  name: suspend-account-rpc-call-q
+  autoDelete: false
+  durable: true
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Binding
+metadata:
+  name: suspend-account-rpc-call-bind
+spec:
+  source: suspend-account-rpc-call-exc
+  destination: suspend-account-rpc-call-q
+  routingKey: "suspend-account-rpc-call-q"
+  destinationType: queue
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq

@@ -1,19 +1,99 @@
 """
-Add some service docs here.
+Service that allows moderators to suspend an account.
 """
 
-# import os
+import os
+import json
+import logging
+from datetime import datetime as dt
 
-# import shared
-# from shared import rpcs
+import shared
+from shared import rpcs
+from shared.models import accounts as model
+
+
+class SuspendAccountRPCServer(rpcs.RPCServer):
+    """
+    The RPC server for the Suspend Account RPC.
+
+    Expects requests to have authMod instead of
+    authUser, as it is a moderation service.
+    """
+
+    def __init__(
+        self,
+        rabbitmq_user: str,
+        rabbitmq_pass: str,
+        *,
+        rpc_prefix="suspend-account-rpc",
+    ):
+        super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
+
+    def process(self, body: bytes) -> str:
+        """
+        Processes a suspension request.
+
+        Dates must be in the form "%Y-%m-%d %H:%M:%S.%f",
+        this is the default for str(datetime.datetime.now()).
+        """
+        logging.info("[RECEIVED]")
+
+        # decode json
+        try:
+            req = json.loads(body)
+        except json.JSONDecodeError:
+            return rpcs.response(400, {"reason": "Bad JSON."})
+
+        try:
+            # check version
+            if req["version"] != "1.0.0":
+                return rpcs.response(400, {"reason": "Bad version."})
+
+            # TODO: check a moderator is who they say they are or just blindly
+            # trust the gateway?
+            sus = model.Suspension(
+                start=dt.now(),
+                end=dt.strptime(
+                    req["data"]["suspend_until"],
+                    "%Y-%m-%d %H:%M:%S.%f",
+                ),
+                suspended_by=req["authMod"],
+            )
+
+            user = model.Accounts.get(
+                username=req["data"]["username"],
+            )
+
+            user.suspension_history.append(sus)
+            user.save()
+
+            return rpcs.response(200, {"success": True})
+
+        except KeyError:
+            return rpcs.response(400, {"reason": "Malformed request."})
 
 
 def main():
     """
-    Add appropriate docs here.
+    Sets up the ScyllaDB connection and starts
+    serving the RPC.
     """
-    raise NotImplementedError
+    logging.info("Connecting to ScyllaDB...")
+    _ = shared.setup_scylla(
+        keyspace=os.environ["SCYLLADB_KEYSPACE"],
+        user=os.environ["SCYLLADB_USERNAME"],
+        password=os.environ["SCYLLADB_PASSWORD"],
+    )
+
+    logging.info("Setting up RPC server...")
+    rpc_server = SuspendAccountRPCServer(
+        rabbitmq_user=os.environ["RABBITMQ_USERNAME"],
+        rabbitmq_pass=os.environ["RABBITMQ_PASSWORD"],
+    )
+
+    rpc_server.channel.start_consuming()
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()

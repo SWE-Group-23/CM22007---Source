@@ -91,9 +91,9 @@ spec:
   userReference:
     name: "suspend-account-rabbitmq-user"
   permissions:
-    write: ""
+    write: "suspend-account-rpc-resp-exc"
     configure: ""
-    read: ""
+    read: "suspend-account-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq

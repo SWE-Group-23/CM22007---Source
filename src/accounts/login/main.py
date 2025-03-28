@@ -164,6 +164,11 @@ class LoginRPCServer(rpcs.RPCServer):
         return rpcs.response(200, {"correct": True})
 
     def process(self, body: bytes) -> str:
+        """
+        Processes raw requests as they come
+        in from the call queue. Selects
+        the correct step to respond for.
+        """
         logging.info("[RECEIVED] %s", body)
 
         # decode json
