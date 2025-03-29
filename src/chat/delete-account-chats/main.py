@@ -25,11 +25,11 @@ class DeleteAccountChatsRPCServer(rpcs.RPCServer):
         success = False
         q1 = models.Chats.objects.filter(user1=user_id)
         q2 = models.Chats.objects.filter(user2=user_id)
-        if q1:
-            q1.delete()
+        for chat in q1:
+            chat.delete()
             success = True
-        if q2:
-            q2.delete()
+        for chat in q2:
+            chat.delete()
             success = True
 
         if success:

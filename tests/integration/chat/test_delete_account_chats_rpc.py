@@ -1,5 +1,5 @@
 """
-Integration tests for the delete message RPC.
+Integration tests for the delete account chats RPC.
 """
 
 import os
@@ -8,13 +8,13 @@ import json
 import logging
 
 from lib import AutocleanTestCase
-from shared.rpcs.delete_message_rpc import DeleteMessageRPCClient
+from shared.rpcs.delete_account_chats_rpc import DeleteAccountChatsRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
 
 
-class DeleteMessageRPCTest(AutocleanTestCase):
+class DeleteChatsRPCTest(AutocleanTestCase):
     """
-    Integration tests for the delete message RPC.
+    Integration tests for the delete account chats RPC.
     """
 
     def setUp(self):    # pylint: disable=invalid-name
@@ -28,7 +28,7 @@ class DeleteMessageRPCTest(AutocleanTestCase):
             "cassandra.cqlengine.connection",
         ).setLevel(logging.ERROR)
 
-        self.delete_message_client = DeleteMessageRPCClient(
+        self.delete_account_chats_client = DeleteAccountChatsRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"]
         )
@@ -36,23 +36,23 @@ class DeleteMessageRPCTest(AutocleanTestCase):
         self.test_client = TestRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"],
-            "delete-message-rpc",
+            "delete-account-chats-rpc",
         )
 
 
-    # def test_delete_message(self):
+    # def test_delete_chats(self):
     #     """
-    #     Tests sending a valid json to delete message
+    #     Tests sending a valid json to delete chats
     #     """
-    #     logging.info("Starting the test_delete_message test.")
-    #     client = self.delete_message_client
+    #     logging.info("Starting the test_delete_chats test.")
+    #     client = self.delete_account_chats_client
 
-    #     msg_id = uuid.uuid4()
+    #     user_id = uuid.uuid4()
 
     #     resp_raw = client.call(
     #         "john smith",
     #         "testing",
-    #         msg_id
+    #         user_id
     #         )
 
     #     response = json.loads(resp_raw)
@@ -60,27 +60,6 @@ class DeleteMessageRPCTest(AutocleanTestCase):
 
     #     self.assertEqual(response["status"], 200)
     #     self.assertEqual(response["data"]["message"], "Success")
-
-    def test_invalid_message_delete(self):
-        """
-        Tests attempting to delete a message that doesn't exist
-        """
-        logging.info("Starting the test_invalid_message_delete test.")
-        client = self.delete_message_client
-
-        msg_id = uuid.uuid4()
-
-        resp_raw = client.call(
-            "john smith",
-            "testing",
-            msg_id
-            )
-
-        response = json.loads(resp_raw)
-        logging.info("Response: %s", response)
-
-        self.assertEqual(response["status"], 400)
-        self.assertEqual(response["data"]["message"], "Unable to delete message")
 
     def test_send_nothing(self):
         """
