@@ -15,7 +15,10 @@ class DeleteAccountChatsRPCServer(rpcs.RPCServer):
     """
     Subclass of RPCServer
     """
-    def __init__(self, rabbitmq_user: str, rabbitmq_pass: str, *, rpc_prefix="delete-account-chats-rpc"):
+    def __init__(self, rabbitmq_user: str,
+                 rabbitmq_pass: str,
+                 *,
+                 rpc_prefix="delete-account-chats-rpc"):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
     def _delete_chats(self, user_id):

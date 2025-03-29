@@ -3,7 +3,7 @@ Integration tests for the delete account chats RPC.
 """
 
 import os
-import uuid
+# import uuid
 import json
 import logging
 
