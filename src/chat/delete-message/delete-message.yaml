@@ -91,9 +91,9 @@ spec:
   userReference:
     name: "delete-message-rabbitmq-user"
   permissions:
-    write: ""
+    write: "delete-message-rpc-resp-exc"
     configure: ""
-    read: ""
+    read: "delete-message-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq
