@@ -26,9 +26,9 @@ class DeleteMessageRPCServer(rpcs.RPCServer):
         if msg:
             msg.delete()
             return rpcs.response(200, {"message": "Success"})
-        else:
-            logging.error("[DB ERROR] Cannot find message to delete")
-            return rpcs.response(400, {"message": "Unable to delete message"})
+
+        logging.error("[DB ERROR] Cannot find message to delete")
+        return rpcs.response(400, {"message": "Unable to delete message"})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
