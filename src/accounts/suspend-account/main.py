@@ -7,6 +7,8 @@ import json
 import logging
 from datetime import datetime as dt
 
+from cassandra.cqlengine.query import DoesNotExist
+
 import shared
 from shared import rpcs
 from shared.models import accounts as model
@@ -51,25 +53,44 @@ class SuspendAccountRPCServer(rpcs.RPCServer):
 
             # TODO: check a moderator is who they say they are or just blindly
             # trust the gateway?
+            if req["authMod"] is None or req["authMod"] == "":
+                return rpcs.response(400, {"reason": "Malformed request."})
+
+            start = dt.strptime(
+                req["data"]["suspend_from"],
+                "%Y-%m-%d %H:%M:%S.%f",
+            )
+
+            end = dt.strptime(
+                req["data"]["suspend_until"],
+                "%Y-%m-%d %H:%M:%S.%f",
+            )
+
+            if start > end:
+                return rpcs.response(
+                    400,
+                    {"reason": "Start time must be before end time."},
+                )
+
             sus = model.Suspension(
-                start=dt.now(),
-                end=dt.strptime(
-                    req["data"]["suspend_until"],
-                    "%Y-%m-%d %H:%M:%S.%f",
-                ),
+                start=start,
+                end=end,
                 suspended_by=req["authMod"],
             )
 
-            user = model.Accounts.get(
-                username=req["data"]["username"],
-            )
+            try:
+                user = model.Accounts.get(
+                    username=req["data"]["username"],
+                )
+            except DoesNotExist:
+                return rpcs.response(400, {"reason": "User does not exist."})
 
             user.suspension_history.append(sus)
             user.save()
 
             return rpcs.response(200, {"success": True})
 
-        except KeyError:
+        except (KeyError, ValueError):
             return rpcs.response(400, {"reason": "Malformed request."})
 
 

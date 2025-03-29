@@ -4,6 +4,7 @@ the accounts subsystem.
 """
 
 import json
+from datetime import datetime as dt
 
 from shared import rpcs
 
@@ -23,6 +24,7 @@ class SuspendAccountRPCClient(rpcs.RPCClient):
         srv_from: str,
         username: str,
         suspend_until: str,
+        suspend_from=str(dt.now()),
         api_version="1.0.0",
     ) -> dict:
         """
@@ -35,6 +37,8 @@ class SuspendAccountRPCClient(rpcs.RPCClient):
             username: str - the username to suspend.
             suspend_until: str - the datetime string to suspend the
                                  user until.
+            suspend_from=str(dt.now()) - the datetime string to
+                                         suspend the user from.
             api_version="1.0.0" - the API version to call.
 
         Returns:
@@ -48,6 +52,7 @@ class SuspendAccountRPCClient(rpcs.RPCClient):
             srv_from,
             {
                 "username": username,
+                "suspend_from": suspend_from,
                 "suspend_until": suspend_until,
             },
         )
