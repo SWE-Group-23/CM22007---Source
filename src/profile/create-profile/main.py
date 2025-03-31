@@ -10,22 +10,23 @@ from shared.models import profile as model
 import shared
 from shared import rpcs
 
-class LoginRPCServer(rpcs.RPCServer):
+class CreateProfileRPCServer(rpcs.RPCServer):
     """
-    Serves the login RPC.
+    Serves the create profile RPC.
     """
 
     def __init__(
         self,
         rabbitmq_user: str,
         rabbitmq_pass: str,
+        *,
         rpc_prefix="create-profile-rpc",
     ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
-    def _add_account(self, data: dict) -> str:
+    def _add_profile(self, data: dict) -> str:
         """
-        Adds account data to database
+        Adds profile data to database
         """
         (
             model.Profile.if_not_exists().create(
@@ -52,7 +53,7 @@ class LoginRPCServer(rpcs.RPCServer):
                 return rpcs.response(400, {"reason": "Bad version."})
 
             # return response
-            return self._add_account(req["data"])
+            return self._add_profile(req["data"])
 
         except KeyError:
             return rpcs.response(400, {"reason": "Malformed request."})
@@ -68,10 +69,9 @@ def main():
         password=os.environ["SCYLLADB_PASSWORD"],
     )
 
-    rpc_server = LoginRPCServer(
+    rpc_server = CreateProfileRPCServer(
         os.environ["RABBITMQ_USERNAME"],
-        os.environ["RABBITMQ_PASSWORD"],
-        "create-profile-rpc",
+        os.environ["RABBITMQ_PASSWORD"]
     )
 
     logging.info("Consuming...")

@@ -25,6 +25,7 @@ class CreateProfileRPCClient(rpcs.RPCClient):
         """
         sends data for profile set up
         """
+
         data = {
             "username": username,
             "name": name,
@@ -39,4 +40,4 @@ class CreateProfileRPCClient(rpcs.RPCClient):
             data,
         )
 
-        return json.loads(self._call(body=req))
+        return self._call(body=req)
