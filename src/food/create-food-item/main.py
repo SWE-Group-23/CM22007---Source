@@ -21,18 +21,19 @@ class CreateFoodRPCServer(rpcs.RPCServer):
     def __init__(self, rabbitmq_user, rabbitmq_pass, rpc_prefix="create-food-rpc"):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
     
-    def create_food_item(self, food_id, user_id, food_name, useby_date, img_id):
+    def create_food_item(self, user_id, img_id, food_name, useby):
         """
         Attempts to add a new food item to the user's inventory.
         """
-        # todo: datetime format?
+        if useby < datetime.now():
+            return rpcs.response(400, {"reason": "Unable to create food item - Already expired"})
+        
         try:
-            models.Food.create(
-                food_id = food_id,
+            models.Food.if_not_exists().create(
                 user_id = user_id,
+                img_id = img_id,
                 label = food_name,
-                useby_date = useby_date,
-                img_id = img_id
+                useby = useby
             )
             return rpcs.response(200, {"message" : "Successfully created food item"})
         except Exception as e:
@@ -48,19 +49,20 @@ class CreateFoodRPCServer(rpcs.RPCServer):
         except json.JSONDecodeError:
             return rpcs.response(400, {"reason": "Bad JSON."})
 
+        # parse message
         try:
+            # version checking
             if req["version"] != "1.0.0":
                 return rpcs.response(400, {"reason": "Bad version."})
 
             response = rpcs.response(500, {"reason": "Internal Server Error"})
 
             user_id = uuid.UUID(req["data"]["user_id"])
-            food_id = uuid.UUID(req["data"]["food_id"])
             img_id = uuid.UUID(req["data"]["img_id"])
             label = req["data"]["label"]
-            useby_date = datetime.fromisoformat(req["data"]["useby_date"])
+            useby = datetime.fromisoformat(req["data"]["useby"])
 
-            response = self.create_food_item(food_id, user_id, label, useby_date, img_id)
+            response = self.create_food_item(user_id, img_id, label, useby)
             
             return response
         except KeyError:
@@ -70,10 +72,11 @@ class CreateFoodRPCServer(rpcs.RPCServer):
 
 def main():
     """
-    Add appropriate docs here.
+    Connects Create Food RPC to ScyllaDB and creates corresponding RPC Server.
     """
 
-    # setup database session 
+    # setup database session
+    logging.info("Connecting to ScyllaDB...")
     _ = shared.setup_scylla(
         keyspace=os.environ["SCYLLADB_KEYSPACE"],
         user=os.environ["SCYLLADB_USERNAME"],
@@ -81,12 +84,14 @@ def main():
     )
 
     # create food rpc
+    logging.info("Making CreateFoodRPCServer...")
     rpc_server = CreateFoodRPCServer(
        os.environ["RABBITMQ_USERNAME"],
        os.environ["RABBITMQ_PASSWORD"],
     )
 
     # consuming...
+    logging.info("Consuming...")
     rpc_server.channel.start_consuming()
 
 if __name__ == "__main__":
