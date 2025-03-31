@@ -26,7 +26,7 @@ class CreateFoodRPCServer(rpcs.RPCServer):
         """
         if useby < datetime.now():
             return rpcs.response(400, {"reason": "Unable to create food item - Already expired"})
-  
+
         try:
             models.Food.if_not_exists().create(
                 user_id = user_id,

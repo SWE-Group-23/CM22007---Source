@@ -39,7 +39,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"]
         )
-       
+
     def test_normal(self):
         """
         Tests creating standard food item.
@@ -68,7 +68,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
 
         self.assertEqual(response["status"], 200)
         self.assertEqual(response["data"]["message"], "Successfully created food item")
-    
+
     def test_send_nothing(self):
         """
         Tests creating food item with no given information.
@@ -91,7 +91,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
             label,
             useby
         )
-        
+
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)
 
@@ -162,7 +162,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         """
         Tests the case where a request is not JSON.
         """
-
+        
         resp_raw = self.test_client.call("asdfjkl;")
         resp = json.loads(resp_raw)
 
@@ -206,4 +206,3 @@ class CreateFoodRPCTest(AutocleanTestCase):
         self.assertEqual(resp["status"], 400)
         self.assertRaises(KeyError, lambda x: x["data"]["message"], resp)
         self.assertEqual(resp["data"]["reason"], "Bad version.")
-

@@ -1,3 +1,7 @@
+"""
+Defines RPC client for Create Food RPC.
+"""
+
 import uuid
 from datetime import datetime
 from shared import rpcs
@@ -36,4 +40,3 @@ class CreateFoodRPCClient(rpcs.RPCClient):
         )
 
         return self._call(body=req)
-    

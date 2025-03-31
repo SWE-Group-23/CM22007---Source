@@ -1,5 +1,5 @@
 """
-CQL models for food table.
+CQL models for Food subsystem.
 """
 
 import uuid
