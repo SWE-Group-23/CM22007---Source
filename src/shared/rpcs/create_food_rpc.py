@@ -1,18 +1,13 @@
-from shared import rpcs
 import uuid
 from datetime import datetime
+from shared import rpcs
+
 
 class CreateFoodRPCClient(rpcs.RPCClient):
     """
     Sub-class of RPC client which creates food item
     for user's private inventory.
     """
-
-    def call(self, *args, **kwargs):
-        return super().call(*args, **kwargs)
-    
-
-  
 
     def call(   # pylint: disable=too-many-arguments,too-many-positional-arguments
             self,
@@ -41,3 +36,4 @@ class CreateFoodRPCClient(rpcs.RPCClient):
         )
 
         return self._call(body=req)
+    

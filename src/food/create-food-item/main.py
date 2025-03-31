@@ -1,7 +1,7 @@
 """
 Adds a food item to the user's private inventory.
 """
-
+import json
 import os
 import logging
 import uuid
@@ -10,7 +10,6 @@ from datetime import datetime
 import shared
 from shared import rpcs
 from shared.models import food as models
-import json
 
 
 class CreateFoodRPCServer(rpcs.RPCServer):
@@ -20,14 +19,14 @@ class CreateFoodRPCServer(rpcs.RPCServer):
 
     def __init__(self, rabbitmq_user, rabbitmq_pass, rpc_prefix="create-food-rpc"):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
-    
+
     def create_food_item(self, user_id, img_id, food_name, useby):
         """
         Attempts to add a new food item to the user's inventory.
         """
         if useby < datetime.now():
             return rpcs.response(400, {"reason": "Unable to create food item - Already expired"})
-        
+  
         try:
             models.Food.if_not_exists().create(
                 user_id = user_id,
@@ -39,7 +38,7 @@ class CreateFoodRPCServer(rpcs.RPCServer):
         except Exception as e:
             logging.error("[DB ERROR] %s", e, exc_info=True)
             return rpcs.response(400, {"reason": "Unable to create food item"})
-    
+
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
 
@@ -63,7 +62,7 @@ class CreateFoodRPCServer(rpcs.RPCServer):
             useby = datetime.fromisoformat(req["data"]["useby"])
 
             response = self.create_food_item(user_id, img_id, label, useby)
-            
+
             return response
         except KeyError:
             return rpcs.response(400,{"reason": "Malformed request."})

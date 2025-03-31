@@ -20,7 +20,7 @@ def main():
         user=os.environ["SCYLLADB_USERNAME"],
         password=os.environ["SCYLLADB_PASSWORD"],
     )
-    
+
     # sync tables here
     print("Setting up Food database...")
     cm.sync_table(models.Food)

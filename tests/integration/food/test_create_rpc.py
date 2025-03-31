@@ -4,28 +4,25 @@ Integration tests for the Create Food RPC.
 
 import os
 import json
-import uuid
-from datetime import datetime
 import logging
 
+import uuid
+from datetime import datetime
+
 from lib import AutocleanTestCase
-from shared.rpcs.create_food_rpc import CreateFoodRPCClient
 from shared import rpcs
+from shared.rpcs.create_food_rpc import CreateFoodRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
 
 class CreateFoodRPCTest(AutocleanTestCase):
     """
     Integration tests for Create Food RPC.
     """
-
-    # test creating food item that expires same day 
-    # test alerts send when needed
-
-    def setup(self):
+    def __init__(self):
         """
-        Sets up ScyllaDB and RPC Clients
+        Sets up ScyllaDB and RPC Clients.
         """
-        super().setup()
+        super().__init__()
 
         # suppress new default session warning
         logging.getLogger(
@@ -42,8 +39,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"]
         )
-
-    
+       
     def test_normal(self):
         """
         Tests creating standard food item.
@@ -71,7 +67,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         logging.info("Response: %s", response)
 
         self.assertEqual(response["status"], 200)
-        self.assertEqual(resposnse["data"]["message"], "Successfully created food item")
+        self.assertEqual(response["data"]["message"], "Successfully created food item")
     
     def test_send_nothing(self):
         """
@@ -100,7 +96,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         logging.info("Response: %s", response)
 
         self.assertEqual(response["status"], 400)
-        self.assertEqual(resposnse["data"]["message"], "Unable to create food item")
+        self.assertEqual(response["data"]["message"], "Unable to create food item")
 
 
     def test_incorrect_format(self):
@@ -130,7 +126,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         logging.info("Response: %s", response)
 
         self.assertEqual(response["status"], 400)
-        self.assertEqual(resposnse["data"]["message"], "Unable to create food item")
+        self.assertEqual(response["data"]["message"], "Unable to create food item")
     
     def test_past_useby(self):
         """
@@ -143,7 +139,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         user_id = uuid.uuid4()
         img_id = uuid.uuid4()
         label = ""
-        useby = datetime.datetime(2025, 1, 1, 0, 0)
+        useby = datetime(2025, 1, 1, 0, 0)
 
         resp_raw = client.call(
             "Test User",
@@ -159,7 +155,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         logging.info("Response: %s", response)
 
         self.assertEqual(response["status"], 400)
-        self.assertEqual(resposnse["data"]["message"], "Unable to create food item")
+        self.assertEqual(response["data"]["message"], "Unable to create food item")
 
 
     def test_non_json(self):
