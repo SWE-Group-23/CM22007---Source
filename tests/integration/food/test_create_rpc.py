@@ -32,12 +32,13 @@ class CreateFoodRPCTest(AutocleanTestCase):
         self.test_client = TestRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"],
-            "ping-rpc",
+            "create-food-item-rpc",
         )
 
         self.create_food_client = CreateFoodRPCClient(
             os.environ["RABBITMQ_USERNAME"],
-            os.environ["RABBITMQ_PASSWORD"]
+            os.environ["RABBITMQ_PASSWORD"],
+            "create-food-item-rpc"
         )
 
     def test_normal(self):
@@ -127,7 +128,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
 
         self.assertEqual(response["status"], 400)
         self.assertEqual(response["data"]["message"], "Unable to create food item")
-    
+
     def test_past_useby(self):
         """
         Tests creating food item which has already expired.
@@ -162,7 +163,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         """
         Tests the case where a request is not JSON.
         """
-        
+
         resp_raw = self.test_client.call("asdfjkl;")
         resp = json.loads(resp_raw)
 
@@ -192,7 +193,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         Tests the case where the request version
         is incorrect.
         """
-      
+
         req = rpcs.request(
             "",
             "1.2.3",

@@ -35,7 +35,7 @@ class CreateFoodRPCServer(rpcs.RPCServer):
                 useby = useby
             )
             return rpcs.response(200, {"message" : "Successfully created food item"})
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-except
             logging.error("[DB ERROR] %s", e, exc_info=True)
             return rpcs.response(400, {"reason": "Unable to create food item"})
 
