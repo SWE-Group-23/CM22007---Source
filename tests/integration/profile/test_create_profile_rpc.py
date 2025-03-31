@@ -3,7 +3,6 @@ Integration tests for the create account RPC.
 """
 
 import os
-import uuid
 import json
 import logging
 
@@ -47,10 +46,8 @@ class CreateProfileRPCTest(AutocleanTestCase):
         logging.info("Starting the test_create_profile test.")
         client = self.create_profile_client
 
-        username = uuid.uuid4()
-
         resp_raw = client.call(
-            username,
+            "a.smith",
             "adam smith",
             "love sourdough <3",
             "vegan"
@@ -64,7 +61,7 @@ class CreateProfileRPCTest(AutocleanTestCase):
 
     def test_send_nothing(self):
         """
-        Tests sending a poorly formed message request
+        Tests sending a poorly formed  account creation
         """
         client = self.test_client
 

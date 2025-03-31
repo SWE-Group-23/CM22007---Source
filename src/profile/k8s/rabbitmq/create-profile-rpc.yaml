@@ -4,7 +4,7 @@ kind: Exchange
 metadata:
   name: create-profile-rpc-call-exc
 spec:
-  name: creqte-profile-rpc-call-exc
+  name: create-profile-rpc-call-exc
   autoDelete: false
   durable: true
   rabbitmqClusterReference:

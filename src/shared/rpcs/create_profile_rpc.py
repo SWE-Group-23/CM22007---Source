@@ -1,6 +1,4 @@
 """Creates RPC Client for create account service."""
-import json
-
 from shared import rpcs
 
 class CreateProfileRPCClient(rpcs.RPCClient):
