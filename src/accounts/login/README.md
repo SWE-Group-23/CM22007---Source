@@ -51,6 +51,7 @@ This should:
     "status": 200,
     "data": {
         "correct": false
+        "username": "Username"
     }
 }
 ```
