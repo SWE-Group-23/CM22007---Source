@@ -179,8 +179,8 @@ class RegisterRPCServer(rpcs.RPCServer):
         self.vk.set(f"register:{req['sid']}", json.dumps(cur_stage))
 
         # return provisioning URI (contains secret)
-        del secret, totp, cur_stage
-        return rpcs.response(200, {"prov_uri": prov_uri})
+        del totp, cur_stage
+        return rpcs.response(200, {"prov_uri": prov_uri, "secret": secret})
 
     def _verify_otp(self, req: dict) -> str:
         """

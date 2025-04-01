@@ -95,6 +95,7 @@ This will:
     "status": 200,
     "data": {
         "prov_uri": "otpauth://totp/app%20name:username?secret=SECRET&issuer=app%20name"
+        "secret": "SECRET"
     }
 }
 ```
