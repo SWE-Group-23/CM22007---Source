@@ -91,9 +91,9 @@ spec:
   userReference:
     name: "block-user-rabbitmq-user"
   permissions:
-    write: ""
+    write: "block-user-rpc-resp-exc"
     configure: ""
-    read: ""
+    read: "block-user-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq
