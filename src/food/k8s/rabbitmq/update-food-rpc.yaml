@@ -1,9 +1,9 @@
 apiVersion: rabbitmq.com/v1beta1
 kind: Exchange
 metadata:
-  name: create-food-item-rpc-call-exc
+  name: update-food-item-rpc-call-exc
 spec:
-  name: create-food-item-rpc-call-exc
+  name: update-food-item-rpc-call-exc
   autoDelete: false
   durable: true
   rabbitmqClusterReference:
@@ -15,9 +15,9 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: Exchange
 metadata:
-  name: create-food-item-rpc-resp-exc
+  name: update-food-item-rpc-resp-exc
 spec:
-  name: create-food-item-rpc-resp-exc
+  name: update-food-item-rpc-resp-exc
   autoDelete: false
   durable: true
   rabbitmqClusterReference:
@@ -29,9 +29,9 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: Queue
 metadata:
-  name: create-food-item-rpc-call-q
+  name: update-food-item-rpc-call-q
 spec:
-  name: create-food-item-rpc-call-q
+  name: update-food-item-rpc-call-q
   autoDelete: false
   durable: true
   rabbitmqClusterReference:
@@ -43,11 +43,11 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: Binding
 metadata:
-  name: create-food-item-rpc-call-bind
+  name: update-food-item-rpc-call-bind
 spec:
-  source: create-food-item-rpc-call-exc
-  destination: create-food-item-rpc-call-q
-  routingKey: "create-food-item-rpc-call-q"
+  source: update-food-item-rpc-call-exc
+  destination: update-food-item-rpc-call-q
+  routingKey: "update-food-item-rpc-call-q"
   destinationType: queue
   rabbitmqClusterReference:
     name: rabbitmq
