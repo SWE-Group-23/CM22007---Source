@@ -18,24 +18,21 @@ class CreateProfileRPCClient(rpcs.RPCClient):
         name: str,
         bio: str,
         food_preferences: str,
-        api_version="1.0.0",
-    ) -> dict:
+        api_version="1.0.0"):
         """
         sends data for profile set up
         """
-
-        data = {
-            "username": username,
-            "name": name,
-            "bio": bio,
-            "food_preferences": food_preferences
-        }
 
         req = rpcs.request(
             auth_user,
             api_version,
             srv_from,
-            data,
+            data = {
+            "username": username,
+            "name": name,
+            "bio": bio,
+            "food_preferences": food_preferences
+            }
         )
 
         return self._call(body=req)

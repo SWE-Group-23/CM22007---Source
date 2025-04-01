@@ -49,7 +49,7 @@ class CreateProfileRPCServer(rpcs.RPCServer):
 
         try:
             # check version
-            if req["api_version"] != "1.0.0":
+            if req["version"] != "1.0.0":
                 return rpcs.response(400, {"reason": "Bad version."})
 
             # return response

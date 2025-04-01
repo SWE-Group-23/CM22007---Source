@@ -47,6 +47,8 @@ class CreateProfileRPCTest(AutocleanTestCase):
         client = self.create_profile_client
 
         resp_raw = client.call(
+            "asmith",
+            "testing",
             "a.smith",
             "adam smith",
             "love sourdough <3",
@@ -54,10 +56,11 @@ class CreateProfileRPCTest(AutocleanTestCase):
             )
 
         response = json.loads(resp_raw)
-        logging.info("Response: %s", response)
+        print(f"Response: {response}")
 
-        self.assertEqual(response["status"], 200)
         self.assertEqual(response["data"]["status"], "success")
+        self.assertEqual(response["status"], 200)
+ 
 
     def test_send_nothing(self):
         """
