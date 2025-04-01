@@ -32,9 +32,8 @@ class FetchMessagesRPCServer(rpcs.RPCServer):
                     "reported": str(msg.reported)}
                     for msg in q]
             return rpcs.response(200, {"data": data})
-        else:
-            logging.error("[DB ERROR] Could not get messages")
-            return rpcs.response(400, {"message": "Unable to fetch messages"})
+        logging.error("[DB ERROR] Could not get messages")
+        return rpcs.response(400, {"message": "Unable to fetch messages"})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
