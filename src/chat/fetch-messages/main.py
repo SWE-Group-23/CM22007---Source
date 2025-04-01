@@ -26,9 +26,9 @@ class FetchMessagesRPCServer(rpcs.RPCServer):
             q = models.Messages.objects.filter(chat_id=chat_id)
             data = [{"msg_id": str(msg.msg_id),
                      "chat_id": str(msg.chat_id),
-                     "sender_id": str(msg.sender_id),
+                     "sender_user": msg.sender_user,
                      "sent_time": str(msg.sent_time),
-                     "message": msg.message,
+                     "message": str(msg.message),
                      "reported": str(msg.reported)}
                      for msg in q]
             return rpcs.response(200, {"data": data})

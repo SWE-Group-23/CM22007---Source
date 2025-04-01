@@ -3,7 +3,6 @@ Client for using the send message RPC from the
 chat subsystem.
 """
 
-import uuid
 from shared import rpcs
 
 class SendMessageRPCClient(rpcs.RPCClient):
@@ -19,8 +18,8 @@ class SendMessageRPCClient(rpcs.RPCClient):
             auth_user: str,
             service: str,
             chat_id,
-            send_id: uuid,
-            receiver_id: uuid,
+            send_id: str,
+            receiver_user: str,
             time_sent: int,
             message: str,
             api_version="1.0.0"):
@@ -33,8 +32,8 @@ class SendMessageRPCClient(rpcs.RPCClient):
             service,
             data = {
                 "chat_id": str(chat_id),
-                "sender_id": str(send_id),
-                "receiver_id": str(receiver_id),
+                "sender_user": str(send_id),
+                "receiver_user": str(receiver_user),
                 "time_sent": time_sent,
                 "message": message
             }

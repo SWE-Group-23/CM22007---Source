@@ -5,7 +5,6 @@ Deletes a chats associated with an account
 import os
 import json
 import logging
-import uuid
 
 import shared
 from shared import rpcs
@@ -21,13 +20,13 @@ class DeleteAccountChatsRPCServer(rpcs.RPCServer):
                  rpc_prefix="delete-account-chats-rpc"):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
-    def _delete_chats(self, user_id):
+    def _delete_chats(self, username):
         """
         Deletes associated chats with a user
         """
         success = False
-        q1 = models.Chats.objects.filter(user1=user_id)
-        q2 = models.Chats.objects.filter(user2=user_id)
+        q1 = models.Chats.objects.filter(user1=username)
+        q2 = models.Chats.objects.filter(user2=username)
         for chat in q1:
             chat.delete()
             success = True
@@ -55,11 +54,11 @@ class DeleteAccountChatsRPCServer(rpcs.RPCServer):
 
             resp = rpcs.response(500, {"reason": "Internal Server Error"})
 
-            user_id = uuid.UUID(req["data"]["user_id"])
+            username = str(req["data"]["username"])
 
-            logging.info("User ID: %s", user_id)
+            logging.info("User ID: %s", username)
 
-            resp = self._delete_chats(user_id)
+            resp = self._delete_chats(username)
 
             return resp
         except KeyError:

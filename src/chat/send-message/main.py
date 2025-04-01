@@ -19,14 +19,14 @@ class SendMessageRPCServer(rpcs.RPCServer):
     def __init__(self, rabbitmq_user: str, rabbitmq_pass: str, *, rpc_prefix="send-message-rpc"):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
-    def _add_message(self, chat_id, sender_id, time_sent, message):
+    def _add_message(self, chat_id, sender_user, time_sent, message):
         """
         Attempts to add a message to the messages table
         """
         try:
             models.Messages.create(
                 chat_id = chat_id,
-                sender_id = sender_id,
+                sender_user = sender_user,
                 sent_time = time_sent,
                 message = message
             )
@@ -35,13 +35,13 @@ class SendMessageRPCServer(rpcs.RPCServer):
             logging.error("[DB ERROR] %s", e, exc_info=True)
             return rpcs.response(400, {"message": "Unable to send message"})
 
-    def _new_chat(self, sender_id, receiver_id):
+    def _new_chat(self, sender_user, receiver_user):
         """
         Creates a new chat if there was not an existing one
         """
         chat = models.Chats.create(
-            user1 = sender_id,
-            user2 = receiver_id
+            user1 = sender_user,
+            user2 = receiver_user
         )
         chat_id = chat.chat_id
         return chat_id
@@ -61,17 +61,17 @@ class SendMessageRPCServer(rpcs.RPCServer):
             resp = rpcs.response(500, {"reason": "Internal Server Error"})
 
             chat_id = req["data"]["chat_id"]
-            sender_id = uuid.UUID(req["data"]["sender_id"])
-            receiver_id = uuid.UUID(req["data"]["receiver_id"])
+            sender_user = str(req["data"]["sender_user"])
+            receiver_user = str(req["data"]["receiver_user"])
             time_sent = datetime.fromtimestamp(req["data"]["time_sent"] / 1000)
             message= req["data"]["message"]
 
             if chat_id != "None":
                 chat_id = uuid.UUID(chat_id)
             else:
-                chat_id = self._new_chat(sender_id, receiver_id)
+                chat_id = self._new_chat(sender_user, receiver_user)
 
-            resp = self._add_message(chat_id, sender_id, time_sent, message)
+            resp = self._add_message(chat_id, sender_user, time_sent, message)
 
             return resp
 

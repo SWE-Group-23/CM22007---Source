@@ -19,7 +19,7 @@ This should:
   "data": [{
     "msg_id": "msg_id",
     "chat_id": "chat_id",
-    "sender_id": "user_id",
+    "sender_user": "user_id",
     "sent_time": "time_sent",
     "message": "sample chat message",
     "reported": "False"

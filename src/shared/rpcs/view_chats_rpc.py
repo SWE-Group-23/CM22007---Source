@@ -3,7 +3,6 @@ Client for using the view chats RPC from the
 chat subsystem.
 """
 
-import uuid
 from shared import rpcs
 
 class ViewChatsRPCClient(rpcs.RPCClient):
@@ -14,7 +13,7 @@ class ViewChatsRPCClient(rpcs.RPCClient):
     def __init__(self, *args, rpc_prefix="view-chats-rpc", **kwargs):
         super().__init__(*args, rpc_prefix, **kwargs)
 
-    def call(self, auth_user: str, service: str, user_id: uuid, api_version="1.0.0"):
+    def call(self, auth_user: str, service: str, user_id: str, api_version="1.0.0"):
         """
         Calls view chats RPC
         """

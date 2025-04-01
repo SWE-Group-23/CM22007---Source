@@ -6,8 +6,8 @@
   "from": "send-message",
   "data": {
     "chat_id": "chat_id",
-    "sender_id": "user_id",
-    "receiver_id": "user_id",
+    "sender_user": "user_id",
+    "receiver_user": "user_id",
     "time_sent": "time_sent",
     "message": "sample chat message"
   }

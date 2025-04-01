@@ -5,7 +5,6 @@ Gets the chats from the database and returns to the user
 import os
 import json
 import logging
-import uuid
 
 import shared
 from shared import rpcs
@@ -18,17 +17,17 @@ class ViewChatsRPCServer(rpcs.RPCServer):
     def __init__(self, rabbitmq_user: str, rabbitmq_pass: str, *, rpc_prefix="view-chats-rpc"):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
-    def _fetch_chats(self, user_id):
+    def _fetch_chats(self, user):
         """
         Attempts to fetch all chats for a specific user
         """
         try:
-            q1 = list(models.Chats.objects.filter(user1=user_id))
-            q2 = list(models.Chats.objects.filter(user2=user_id))
+            q1 = list(models.Chats.objects.filter(user1=user))
+            q2 = list(models.Chats.objects.filter(user2=user))
             q = q1 + q2
             data = [{"chat_id": str(chat.chat_id),
-                     "user1": str(chat.user1),
-                     "user2": str(chat.user2),
+                     "user1": chat.user1,
+                     "user2": chat.user2,
                      "blocked": str(chat.blocked)}
                      for chat in q]
             return rpcs.response(200, {"data": data})
@@ -50,10 +49,10 @@ class ViewChatsRPCServer(rpcs.RPCServer):
 
             resp = rpcs.response(500, {"reason": "Internal Server Error"})
 
-            user_id = uuid.UUID(req["data"]["user_id"])
-            logging.info("User ID: %s", user_id)
+            username = str(req["data"]["username"])
+            logging.info("User ID: %s", username)
 
-            resp = self._fetch_chats(user_id)
+            resp = self._fetch_chats(username)
 
             return resp
         except KeyError:
