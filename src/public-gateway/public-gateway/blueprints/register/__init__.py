@@ -1,4 +1,5 @@
 import os
+import json
 
 from quart import Blueprint, request, Response
 import valkey
@@ -36,9 +37,9 @@ create_register_client()
 
 @blueprint.post("/check-valid-username")
 async def check_username():
-    json = await request.get_json()
+    json_req = await request.get_json()
 
-    if json is None or "username" not in json:
+    if json_req is None or "username" not in json_req:
         return Response(status=400)
 
     while True:
@@ -46,7 +47,7 @@ async def check_username():
             resp = register_client.check_valid_username_call(
                 sid=request.token,
                 srv_from=GW_NAME,
-                username=json["username"],
+                username=json_req["username"],
             )
             break
         except ChannelWrongStateError:
@@ -57,17 +58,18 @@ async def check_username():
 
 @blueprint.post("/check-password")
 async def check_password():
-    json = await request.get_json()
+    json_req = await request.get_json()
 
-    if json is None:
+    if json_req is None:
         return Response(status=400)
 
-    if "password" not in json or "username" not in json:
+    if "password" not in json_req or "username" not in json_req:
         return Response(status=400)
 
     try:
         pw_digest = ph.hash(
-            json["password"], salt=json["username"].ljust(16, "=").encode()
+            json_req["password"],
+            salt=json_req["username"].ljust(16, "=").encode(),
         )
     except argon2.exceptions.HashingError:
         return Response(status=500)
@@ -103,12 +105,12 @@ async def setup_otp():
 
 @blueprint.post("/verify-otp")
 async def verify_otp():
-    json = await request.get_json()
+    json_req = await request.get_json()
 
-    if json is None:
+    if json_req is None:
         return Response(status=400)
 
-    if "otp" not in json:
+    if "otp" not in json_req:
         return Response(status=400)
 
     while True:
@@ -116,7 +118,7 @@ async def verify_otp():
             resp = register_client.verify_otp_call(
                 sid=request.token,
                 srv_from=GW_NAME,
-                otp=json["otp"],
+                otp=json_req["otp"],
             )
             break
         except ChannelWrongStateError:
@@ -136,5 +138,14 @@ async def backup_code():
             break
         except ChannelWrongStateError:
             create_register_client()
+
+    # if successful, set the username in the token to indicate
+    # user is logged in
+    if resp["status"] == 200:
+        r.set(
+            request.token,
+            json.dumps({"username": resp["data"]["username"]}),
+            keepttl=True,
+        )
 
     return resp["data"], resp["status"]

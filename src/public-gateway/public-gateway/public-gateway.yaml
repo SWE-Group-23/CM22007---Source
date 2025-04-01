@@ -17,6 +17,8 @@ spec:
         - name: public-gateway
           image: public-gateway:latest
           imagePullPolicy: IfNotPresent
+          ports:
+          - containerPort: 8080
           tty: true
           securityContext:
             readOnlyRootFilesystem: true
@@ -86,9 +88,9 @@ spec:
   userReference:
     name: "public-gateway-rabbitmq-user"
   permissions:
-    write: "register-rpc-(call-exc|resp-q-.*)"
-    configure: "register-rpc-resp-(exc|q.*)"
-    read: "register-rpc-resp-(exc|q-.*)"
+    write: "(register|login)-rpc-(call-exc|resp-q-.*)"
+    configure: "(register|login)-rpc-resp-(exc|q.*)"
+    read: "(register|login)-rpc-resp-(exc|q-.*)"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq

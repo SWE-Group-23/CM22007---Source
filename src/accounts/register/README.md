@@ -6,7 +6,7 @@
     "from": "public-gateway",
     "data": {
         "step": "check-valid-username",
-        "username": "username"
+        "username": "Username"
     }
 }
 ```
@@ -171,6 +171,7 @@ This will:
     "status": 200,
     "data": {
         "backup_code": "87041187b323e644-ca65ef9f70ee8aab-bf58b5d30287a7f2-8d3d3f60f4646b03"
+        "username": "Username"
     }
 }
 ```

@@ -8,11 +8,12 @@ from secrets import token_hex
 from quart import Quart, request
 import valkey
 
-from blueprints import register
+from blueprints import register, login
 
 
 app = Quart(__name__)
 app.register_blueprint(register.blueprint)
+app.register_blueprint(login.blueprint)
 
 GW_NAME = "public-gateway"
 
