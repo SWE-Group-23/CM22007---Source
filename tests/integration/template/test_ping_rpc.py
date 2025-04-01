@@ -111,7 +111,7 @@ class PingRPCTest(AutocleanTestCase):
 
         req = rpcs.request(
             "",
-            "1.2.3",
+            "200",
             "testing",
             {"message": "Ping!"},
         )

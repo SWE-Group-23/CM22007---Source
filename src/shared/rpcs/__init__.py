@@ -163,6 +163,11 @@ class RPCServer(ABC):
         """
         try:
             resp = self.process(body)
+        except AttributeError:
+            resp = response(
+                400,
+                {"reason": "Malformed request."}
+            )
         except Exception as e:  # pylint: disable=broad-exception-caught
             print(e)
             resp = response(

@@ -1,19 +1,19 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: testing-service
-  namespace: testing
+  name: public-gateway-setup-job
+  namespace: public-gateway
 spec:
   backoffLimit: 1
   template:
     metadata:
       labels:
-        app: testing-service
+        app: public-gateway-setup-job
     spec:
       restartPolicy: Never
       containers:
-        - name: testing-service
-          image: testing-service:latest
+        - name: public-gateway-setup-job
+          image: public-gateway-setup-job:latest
           imagePullPolicy: IfNotPresent
           tty: true
           securityContext:
@@ -32,33 +32,21 @@ spec:
             - mountPath: /tmp
               name: temp
           env:
-            - name: RABBITMQ_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: rabbitmq-default-user
-                  key: username
-            - name: RABBITMQ_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: rabbitmq-default-user
-                  key: password
             - name: SCYLLADB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: dev-db-superuser
+                  name: public-gateway-user-scylla-creds
                   key: username
             - name: SCYLLADB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: dev-db-superuser
+                  name: public-gateway-user-scylla-creds
                   key: password
-            - name: ACCOUNTS_VALKEY_USERNAME
-              value: "default"
-            - name: ACCOUNTS_VALKEY_PASSWORD
+            - name: SCYLLADB_KEYSPACE
               valueFrom:
-                secretKeyRef:
-                  name: accounts-valkey
-                  key: password
+                configMapKeyRef:
+                  name: public-gateway-keyspace
+                  key: keyspace
       volumes:
         - emptyDir: {}
           name: uv

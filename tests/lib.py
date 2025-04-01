@@ -6,12 +6,14 @@ testing classes.
 import json
 import os
 from unittest import TestCase
+import time
 
 import cassandra as cs
 import cassandra.auth as ca
 import cassandra.cluster as cc
 import pika
 import requests
+import valkey
 
 
 class AutocleanTestCase(TestCase):
@@ -67,6 +69,15 @@ class AutocleanTestCase(TestCase):
             for table in tables:
                 # print(f"Truncating {keyspace}.{str(table.table_name)}...")
                 session.execute(f"TRUNCATE {keyspace}.{table.table_name};")
+                result = session.execute(
+                    f"SELECT COUNT(*) FROM {keyspace}.{table.table_name};"
+                ).one()
+                while result[0] != 0:
+                    time.sleep(0.1)
+                    session.execute(f"TRUNCATE {keyspace}.{table.table_name};")
+                    result = session.execute(
+                        f"SELECT COUNT(*) FROM {keyspace}.{table.table_name};"
+                    ).one()
 
     def _tear_down_rabbitmq(self):
         """
@@ -113,6 +124,18 @@ class AutocleanTestCase(TestCase):
             except pika.exceptions.ChannelClosedByBroker:
                 pass
 
+    def _tear_down_accounts_valkey(self):
+        vk = valkey.Valkey(
+            host="accounts-valkey.accounts.svc.cluster.local",
+            port="6379",
+            db=0,
+            username=os.environ["ACCOUNTS_VALKEY_USERNAME"],
+            password=os.environ["ACCOUNTS_VALKEY_PASSWORD"],
+        )
+
+        vk.flushall()
+
     def tearDown(self):
         self._tear_down_scylla()
         self._tear_down_rabbitmq()
+        self._tear_down_accounts_valkey()

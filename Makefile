@@ -418,6 +418,7 @@ test-unchecked: test-clean
 	@-echo "Copying necessary credentials into testing namespace..."
 	@-./tests/copy-secret.sh rabbitmq-default-user rabbitmq testing
 	@-./tests/copy-secret.sh dev-db-superuser scylla-auth testing
+	@-./tests/copy-secret.sh accounts-valkey accounts testing
 	@-echo "Done!"
 	
 	@-echo "Running tests..."

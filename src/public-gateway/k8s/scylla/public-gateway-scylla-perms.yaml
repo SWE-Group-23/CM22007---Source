@@ -1,0 +1,31 @@
+apiVersion: custom.local/v1
+kind: ScyllaUser
+metadata:
+  name: public-gateway-user
+  namespace: public-gateway
+spec:
+  scyllaClusterReference: dev-db
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaKeyspace
+metadata:
+  name: public-gateway-keyspace
+  namespace: public-gateway
+spec:
+  scyllaClusterReference: dev-db
+  replicationFactor: 3
+
+---
+
+apiVersion: custom.local/v1
+kind: ScyllaPermission
+metadata:
+  name: public-gateway-permission
+  namespace: public-gateway
+spec:
+  scyllaClusterReference: dev-db
+  user: public-gateway-user
+  keyspace: public-gateway-keyspace
+  permission: CREATE

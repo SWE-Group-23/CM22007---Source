@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: public-gateway
+  namespace: public-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: public-gateway
+  template:
+    metadata:
+      labels:
+        app: public-gateway
+    spec:
+      containers:
+        - name: public-gateway
+          image: public-gateway:latest
+          imagePullPolicy: IfNotPresent
+          tty: true
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /home/user1/.cache/uv
+              name: uv
+            - mountPath: /tmp
+              name: temp
+          env:
+            - name: RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: public-gateway-rabbitmq-user-user-credentials
+                  key: username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: public-gateway-rabbitmq-user-user-credentials
+                  key: password
+            - name: VALKEY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: public-gateway-user-valkey-creds
+                  key: username
+            - name: VALKEY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: public-gateway-user-valkey-creds
+                  key: password
+      volumes:
+        - emptyDir: {}
+          name: uv
+        - emptyDir: {}
+          name: temp
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: User
+metadata:
+  name: public-gateway-rabbitmq-user
+  namespace: public-gateway
+spec:
+  tags:
+  - policymaker
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq
+
+---
+
+apiVersion: rabbitmq.com/v1beta1
+kind: Permission
+metadata:
+  name: public-gateway-rabbitmq-permission
+  namespace: public-gateway
+spec:
+  vhost: "/"
+  userReference:
+    name: "public-gateway-rabbitmq-user"
+  permissions:
+    write: "register-rpc-(call-exc|resp-q-.*)"
+    configure: "register-rpc-resp-(exc|q.*)"
+    read: "register-rpc-resp-(exc|q-.*)"
+  rabbitmqClusterReference:
+    name: rabbitmq
+    namespace: rabbitmq

@@ -1,14 +1,13 @@
 [project]
-name = "tests"
+name = "register"
 version = "0.1.0"
-description = "Runs integration and end-to-end tests."
+description = "Handles registering an account."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "argon2-cffi>=23.1.0",
     "pika>=1.3.2",
     "pyotp>=2.9.0",
-    "requests>=2.32.3",
     "scylla-driver>=3.28.2",
     "valkey>=6.1.0",
 ]
