@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "from": "delete-account-chats",
   "data": {
-    "user_id": "user_id"
+    "username": "username"
   }
 }
 ```

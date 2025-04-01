@@ -8,7 +8,7 @@ Requests to the server should follow:
   "version": "1.0.0",
   "from": "view-chats",
   "data": {
-    "user_id": "user_id"
+    "username": "username"
   }
 }
 ```
@@ -21,8 +21,8 @@ This should:
   "status": 200,
   "data": [{
     "chat_id": "chat_id",
-    "user1": "user_id",
-    "user2": "user_id",
+    "user1": "username",
+    "user2": "username",
     "blocked": "False"
   }]
 }
