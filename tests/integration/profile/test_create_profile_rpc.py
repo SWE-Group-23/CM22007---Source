@@ -47,9 +47,8 @@ class CreateProfileRPCTest(AutocleanTestCase):
         client = self.create_profile_client
 
         resp_raw = client.call(
-            "asmith",
-            "testing",
             "a.smith",
+            "testing",
             "adam smith",
             "love sourdough <3",
             "vegan"

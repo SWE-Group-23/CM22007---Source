@@ -14,7 +14,6 @@ class CreateProfileRPCClient(rpcs.RPCClient):
         self,
         auth_user: str,
         srv_from: str,
-        username: str,
         name: str,
         bio: str,
         food_preferences: str,
@@ -28,7 +27,7 @@ class CreateProfileRPCClient(rpcs.RPCClient):
             api_version,
             srv_from,
             data = {
-            "username": username,
+            "username": auth_user,
             "name": name,
             "bio": bio,
             "food_preferences": food_preferences

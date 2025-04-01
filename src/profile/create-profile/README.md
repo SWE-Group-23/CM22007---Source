@@ -4,7 +4,7 @@
     "apiVersion"
     "srvFrom"
     "data": {
-            "username": "username",
+            "username": "authUser",
             "name": "name",
             "bio": "bio",
             "food_preferences": "food_preferences"
