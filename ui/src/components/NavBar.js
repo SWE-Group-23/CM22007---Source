@@ -9,6 +9,7 @@ function NavBar() {
         <div className="nav-links">
           <Link to="/">OpenPantry</Link>
           <div className="spacer" />
+          <Link to="/pantry">Pantry</Link>
           <Link to="/listings">Listings</Link>
           <Link to="/profile">Profile</Link>
           <p>Log Out</p>
