@@ -7,6 +7,8 @@ from secrets import token_hex
 
 from quart import Quart, request, Response
 import valkey
+from pika.exceptions import ChannelWrongStateError
+import argon2
 
 import shared
 from shared.rpcs.register_rpc import RegisterRPCClient
@@ -23,10 +25,17 @@ r = valkey.Valkey(
 )
 
 
-register_client = RegisterRPCClient(
-    os.environ["RABBITMQ_USERNAME"],
-    os.environ["RABBITMQ_PASSWORD"],
-)
+
+def create_register_client():
+    global register_client
+
+    register_client = RegisterRPCClient(
+        os.environ["RABBITMQ_USERNAME"],
+        os.environ["RABBITMQ_PASSWORD"],
+    )
+
+
+create_register_client()
 
 
 @app.before_request
@@ -58,20 +67,40 @@ def index():
 @app.post("/register/check-valid-username")
 async def check_username():
     json = await request.get_json()
-    
-    print(request)
-    print(json)
 
     if json is None or "username" not in json:
         return Response(status=400)
-
-    resp = register_client.check_valid_username_call(
-        sid=request.token,
-        srv_from="public-gateway",
-        username=json["username"],
-    )
     
-    print(resp)
+    try:
+        resp = register_client.check_valid_username_call(
+            sid=request.token,
+            srv_from="public-gateway",
+            username=json["username"],
+        )
+    except ChannelWrongStateError:
+        create_register_client()
+
+    if resp["status"] != 200:
+        return Response(status=400)
+    
+    return resp["data"]
+
+
+@app.post("/register/check-password")
+async def check_password():
+    json = await request.get_json()
+
+    if json is None or "password" not in json:
+        return Response(status=400)
+    
+    try:
+        resp = register_client.check_valid_username_call(
+            sid=request.token,
+            srv_from="public-gateway",
+            username=json["username"],
+        )
+    except ChannelWrongStateError:
+        create_register_client()
 
     if resp["status"] != 200:
         return Response(status=400)
