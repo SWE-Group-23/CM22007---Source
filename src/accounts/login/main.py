@@ -108,10 +108,10 @@ class LoginRPCServer(rpcs.RPCServer):
                 "stage": "username-password",
                 "username": req["data"]["username"],
             }
-            self.vk.setex(
+            self.vk.set(
                 f"login:{req['sid']}",
-                60 * 30,
                 json.dumps(stage),
+                ex=60 * 30,
             )
 
         return rpcs.response(200, {"correct": login_success})
@@ -148,7 +148,10 @@ class LoginRPCServer(rpcs.RPCServer):
         totp = pyotp.totp.TOTP(otp_sec)
 
         # check given OTP against stored OTP
-        if not totp.verify(req["data"]["otp"], valid_window=1):
+        if not totp.verify(
+            str(req["data"]["otp"]).zfill(6),
+            valid_window=1,
+        ):
             del totp, cur_stage, otp_sec
             return rpcs.response(
                 200,
