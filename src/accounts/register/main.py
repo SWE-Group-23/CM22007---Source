@@ -117,7 +117,8 @@ class RegisterRPCServer(rpcs.RPCServer):
             stage = {"stage": "username-valid",
                      "username": req["data"]["username"]}
 
-            self.vk.setex(f"register:{req['sid']}", 60 * 30, json.dumps(stage))
+            self.vk.set(f"register:{req['sid']}",
+                        json.dumps(stage), ex=60 * 30)
 
             return rpcs.response(200, {"valid": True})
 
@@ -145,7 +146,11 @@ class RegisterRPCServer(rpcs.RPCServer):
         cur_stage["hash"] = pw_hash
 
         # set new stage for token
-        self.vk.set(f"register:{req['sid']}", json.dumps(cur_stage))
+        self.vk.set(
+            f"register:{req['sid']}",
+            json.dumps(cur_stage),
+            keepttl=True,
+        )
 
         del pw_hash
         return rpcs.response(200, {})
@@ -175,7 +180,11 @@ class RegisterRPCServer(rpcs.RPCServer):
         cur_stage["otp_sec"] = secret
 
         # store new stage info
-        self.vk.set(f"register:{req['sid']}", json.dumps(cur_stage))
+        self.vk.set(
+            f"register:{req['sid']}",
+            json.dumps(cur_stage),
+            keepttl=True,
+        )
 
         # return provisioning URI (contains secret)
         del totp, cur_stage
@@ -197,14 +206,21 @@ class RegisterRPCServer(rpcs.RPCServer):
         totp = pyotp.totp.TOTP(cur_stage["otp_sec"])
 
         # check given OTP against stored OTP
-        if not totp.verify(req["data"]["otp"], valid_window=1):
+        if not totp.verify(
+            str(req["data"]["otp"]).zfill(6),
+            valid_window=1,
+        ):
             return rpcs.response(200, {"correct": False})
 
         # update stage
         del totp
         cur_stage["stage"] = "otp-verified"
 
-        self.vk.set(f"register:{req['sid']}", json.dumps(cur_stage))
+        self.vk.set(
+            f"register:{req['sid']}",
+            json.dumps(cur_stage),
+            keepttl=True,
+        )
         del cur_stage
 
         return rpcs.response(200, {"correct": True})

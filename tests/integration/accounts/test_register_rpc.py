@@ -490,7 +490,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
                 "username": "NotExists",
             }
         )
-        self.vk.setex(f"register:{sid}", 1, stage)
+        self.vk.set(f"register:{sid}", stage, ex=1)
 
         vk_stage = self.vk.get(f"register:{sid}")
         self.assertIsNotNone(vk_stage)
