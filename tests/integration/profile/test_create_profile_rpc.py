@@ -56,11 +56,9 @@ class CreateProfileRPCTest(AutocleanTestCase):
             )
 
         response = json.loads(resp_raw)
-        print(f"Response: {response}")
 
         self.assertEqual(response["data"]["status"], "success")
         self.assertEqual(response["status"], 200)
- 
 
     def test_send_nothing(self):
         """
