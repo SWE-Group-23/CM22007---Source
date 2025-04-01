@@ -49,8 +49,8 @@ class SendMessageRPCTest(AutocleanTestCase):
         client = self.send_message_client
 
         chat_id = uuid.uuid4()
-        sender_user = uuid.uuid4()
-        receiver_user = uuid.uuid4()
+        sender_user = str(uuid.uuid4())
+        receiver_user = str(uuid.uuid4())
         timestamp = int(time.time() * 1000)
         message = "test message"
 
@@ -78,8 +78,8 @@ class SendMessageRPCTest(AutocleanTestCase):
         client = self.send_message_client
 
         chat_id = "None"
-        sender_user = uuid.uuid4()
-        receiver_user = uuid.uuid4()
+        sender_user = str(uuid.uuid4())
+        receiver_user = str(uuid.uuid4())
         timestamp = int(time.time() * 1000)
         message = "New chat test message"
 

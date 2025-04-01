@@ -47,7 +47,7 @@ class ViewChatsRPCTest(AutocleanTestCase):
         logging.info("Starting the test_view_chats test.")
         client = self.view_chats_client
 
-        user_id = uuid.uuid4()
+        user_id = str(uuid.uuid4())
 
         resp_raw = client.call(
             "john smith",

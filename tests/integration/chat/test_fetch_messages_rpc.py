@@ -40,7 +40,7 @@ class FetchMessagesRPCTest(AutocleanTestCase):
         )
 
 
-    def test_send_message(self):
+    def test_fetch_message(self):
         """
         Tests sending a valid fetch request
         """
