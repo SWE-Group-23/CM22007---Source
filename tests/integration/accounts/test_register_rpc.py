@@ -215,6 +215,7 @@ class RegisterRPCTest(AutocleanTestCase):  # pylint: disable=too-many-public-met
         ctx.vk_data = self._get_vk_data(ctx.sid)
 
         self.assertEqual(resp["status"], 200)
+        self.assertEqual(resp["data"]["username"], "NotExists")
         self.assertRegex(
             resp["data"]["backup_code"],
             "^[0-9a-f]{6}-[0-9a-f]{6}-[0-9a-f]{6}-[0-9a-f]{6}$",

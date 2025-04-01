@@ -130,15 +130,15 @@ class LoginRPCServer(rpcs.RPCServer):
             del cur_stage
             return rpcs.response(400, {"reason": "Malformed request."})
 
+        username = cur_stage["username"]
+
         try:
             otp_sec = (
                 model.Accounts.objects()
                 .only(
                     ["otp_secret"],
                 )
-                .get(
-                    username=cur_stage["username"],
-                )["otp_secret"]
+                .get(username=username)["otp_secret"]
             )
         except query.DoesNotExist:
             self.vk.delete(f"login:{req['sid']}")
@@ -150,18 +150,30 @@ class LoginRPCServer(rpcs.RPCServer):
         # check given OTP against stored OTP
         if not totp.verify(req["data"]["otp"], valid_window=1):
             del totp, cur_stage, otp_sec
-            return rpcs.response(200, {"correct": False})
+            return rpcs.response(
+                200,
+                {
+                    "correct": False,
+                    "username": username,
+                },
+            )
 
         # OTP correct so clean up
         self.vk.delete(f"login:{req['sid']}")
 
         # set last login
         model.Accounts.get(
-            username=cur_stage["username"],
+            username=username,
         ).update(last_login=datetime.datetime.now())
 
         del totp, cur_stage, otp_sec
-        return rpcs.response(200, {"correct": True})
+        return rpcs.response(
+            200,
+            {
+                "correct": True,
+                "username": username,
+            },
+        )
 
     def process(self, body: bytes) -> str:
         """

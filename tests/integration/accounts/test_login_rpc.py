@@ -270,6 +270,7 @@ class LoginRPCTest(AutocleanTestCase):
 
         self.assertEqual(resp["status"], 200)
         self.assertTrue(resp["data"]["correct"])
+        self.assertEqual(resp["data"]["username"], "Exists")
         self.assertIsNone(self.vk.get(f"login:{ctx['token']}"))
 
         user = model.Accounts.get(username=ctx["username"])
@@ -304,6 +305,7 @@ class LoginRPCTest(AutocleanTestCase):
 
         self.assertEqual(resp["status"], 200)
         self.assertFalse(resp["data"]["correct"])
+        self.assertEqual(resp["data"]["username"], "Exists")
         vk_stage = json.loads(self.vk.get(f"login:{ctx['token']}"))
         self.assertEqual(vk_stage["stage"], "username-password")
         self.assertEqual(vk_stage["username"], ctx["username"])
@@ -325,6 +327,7 @@ class LoginRPCTest(AutocleanTestCase):
 
         self.assertEqual(resp["status"], 200)
         self.assertTrue(resp["data"]["correct"])
+        self.assertEqual(resp["data"]["username"], "Exists")
         self.assertIsNone(self.vk.get(f"login:{ctx['token']}"))
 
         user = model.Accounts.get(username=ctx["username"])
@@ -352,6 +355,7 @@ class LoginRPCTest(AutocleanTestCase):
                 if status == 200:
                     self.assertEqual(resp["status"], status)
                     self.assertFalse(resp["data"]["correct"])
+                    self.assertEqual(resp["data"]["username"], "Exists")
                 else:
                     self.assertEqual(resp["status"], status)
                     self.assertEqual(

@@ -117,8 +117,7 @@ class RegisterRPCServer(rpcs.RPCServer):
             stage = {"stage": "username-valid",
                      "username": req["data"]["username"]}
 
-            self.vk.setex(
-                f"register:{req['sid']}", 60 * 30, json.dumps(stage))
+            self.vk.setex(f"register:{req['sid']}", 60 * 30, json.dumps(stage))
 
             return rpcs.response(200, {"valid": True})
 
@@ -251,7 +250,13 @@ class RegisterRPCServer(rpcs.RPCServer):
         # delete user stage in valkey
         self.vk.delete(f"register:{req['sid']}")
 
-        return rpcs.response(200, {"backup_code": backup_code})
+        return rpcs.response(
+            200,
+            {
+                "backup_code": backup_code,
+                "username": cur_stage["username"],
+            },
+        )
 
     def process(self, body):
         """
