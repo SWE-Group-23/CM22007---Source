@@ -36,6 +36,10 @@ function Pantry() {
   function addListing(formData) {
       setPostingListing(false)
   }
+
+  function removeItem(foodId) {
+      setFoodItems(foodItems.filter(foodItem => {return foodItem.id !== foodId}));
+  }
   
   if (postingListing) {
       content = (
@@ -68,6 +72,7 @@ function Pantry() {
           {foodItems.map(foodItem => {
               return <Food key={foodItem.id} foodItem={foodItem}
                 setPostingListing={setPostingListing} setListingItem={setListingItem}
+                removeItem={removeItem}
               />
           })}
           </div>
