@@ -18,7 +18,7 @@ class SendMessageRPCTest(AutocleanTestCase):
     Integration tests for the send message RPC.
     """
 
-    def setUp(self):    # pylint: disable=invalid-name
+    def setUp(self):  # pylint: disable=invalid-name
         """
         Sets up Scylla and RPC Clients.
         """
@@ -30,8 +30,7 @@ class SendMessageRPCTest(AutocleanTestCase):
         ).setLevel(logging.ERROR)
 
         self.send_message_client = SendMessageRPCClient(
-            os.environ["RABBITMQ_USERNAME"],
-            os.environ["RABBITMQ_PASSWORD"]
+            os.environ["RABBITMQ_USERNAME"], os.environ["RABBITMQ_PASSWORD"]
         )
 
         self.test_client = TestRPCClient(
@@ -39,7 +38,6 @@ class SendMessageRPCTest(AutocleanTestCase):
             os.environ["RABBITMQ_PASSWORD"],
             "send-message-rpc",
         )
-
 
     def test_send_message(self):
         """
@@ -61,8 +59,8 @@ class SendMessageRPCTest(AutocleanTestCase):
             sender_user,
             receiver_user,
             timestamp,
-            message
-            )
+            message,
+        )
 
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)
@@ -90,8 +88,8 @@ class SendMessageRPCTest(AutocleanTestCase):
             sender_user,
             receiver_user,
             timestamp,
-            message
-            )
+            message,
+        )
 
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)

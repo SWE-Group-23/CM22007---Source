@@ -10,11 +10,19 @@ import shared
 from shared import rpcs
 from shared.models import chat as models
 
+
 class ViewChatsRPCServer(rpcs.RPCServer):
     """
     Subclass of RPCServer
     """
-    def __init__(self, rabbitmq_user: str, rabbitmq_pass: str, *, rpc_prefix="view-chats-rpc"):
+
+    def __init__(
+        self,
+        rabbitmq_user: str,
+        rabbitmq_pass: str,
+        *,
+        rpc_prefix="view-chats-rpc",
+    ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
     def _fetch_chats(self, user):
@@ -25,11 +33,15 @@ class ViewChatsRPCServer(rpcs.RPCServer):
             q1 = list(models.Chats.objects.filter(user1=user))
             q2 = list(models.Chats.objects.filter(user2=user))
             q = q1 + q2
-            data = [{"chat_id": str(chat.chat_id),
-                     "user1": chat.user1,
-                     "user2": chat.user2,
-                     "blocked": str(chat.blocked)}
-                     for chat in q]
+            data = [
+                {
+                    "chat_id": str(chat.chat_id),
+                    "user1": chat.user1,
+                    "user2": chat.user2,
+                    "blocked": str(chat.blocked),
+                }
+                for chat in q
+            ]
             return rpcs.response(200, {"data": data})
         except q1.DoesNotExist as e:
             logging.error("[DB ERROR] %s", e, exc_info=True)
@@ -58,6 +70,7 @@ class ViewChatsRPCServer(rpcs.RPCServer):
         except KeyError:
             return rpcs.response(400, {"reason": "Malformed request."})
 
+
 def main():
     """
     Sets up Scylla and the RPC Server, then starts
@@ -70,12 +83,12 @@ def main():
     )
 
     rpc_server = ViewChatsRPCServer(
-        os.environ["RABBITMQ_USERNAME"],
-        os.environ["RABBITMQ_PASSWORD"]
+        os.environ["RABBITMQ_USERNAME"], os.environ["RABBITMQ_PASSWORD"]
     )
 
     logging.info("Consuming...")
     rpc_server.channel.start_consuming()
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

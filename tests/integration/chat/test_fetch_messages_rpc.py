@@ -17,7 +17,7 @@ class FetchMessagesRPCTest(AutocleanTestCase):
     Integration tests for the fetch messages RPC.
     """
 
-    def setUp(self):    # pylint: disable=invalid-name
+    def setUp(self):  # pylint: disable=invalid-name
         """
         Sets up Scylla and RPC Clients.
         """
@@ -29,8 +29,7 @@ class FetchMessagesRPCTest(AutocleanTestCase):
         ).setLevel(logging.ERROR)
 
         self.fetch_messages_client = FetchMessagesRPCClient(
-            os.environ["RABBITMQ_USERNAME"],
-            os.environ["RABBITMQ_PASSWORD"]
+            os.environ["RABBITMQ_USERNAME"], os.environ["RABBITMQ_PASSWORD"]
         )
 
         self.test_client = TestRPCClient(
@@ -38,7 +37,6 @@ class FetchMessagesRPCTest(AutocleanTestCase):
             os.environ["RABBITMQ_PASSWORD"],
             "fetch-messages-rpc",
         )
-
 
     def test_fetch_message(self):
         """
@@ -49,11 +47,7 @@ class FetchMessagesRPCTest(AutocleanTestCase):
 
         chat_id = uuid.uuid4()
 
-        resp_raw = client.call(
-            "john smith",
-            "testing",
-            chat_id
-            )
+        resp_raw = client.call("john smith", "testing", chat_id)
 
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)

@@ -11,11 +11,19 @@ import shared
 from shared import rpcs
 from shared.models import chat as models
 
+
 class FetchMessagesRPCServer(rpcs.RPCServer):
     """
     Subclass of RPCServer
     """
-    def __init__(self, rabbitmq_user: str, rabbitmq_pass: str, *, rpc_prefix="fetch-messages-rpc"):
+
+    def __init__(
+        self,
+        rabbitmq_user: str,
+        rabbitmq_pass: str,
+        *,
+        rpc_prefix="fetch-messages-rpc",
+    ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
     def _fetch_messages(self, chat_id):
@@ -24,13 +32,17 @@ class FetchMessagesRPCServer(rpcs.RPCServer):
         """
         q = models.Messages.objects.filter(chat_id=chat_id)
         if q:
-            data = [{"msg_id": str(msg.msg_id),
+            data = [
+                {
+                    "msg_id": str(msg.msg_id),
                     "chat_id": str(msg.chat_id),
                     "sender_user": str(msg.sender_user),
                     "sent_time": str(msg.sent_time),
                     "message": str(msg.message),
-                    "reported": str(msg.reported)}
-                    for msg in q]
+                    "reported": str(msg.reported),
+                }
+                for msg in q
+            ]
             return rpcs.response(200, {"data": data})
         logging.error("[DB ERROR] Could not get messages")
         return rpcs.response(400, {"message": "Unable to fetch messages"})
@@ -57,6 +69,7 @@ class FetchMessagesRPCServer(rpcs.RPCServer):
         except KeyError:
             return rpcs.response(400, {"reason": "Malformed request."})
 
+
 def main():
     """
     Sets up Scylla and the RPC Server, then starts
@@ -69,12 +82,12 @@ def main():
     )
 
     rpc_server = FetchMessagesRPCServer(
-        os.environ["RABBITMQ_USERNAME"],
-        os.environ["RABBITMQ_PASSWORD"]
+        os.environ["RABBITMQ_USERNAME"], os.environ["RABBITMQ_PASSWORD"]
     )
 
     logging.info("Consuming...")
     rpc_server.channel.start_consuming()
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

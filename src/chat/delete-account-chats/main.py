@@ -10,14 +10,19 @@ import shared
 from shared import rpcs
 from shared.models import chat as models
 
+
 class DeleteAccountChatsRPCServer(rpcs.RPCServer):
     """
     Subclass of RPCServer
     """
-    def __init__(self, rabbitmq_user: str,
-                 rabbitmq_pass: str,
-                 *,
-                 rpc_prefix="delete-account-chats-rpc"):
+
+    def __init__(
+        self,
+        rabbitmq_user: str,
+        rabbitmq_pass: str,
+        *,
+        rpc_prefix="delete-account-chats-rpc",
+    ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
     def _delete_chats(self, username):
@@ -64,6 +69,7 @@ class DeleteAccountChatsRPCServer(rpcs.RPCServer):
         except KeyError:
             return rpcs.response(400, {"reason": "Malformed request."})
 
+
 def main():
     """
     Sets up Scylla and the RPC Server, then starts
@@ -76,12 +82,12 @@ def main():
     )
 
     rpc_server = DeleteAccountChatsRPCServer(
-        os.environ["RABBITMQ_USERNAME"],
-        os.environ["RABBITMQ_PASSWORD"]
+        os.environ["RABBITMQ_USERNAME"], os.environ["RABBITMQ_PASSWORD"]
     )
 
     logging.info("Consuming...")
     rpc_server.channel.start_consuming()
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
