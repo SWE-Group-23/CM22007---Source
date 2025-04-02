@@ -3,7 +3,7 @@ import json
 
 from quart import Blueprint, request, Response, abort
 import valkey
-from pika.exceptions import ChannelWrongStateError
+from pika.exceptions import ChannelWrongStateError, AMQPConnectionError
 import argon2
 
 from shared.rpcs.register_rpc import RegisterRPCClient
@@ -60,7 +60,7 @@ async def check_username():
                 username=json_req["username"],
             )
             break
-        except ChannelWrongStateError:
+        except (ChannelWrongStateError, AMQPConnectionError):
             create_register_client()
 
     return resp["data"], resp["status"]
@@ -92,7 +92,7 @@ async def check_password():
                 password_digest=pw_digest,
             )
             break
-        except ChannelWrongStateError:
+        except (ChannelWrongStateError, AMQPConnectionError):
             create_register_client()
 
     return resp["data"], resp["status"]
@@ -107,7 +107,7 @@ async def setup_otp():
                 srv_from=GW_NAME,
             )
             break
-        except ChannelWrongStateError:
+        except (ChannelWrongStateError, AMQPConnectionError):
             create_register_client()
 
     return resp["data"], resp["status"]
@@ -131,7 +131,7 @@ async def verify_otp():
                 otp=json_req["otp"],
             )
             break
-        except ChannelWrongStateError:
+        except (ChannelWrongStateError, AMQPConnectionError):
             create_register_client()
 
     return resp["data"], resp["status"]
@@ -146,7 +146,7 @@ async def backup_code():
                 srv_from=GW_NAME,
             )
             break
-        except ChannelWrongStateError:
+        except (ChannelWrongStateError, AMQPConnectionError):
             create_register_client()
 
     # if successful, set the username in the token to indicate

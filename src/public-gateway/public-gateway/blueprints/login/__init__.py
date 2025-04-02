@@ -3,7 +3,7 @@ import json
 
 from quart import Blueprint, request, Response, abort
 import valkey
-from pika.exceptions import ChannelWrongStateError
+from pika.exceptions import ChannelWrongStateError, AMQPConnectionError
 import argon2
 
 from shared.rpcs.login_rpc import LoginRPCClient
@@ -72,7 +72,7 @@ async def check_password():
                 password_digest=pw_digest,
             )
             break
-        except ChannelWrongStateError:
+        except (ChannelWrongStateError, AMQPConnectionError):
             create_login_client()
 
     return resp["data"], resp["status"]
@@ -93,7 +93,7 @@ async def verify_otp():
                 otp=json_req["otp"],
             )
             break
-        except ChannelWrongStateError:
+        except (ChannelWrongStateError, AMQPConnectionError):
             create_login_client()
 
     # if successful, set the username in valkey
