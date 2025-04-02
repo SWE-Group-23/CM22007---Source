@@ -1,7 +1,7 @@
 import os
 import json
 
-from quart import Blueprint, request, Response
+from quart import Blueprint, request, Response, abort
 import valkey
 from pika.exceptions import ChannelWrongStateError
 import argon2
@@ -33,6 +33,16 @@ def create_login_client():
 
 
 create_login_client()
+
+
+@blueprint.before_request
+async def block_auth_users():
+    try:
+        session = r.get(request.token)
+        if session and session != b"{}":
+            abort(403, "Already logged in.")
+    except AttributeError:
+        pass
 
 
 @blueprint.post("/check-password")

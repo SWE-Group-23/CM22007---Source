@@ -1,13 +1,15 @@
 """
-Add some service docs here.
+Runs a Quart app which serves as the public API gateway.
 """
 
 import os
+import json
 from secrets import token_hex
 
 from quart import Quart, request
 from quart_cors import cors
 import valkey
+import argon2
 
 from blueprints import register, login
 
@@ -27,6 +29,7 @@ r = valkey.Valkey(
     username=os.environ["VALKEY_USERNAME"],
     password=os.environ["VALKEY_PASSWORD"],
 )
+ph = argon2.PasswordHasher()
 
 
 @app.before_request
@@ -59,9 +62,26 @@ def index():
     return "Hello, world"
 
 
+@app.get("/check-logged-in")
+async def check_logged_in():
+    try:
+        session = r.get(request.token)
+        # if a session exists but is not authenticated
+        if session and session == b"{}":
+            return {"logged-in": False}, 200
+        # if a session does not exist in valkey
+        elif not session:
+            return {"logged-in": False}, 200
+    except AttributeError:
+        # if the request didn't have a session token cookie
+        return {"logged-in": False}, 200
+
+    return {"logged-in": True}, 200
+
+
 def main():
     """
-    Add appropriate docs here.
+    Starts running the Quart app.
     """
 
     app.run(port=8080, debug=True)
