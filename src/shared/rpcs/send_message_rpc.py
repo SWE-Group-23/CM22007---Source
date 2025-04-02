@@ -16,14 +16,14 @@ class SendMessageRPCClient(rpcs.RPCClient):
         super().__init__(*args, rpc_prefix, **kwargs)
 
     def call(   # pylint: disable=too-many-arguments,too-many-positional-arguments
-            self,
-            auth_user: str,
-            service: str,
-            chat_id,
-            receiver_user: str,
-            time_sent: str,
-            message: str,
-            api_version="1.0.0"):
+        self,
+        auth_user: str,
+        service: str,
+        chat_id,
+        receiver_user: str,
+        time_sent: str,
+        message: str,
+        api_version="1.0.0"):
         """
         Calls send message RPC
         """
