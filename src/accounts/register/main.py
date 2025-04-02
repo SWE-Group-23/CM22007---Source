@@ -172,7 +172,7 @@ class RegisterRPCServer(rpcs.RPCServer):
         totp = pyotp.totp.TOTP(secret)
         prov_uri = totp.provisioning_uri(
             name=cur_stage["username"],
-            issuer_name="App Name Goes Here",
+            issuer_name="OpenPantry",
         )
 
         # new stage info
