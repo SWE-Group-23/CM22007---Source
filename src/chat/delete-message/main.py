@@ -22,7 +22,7 @@ class DeleteMessageRPCServer(rpcs.RPCServer):
         """
         Attempts to delete a specific message from the database
         """
-        msg = models.Messages.objects.filter(msg_id=msg_id).get()
+        msg = models.Messages.objects.get(msg_id=msg_id)
         if msg:
             msg.delete()
             return rpcs.response(200, {"message": "Success"})

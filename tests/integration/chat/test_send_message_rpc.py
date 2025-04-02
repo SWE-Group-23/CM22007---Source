@@ -4,9 +4,9 @@ Integration tests for the send message RPC.
 
 import os
 import uuid
-import time
 import json
 import logging
+from datetime import datetime
 
 from lib import AutocleanTestCase
 from shared.rpcs.send_message_rpc import SendMessageRPCClient
@@ -49,16 +49,14 @@ class SendMessageRPCTest(AutocleanTestCase):
         client = self.send_message_client
 
         chat_id = uuid.uuid4()
-        sender_user = str(uuid.uuid4())
-        receiver_user = str(uuid.uuid4())
-        timestamp = int(time.time() * 1000)
+        receiver_user = str("Bob")
+        timestamp = str(datetime.now())
         message = "test message"
 
         resp_raw = client.call(
             "john smith",
             "testing",
             chat_id,
-            sender_user,
             receiver_user,
             timestamp,
             message
@@ -78,16 +76,14 @@ class SendMessageRPCTest(AutocleanTestCase):
         client = self.send_message_client
 
         chat_id = "None"
-        sender_user = str(uuid.uuid4())
-        receiver_user = str(uuid.uuid4())
-        timestamp = int(time.time() * 1000)
+        receiver_user = str("Alice")
+        timestamp = str(datetime.now())
         message = "New chat test message"
 
         resp_raw = client.call(
             "john smith",
             "testing",
             chat_id,
-            sender_user,
             receiver_user,
             timestamp,
             message

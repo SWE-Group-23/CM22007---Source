@@ -18,9 +18,8 @@ class SendMessageRPCClient(rpcs.RPCClient):
             auth_user: str,
             service: str,
             chat_id,
-            sender_user: str,
             receiver_user: str,
-            time_sent: int,
+            time_sent: str,
             message: str,
             api_version="1.0.0"):
         """
@@ -32,7 +31,6 @@ class SendMessageRPCClient(rpcs.RPCClient):
             service,
             data = {
                 "chat_id": str(chat_id),
-                "sender_user": sender_user,
                 "receiver_user": receiver_user,
                 "time_sent": time_sent,
                 "message": message
