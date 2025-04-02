@@ -1,14 +1,29 @@
 import { useState } from "react";
 
+import Food from "./components/Food";
+
 function Pantry() {
   
   const [addingFood, setAddingFood] = useState(false);
+
+  const [foodItems, setFoodItems] = useState([
+    {name: "Banana", exp: "12/4/25", desc: "Quite yellow"},
+    {name: "Ham Sandwitch", exp: "7/4/25", desc: "White bread, buttered"},
+    {name: "Yoghurt", exp: "14/4/25", desc: "Strawberry Flavoured"},
+  ]);
 
   let content;
 
   function addFood(formData) {
     if (addingFood) {
-        alert("food added");
+      setFoodItems([
+        ...foodItems,
+        {
+          name: formData.get("name"),
+          exp: formData.get("expiry"),
+          desc: formData.get("description")
+        }
+      ]);
         setAddingFood(false);
     }
   }
@@ -17,9 +32,14 @@ function Pantry() {
       content = (
         <div className="profile-page">
           <h1 className="title">Your Pantry</h1>
+          <div className="food-items">
+          {foodItems.map(foodItem => {
+              return <Food foodItem={foodItem} />
+          })}
+          </div>
           <button
             onClick={() => {setAddingFood(true)}}
-            className="dark-button"
+            className="dark-button jc-center-margin"
           >
             Add Food
           </button>
