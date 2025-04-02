@@ -30,13 +30,13 @@ class DeleteMessageRPCServer(rpcs.RPCServer):
         """
         Attempts to delete a specific message from the database
         """
-        msg = models.Messages.objects.get(msg_id=msg_id)
-        if msg:
+        try:
+            msg = models.Messages.objects.get(msg_id=msg_id)
             msg.delete()
             return rpcs.response(200, {"message": "Success"})
-
-        logging.error("[DB ERROR] Cannot find message to delete")
-        return rpcs.response(400, {"message": "Unable to delete message"})
+        except models.Messages.DoesNotExist:
+            logging.error("[DB ERROR] Cannot find message to delete")
+            return rpcs.response(400, {"message": "Unable to delete message"})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
