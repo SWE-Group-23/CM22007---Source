@@ -5,11 +5,13 @@ chat subsystem.
 
 from shared import rpcs
 
+
 class SendMessageRPCClient(rpcs.RPCClient):
     """
     RPC Client for using the send message RPC from the
     chat subsystem.
     """
+
     def __init__(self, *args, rpc_prefix="send-message-rpc", **kwargs):
         super().__init__(*args, rpc_prefix, **kwargs)
 
@@ -29,12 +31,12 @@ class SendMessageRPCClient(rpcs.RPCClient):
             auth_user,
             api_version,
             service,
-            data = {
+            data={
                 "chat_id": str(chat_id),
                 "receiver_user": receiver_user,
                 "time_sent": time_sent,
-                "message": message
-            }
+                "message": message,
+            },
         )
 
         return self._call(body=req)

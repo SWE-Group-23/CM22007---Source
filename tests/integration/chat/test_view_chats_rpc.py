@@ -16,7 +16,7 @@ class ViewChatsRPCTest(AutocleanTestCase):
     Integration tests for the view chats RPC.
     """
 
-    def setUp(self):    # pylint: disable=invalid-name
+    def setUp(self):  # pylint: disable=invalid-name
         """
         Sets up Scylla and RPC Clients.
         """
@@ -28,8 +28,7 @@ class ViewChatsRPCTest(AutocleanTestCase):
         ).setLevel(logging.ERROR)
 
         self.view_chats_client = ViewChatsRPCClient(
-            os.environ["RABBITMQ_USERNAME"],
-            os.environ["RABBITMQ_PASSWORD"]
+            os.environ["RABBITMQ_USERNAME"], os.environ["RABBITMQ_PASSWORD"]
         )
 
         self.test_client = TestRPCClient(
@@ -38,7 +37,6 @@ class ViewChatsRPCTest(AutocleanTestCase):
             "view-chats-rpc",
         )
 
-
     def test_view_chats(self):
         """
         Tests sending a valid fetch request
@@ -46,10 +44,7 @@ class ViewChatsRPCTest(AutocleanTestCase):
         logging.info("Starting the test_view_chats test.")
         client = self.view_chats_client
 
-        resp_raw = client.call(
-            "john smith",
-            "testing"
-            )
+        resp_raw = client.call("john smith", "testing")
 
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)

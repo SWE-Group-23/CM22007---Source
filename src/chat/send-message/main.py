@@ -12,11 +12,19 @@ import shared
 from shared import rpcs
 from shared.models import chat as models
 
+
 class SendMessageRPCServer(rpcs.RPCServer):
     """
     Subclass of RPCServer
     """
-    def __init__(self, rabbitmq_user: str, rabbitmq_pass: str, *, rpc_prefix="send-message-rpc"):
+
+    def __init__(
+        self,
+        rabbitmq_user: str,
+        rabbitmq_pass: str,
+        *,
+        rpc_prefix="send-message-rpc",
+    ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
     def _add_message(self, chat_id, sender_user, time_sent, message):
@@ -25,10 +33,10 @@ class SendMessageRPCServer(rpcs.RPCServer):
         """
         try:
             models.Messages.create(
-                chat_id = chat_id,
-                sender_user = sender_user,
-                sent_time = time_sent,
-                message = message
+                chat_id=chat_id,
+                sender_user=sender_user,
+                sent_time=time_sent,
+                message=message,
             )
             return rpcs.response(200, {"message": "Message sent"})
         except ConnectionError as e:
@@ -39,12 +47,8 @@ class SendMessageRPCServer(rpcs.RPCServer):
         """
         Creates a new chat if there was not an existing one
         """
-        chat = models.Chats.create(
-            user1 = sender_user,
-            user2 = receiver_user
-        )
-        chat_id = chat.chat_id
-        return chat_id
+        chat = models.Chats.create(user1=sender_user, user2=receiver_user)
+        return chat.chat_id
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
@@ -78,6 +82,7 @@ class SendMessageRPCServer(rpcs.RPCServer):
         except KeyError:
             return rpcs.response(400, {"reason": "Malformed request."})
 
+
 def main():
     """
     Sets up Scylla, and the RPC Server, then starts
@@ -90,12 +95,12 @@ def main():
     )
 
     rpc_server = SendMessageRPCServer(
-        os.environ["RABBITMQ_USERNAME"],
-        os.environ["RABBITMQ_PASSWORD"]
+        os.environ["RABBITMQ_USERNAME"], os.environ["RABBITMQ_PASSWORD"]
     )
 
     logging.info("Consuming...")
     rpc_server.channel.start_consuming()
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
