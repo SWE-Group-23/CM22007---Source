@@ -61,7 +61,7 @@ class SendMessageRPCServer(rpcs.RPCServer):
             resp = rpcs.response(500, {"reason": "Internal Server Error"})
 
             chat_id = req["data"]["chat_id"]
-            sender_user = str(req["data"]["sender_user"])
+            sender_user = str(req["authUser"])
             receiver_user = str(req["data"]["receiver_user"])
             time_sent = datetime.fromtimestamp(req["data"]["time_sent"] / 1000)
             message= req["data"]["message"]

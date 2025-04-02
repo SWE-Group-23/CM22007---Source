@@ -54,9 +54,9 @@ class DeleteAccountChatsRPCServer(rpcs.RPCServer):
 
             resp = rpcs.response(500, {"reason": "Internal Server Error"})
 
-            username = str(req["data"]["username"])
+            username = str(req["authUser"])
 
-            logging.info("User ID: %s", username)
+            logging.info("User: %s", username)
 
             resp = self._delete_chats(username)
 
