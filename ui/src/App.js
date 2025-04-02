@@ -3,7 +3,7 @@ import "./App.css";
 import NavBar from "./components/NavBar";
 import ListingDetail from "./components/ListingDetail";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 import RequireLogin from "./RequireLogin";
 
@@ -29,6 +29,19 @@ const loggedInLinks = [
 function App() {
 
   const [loggedIn, setLoggedIn] = useState(false)
+  
+  useMemo(() => {
+    fetch("http://localhost:8080/check-logged-in", {
+      credentials: "include",
+    }).then(response => {
+      if (response.ok) {
+        response.json().then(json => {
+          setLoggedIn(json.logged_in);
+        })
+      }
+    })
+  }, [setLoggedIn]);
+
 
   return (
     <Router>
@@ -37,13 +50,29 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/pantry" element={
-          <RequireLogin page={<Pantry />} loggedIn={loggedIn} />
+          <RequireLogin page={<Pantry />}
+            loggedIn={loggedIn} setLoggedIn={setLoggedIn}
+          />
         } />
-        <Route path="/listings" element={<Listings />} />
-        <Route path="/listings/:id" element={<ListingDetail />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/listings" element={
+          <RequireLogin page={<Listings />}
+            loggedIn={loggedIn} setLoggedIn={setLoggedIn}
+          />
+        } />
+        <Route path="/listings/:id" element={
+          <RequireLogin page={<ListingDetail />}
+            loggedIn={loggedIn} setLoggedIn={setLoggedIn}
+          />
+        } />
+        <Route path="/profile" element={
+          <RequireLogin page={<Profile />}
+            loggedIn={loggedIn} setLoggedIn={setLoggedIn}
+          />
+        } />
         <Route path="/login" element={
-          <RequireLogin page={<Navigate to="/" />} loggedIn={loggedIn} />
+          <RequireLogin page={<Navigate to="/pantry" />}
+            loggedIn={loggedIn} setLoggedIn={setLoggedIn}
+          />
         } />
         <Route path="/register" element={<Register setLoggedIn={setLoggedIn} />} />
       </Routes>

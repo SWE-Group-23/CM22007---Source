@@ -68,15 +68,15 @@ async def check_logged_in():
         session = r.get(request.token)
         # if a session exists but is not authenticated
         if session and session == b"{}":
-            return {"logged-in": False}, 200
+            return {"logged_in": False}, 200
         # if a session does not exist in valkey
         elif not session:
-            return {"logged-in": False}, 200
+            return {"logged_in": False}, 200
     except AttributeError:
         # if the request didn't have a session token cookie
-        return {"logged-in": False}, 200
+        return {"logged_in": False}, 200
 
-    return {"logged-in": True}, 200
+    return {"logged_in": True}, 200
 
 
 def main():
