@@ -3,6 +3,7 @@ Runs a Quart app which serves as the public API gateway.
 """
 
 import os
+import json
 from secrets import token_hex
 
 from quart import Quart, request
@@ -75,7 +76,9 @@ async def check_logged_in():
         # if the request didn't have a session token cookie
         return {"logged_in": False}, 200
 
-    return {"logged_in": True}, 200
+    session_json = json.loads(session)
+
+    return {"logged_in": True, "username": session_json["username"]}, 200
 
 
 def main():

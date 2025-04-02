@@ -3,9 +3,10 @@ import "./Register.css";
 import { useState } from "react";
 
 
-function Login({setLoggedIn}) {
+function Login({ setLoggedIn, setSessionUsername }) {
     
     const [registerState, setRegisterState] = useState(0);
+    const [username, setUsername] = useState(null);
 
     function submitCreds(formData) {
         fetch("http://localhost:8080/login/check-password", {
@@ -23,6 +24,7 @@ function Login({setLoggedIn}) {
                 response.json().then(json => {
                     if (json.correct) {
                         setRegisterState(1);
+                        setUsername(formData.get("username"));
                     } else {
                         alert("Creds invalid");
                     }
@@ -46,6 +48,7 @@ function Login({setLoggedIn}) {
                 response.json().then(json => {
                     if (json.correct) {
                         setLoggedIn(true);
+                        setSessionUsername(username);
                     } else {
                         alert("OTP invalid");
                     }

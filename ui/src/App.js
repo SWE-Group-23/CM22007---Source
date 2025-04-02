@@ -2,11 +2,11 @@ import "leaflet/dist/leaflet.css";
 import "./App.css";
 import NavBar from "./components/NavBar";
 import ListingDetail from "./components/ListingDetail";
-import { 
-    BrowserRouter as Router,
-    Route,
-    Routes,
-    Navigate
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
 } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -31,6 +31,7 @@ const loggedInLinks = [
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(null);
+  const [username, setUsername] = useState("");
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -42,6 +43,9 @@ function App() {
         if (response.ok) {
           const data = await response.json();
           setLoggedIn(data.logged_in);
+          if (data.logged_in) {
+            setUsername(data.username);
+          }
         }
       } catch (error) {
         console.error("Error checking login status:", error);
@@ -60,38 +64,69 @@ function App() {
     <Router>
       <NavBar links={loggedIn ? loggedInLinks : loggedOutLinks} />
       <main>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/pantry" element={
-          <RequireLogin page={<Pantry />}
-            loggedIn={loggedIn} setLoggedIn={setLoggedIn}
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/pantry"
+            element={
+              <RequireLogin
+                page={<Pantry />}
+                loggedIn={loggedIn}
+                setLoggedIn={setLoggedIn}
+              />
+            }
           />
-        } />
-        <Route path="/listings" element={
-          <RequireLogin page={<Listings />}
-            loggedIn={loggedIn} setLoggedIn={setLoggedIn}
+          <Route
+            path="/listings"
+            element={
+              <RequireLogin
+                page={<Listings username={username} />}
+                loggedIn={loggedIn}
+                setLoggedIn={setLoggedIn}
+              />
+            }
           />
-        } />
-        <Route path="/listings/:id" element={
-          <RequireLogin page={<ListingDetail />}
-            loggedIn={loggedIn} setLoggedIn={setLoggedIn}
+          <Route
+            path="/listings/:id"
+            element={
+              <RequireLogin
+                page={<ListingDetail />}
+                loggedIn={loggedIn}
+                setLoggedIn={setLoggedIn}
+              />
+            }
           />
-        } />
-        <Route path="/profile" element={
-          <RequireLogin page={<Profile />}
-            loggedIn={loggedIn} setLoggedIn={setLoggedIn}
+          <Route
+            path="/profile"
+            element={
+              <RequireLogin
+                page={<Profile username={username} />}
+                loggedIn={loggedIn}
+                setLoggedIn={setLoggedIn}
+              />
+            }
           />
-        } />
-        <Route path="/login" element={
-          <RequireLogin page={<Navigate to="/pantry" />}
-            loggedIn={loggedIn} setLoggedIn={setLoggedIn}
+          <Route
+            path="/login"
+            element={
+              <RequireLogin
+                page={<Navigate to="/pantry" />}
+                loggedIn={loggedIn}
+                setLoggedIn={setLoggedIn}
+                setSessionUsername={setUsername}
+              />
+            }
           />
-        } />
-        <Route
-          path="/register"
-          element={<Register setLoggedIn={setLoggedIn} />}
-        />
-      </Routes>
+          <Route
+            path="/register"
+            element={
+              <Register
+                setLoggedIn={setLoggedIn}
+                setSessionUsername={setUsername}
+              />
+            }
+          />
+        </Routes>
       </main>
     </Router>
   );
