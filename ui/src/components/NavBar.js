@@ -2,17 +2,18 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import "./NavBar.css";
 
-function NavBar() {
+function NavBar({links}) {
   return (
     <>
       <nav className='navbar'>
         <div className="nav-links">
           <Link to="/">OpenPantry</Link>
           <div className="spacer" />
-          <Link to="/pantry">Pantry</Link>
-          <Link to="/listings">Listings</Link>
-          <Link to="/profile">Profile</Link>
-          <p>Log Out</p>
+          {links.map(link => <Link
+          key={link.title}
+          to={link.path}>
+            {link.title}
+          </Link>)}
         </div>
       </nav>
     </>
