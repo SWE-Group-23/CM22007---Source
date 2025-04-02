@@ -54,14 +54,28 @@ class ViewFoodRPCServer(rpcs.RPCServer):
             if req["version"] != "1.0.0":
                 return rpcs.response(400, {"reason": "Bad version."})
 
-            response = rpcs.response(500, {"reason": "Internal Server Error"})
+            foods = models.Food.objects.filter(
+                user=req["authUser"],
+            )
 
-            # get all the info from server
-            # call view food item
+            if foods:
+                data = {
+                    "foods": [
+                        {
+                            "food_id": str(food.food_id),
+                            "img_id": str(food.img_id),
+                            "label": str(food.label),
+                            "useby": str(food.userby),
+                        }
+                        for food in foods
+                    ]
+                }
+                return rpcs.response(200, data)
 
-            return response
+            return rpcs.response(200, {})
         except KeyError:
-            return rpcs.response(400,{"reason": "Malformed request."})
+            return rpcs.response(400, {"reason": "Malformed request."})
+
 
 def main():
     """
@@ -79,8 +93,8 @@ def main():
     # create food rpc
     logging.info("Making ViewFoodRPCServer...")
     rpc_server = ViewFoodRPCServer(
-       os.environ["RABBITMQ_USERNAME"],
-       os.environ["RABBITMQ_PASSWORD"],
+        os.environ["RABBITMQ_USERNAME"],
+        os.environ["RABBITMQ_PASSWORD"],
     )
 
     # consuming...

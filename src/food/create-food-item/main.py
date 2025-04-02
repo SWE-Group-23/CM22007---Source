@@ -19,24 +19,35 @@ class CreateFoodRPCServer(rpcs.RPCServer):
     Subclass of RPCServer which creates food items.
     """
 
-    def __init__(self, rabbitmq_user, rabbitmq_pass, rpc_prefix="create-food-item-rpc"):
+    def __init__(
+        self,
+        rabbitmq_user,
+        rabbitmq_pass,
+        rpc_prefix="create-food-item-rpc",
+    ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
-    def create_food_item(self, img_id, food_name, useby):
+    def create_food_item(self, auth_user, img_id, food_name, useby):
         """
         Attempts to add a new food item to the user's inventory.
         """
         if useby < datetime.now():
-            return rpcs.response(400, {"reason": "Unable to create food item - Already expired"})
+            return rpcs.response(
+                400, {"reason": "Unable to create food item - Already expired"}
+            )
 
         try:
             models.Food.if_not_exists().create(
-                img_id = img_id,
-                label = food_name,
-                useby = useby
+                user=auth_user,
+                img_id=img_id,
+                label=food_name,
+                useby=useby,
             )
-            return rpcs.response(200, {"message" : "Successfully created food item"})
-        except Exception as e: # pylint: disable=broad-except
+            return rpcs.response(
+                200,
+                {"message": "Successfully created food item"},
+            )
+        except Exception as e:  # pylint: disable=broad-except
             logging.error("[DB ERROR] %s", e, exc_info=True)
             return rpcs.response(400, {"reason": "Unable to create food item"})
 
@@ -61,12 +72,16 @@ class CreateFoodRPCServer(rpcs.RPCServer):
             label = req["data"]["label"]
             useby = datetime.fromisoformat(req["data"]["useby"])
 
-            response = self.create_food_item(img_id, label, useby)
+            response = self.create_food_item(
+                auth_user=req["authUser"],
+                img_id=img_id,
+                food_name=label,
+                useby=useby,
+            )
 
             return response
         except KeyError:
-            return rpcs.response(400,{"reason": "Malformed request."})
-
+            return rpcs.response(400, {"reason": "Malformed request."})
 
 
 def main():
@@ -85,13 +100,14 @@ def main():
     # create food rpc
     logging.info("Making CreateFoodRPCServer...")
     rpc_server = CreateFoodRPCServer(
-       os.environ["RABBITMQ_USERNAME"],
-       os.environ["RABBITMQ_PASSWORD"],
+        os.environ["RABBITMQ_USERNAME"],
+        os.environ["RABBITMQ_PASSWORD"],
     )
 
     # consuming...
     logging.info("Consuming...")
     rpc_server.channel.start_consuming()
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
