@@ -14,6 +14,7 @@ from shared import rpcs
 from shared.rpcs.create_food_rpc import CreateFoodRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
 
+
 class CreateFoodRPCTest(AutocleanTestCase):
     """
     Integration tests for Create Food RPC.
@@ -27,7 +28,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         client = CreateFoodRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"],
-            "create-food-item-rpc"
+            "create-food-item-rpc",
         )
 
         food_id = "None"
@@ -41,14 +42,17 @@ class CreateFoodRPCTest(AutocleanTestCase):
             food_id,
             img_id,
             label,
-            useby
+            useby,
         )
 
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)
 
         self.assertEqual(response["status"], 200)
-        self.assertEqual(response["data"]["message"], "Successfully created food item")
+        self.assertEqual(
+            response["data"]["message"],
+            "Successfully created food item",
+        )
 
     def test_past_useby(self):
         """
@@ -58,7 +62,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         client = CreateFoodRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"],
-            "create-food-item-rpc"
+            "create-food-item-rpc",
         )
 
         food_id = "None"
@@ -72,15 +76,17 @@ class CreateFoodRPCTest(AutocleanTestCase):
             food_id,
             img_id,
             label,
-            useby
+            useby,
         )
 
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)
 
         self.assertEqual(response["status"], 400)
-        self.assertEqual(response["data"]["reason"], "Unable to create food item - Already expired")
-
+        self.assertEqual(
+            response["data"]["reason"],
+            "Unable to create food item - Already expired",
+        )
 
     def test_non_json(self):
         """
@@ -110,9 +116,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
             "create-food-item-rpc",
         )
 
-        req = {
-            "hello": "world"
-        }
+        req = {"hello": "world"}
 
         resp_raw = test_client.call(json.dumps(req))
         resp = json.loads(resp_raw)
