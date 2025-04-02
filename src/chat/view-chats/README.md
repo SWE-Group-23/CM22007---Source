@@ -17,12 +17,16 @@ This should:
 ```json
 {
   "status": 200,
-  "data": [{
-    "chat_id": "chat_id",
-    "user1": "username",
-    "user2": "username",
-    "blocked": "False"
-  }]
+  "data": {
+    "chats": [
+      {
+        "chat_id": "chat_id",
+        "user1": "username",
+        "user2": "username",
+        "blocked": "False"
+      }
+    ]
+  }
 }
 ```
 Status will be:

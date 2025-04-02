@@ -9,6 +9,7 @@ import logging
 from lib import AutocleanTestCase
 from shared.rpcs.view_chats_rpc import ViewChatsRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
+#from shared.models import chat as model
 
 
 class ViewChatsRPCTest(AutocleanTestCase):
@@ -36,6 +37,9 @@ class ViewChatsRPCTest(AutocleanTestCase):
             os.environ["RABBITMQ_PASSWORD"],
             "view-chats-rpc",
         )
+
+    # def _add_chats(self):
+    #     model.Chats
 
     def test_view_chats(self):
         """

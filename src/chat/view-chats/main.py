@@ -29,23 +29,25 @@ class ViewChatsRPCServer(rpcs.RPCServer):
         """
         Attempts to fetch all chats for a specific user
         """
-        try:
-            q1 = list(models.Chats.objects.filter(user1=user))
-            q2 = list(models.Chats.objects.filter(user2=user))
-            q = q1 + q2
-            data = [
-                {
-                    "chat_id": str(chat.chat_id),
-                    "user1": chat.user1,
-                    "user2": chat.user2,
-                    "blocked": str(chat.blocked),
-                }
-                for chat in q
-            ]
+        q1 = list(models.Chats.objects.filter(user1=user))
+        q2 = list(models.Chats.objects.filter(user2=user))
+        q = q1 + q2
+        if q:
+            data = {
+                "chats": [
+                    {
+                        "chat_id": str(chat.chat_id),
+                        "user1": chat.user1,
+                        "user2": chat.user2,
+                        "blocked": str(chat.blocked),
+                    }
+                    for chat in q
+                ]
+            }
             return rpcs.response(200, {"data": data})
-        except q1.DoesNotExist as e:
-            logging.error("[DB ERROR] %s", e, exc_info=True)
-            return rpcs.response(400, {"message": "Unable to fetch chats"})
+
+        logging.error("[DB ERROR] No chats listed")
+        return rpcs.response(400, {"message": "Unable to fetch chats"})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())

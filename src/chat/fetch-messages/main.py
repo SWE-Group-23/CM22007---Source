@@ -32,17 +32,19 @@ class FetchMessagesRPCServer(rpcs.RPCServer):
         """
         q = models.Messages.objects.filter(chat_id=chat_id)
         if q:
-            data = [
-                {
-                    "msg_id": str(msg.msg_id),
-                    "chat_id": str(msg.chat_id),
-                    "sender_user": str(msg.sender_user),
-                    "sent_time": str(msg.sent_time),
-                    "message": str(msg.message),
-                    "reported": str(msg.reported),
-                }
-                for msg in q
-            ]
+            data = {
+                "messages": [
+                    {
+                        "msg_id": str(msg.msg_id),
+                        "chat_id": str(msg.chat_id),
+                        "sender_user": str(msg.sender_user),
+                        "sent_time": str(msg.sent_time),
+                        "message": str(msg.message),
+                        "reported": str(msg.reported),
+                    }
+                    for msg in q
+                ]
+            }
             return rpcs.response(200, {"data": data})
         logging.error("[DB ERROR] Could not get messages")
         return rpcs.response(400, {"message": "Unable to fetch messages"})
