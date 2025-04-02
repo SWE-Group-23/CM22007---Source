@@ -112,32 +112,37 @@ function App() {
             }
           />
         } />
-        <Route path="/chat" element={
-          <RequireLogin page={<Chat />}
-            loggedIn={loggedIn} setLoggedIn={setLoggedIn}
-            setSessionUsername={setUsername}
+          <Route
+            path="/chat"
+            element={
+              <RequireLogin
+                page={<Chat />}
+                loggedIn={loggedIn}
+                setLoggedIn={setLoggedIn}
+                setSessionUsername={setUsername}
+              />
+            }
           />
-        } />
-        <Route
-          path="/login"
-          element={
-            <RequireLogin
-              page={<Navigate to="/pantry" />}
-              loggedIn={loggedIn}
-              setLoggedIn={setLoggedIn}
-              setSessionUsername={setUsername}
-            />
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <Register
-              setLoggedIn={setLoggedIn}
-              setSessionUsername={setUsername}
-            />
-          }
-        />
+          <Route
+            path="/login"
+            element={
+              <RequireLogin
+                page={<Navigate to="/pantry" />}
+                loggedIn={loggedIn}
+                setLoggedIn={setLoggedIn}
+                setSessionUsername={setUsername}
+              />
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <Register
+                setLoggedIn={setLoggedIn}
+                setSessionUsername={setUsername}
+              />
+            }
+          />
         </Routes>
       </main>
     </Router>
