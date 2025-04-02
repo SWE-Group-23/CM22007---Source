@@ -1,5 +1,5 @@
 """
-Integration tests for the view chats RPC.
+Integration tests for the create chat RPC.
 """
 
 import os
@@ -7,14 +7,13 @@ import json
 import logging
 
 from lib import AutocleanTestCase
-from shared.rpcs.view_chats_rpc import ViewChatsRPCClient
+from shared.rpcs.create_chat_rpc import CreateChatRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
-from shared.models import chat as model
 
 
-class ViewChatsRPCTest(AutocleanTestCase):
+class CreateChatRPCTest(AutocleanTestCase):
     """
-    Integration tests for the view chats RPC.
+    Integration tests for the create chat RPC.
     """
 
     def setUp(self):  # pylint: disable=invalid-name
@@ -28,37 +27,36 @@ class ViewChatsRPCTest(AutocleanTestCase):
             "cassandra.cqlengine.connection",
         ).setLevel(logging.ERROR)
 
-        self.view_chats_client = ViewChatsRPCClient(
+        self.create_chat_client = CreateChatRPCClient(
             os.environ["RABBITMQ_USERNAME"], os.environ["RABBITMQ_PASSWORD"]
         )
 
         self.test_client = TestRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"],
-            "view-chats-rpc",
+            "create-chat-rpc",
         )
 
-    def _add_chats(self, user1, user2):
-        model.Chats.create(user1=user1, user2=user2)
-
-    def test_view_chats(self):
+    def test_create_chat(self):
         """
-        Tests sending a valid fetch request
+        Tests sending a valid message
         """
-        logging.info("Starting the test_view_chats test.")
-        client = self.view_chats_client
+        logging.info("Starting the test_send_message test.")
+        client = self.create_chat_client
 
-        self._add_chats("john smith", "bob")
-        self._add_chats("alice", "john smith")
-        self._add_chats("alice", "bob")
+        receiver_user = str("Bob")
 
-        resp_raw = client.call("john smith", "testing")
+        resp_raw = client.call(
+            "john smith",
+            "testing",
+            receiver_user,
+        )
 
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)
-        logging.info("Data received: %s", response["data"])
 
         self.assertEqual(response["status"], 200)
+        self.assertEqual(response["data"]["message"], "Success")
 
     def test_send_nothing(self):
         """
