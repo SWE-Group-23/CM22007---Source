@@ -4,7 +4,7 @@ Updates an existing food item in the user's private inventory.
 
 import os
 import logging
-import json 
+import json
 
 import uuid
 from datetime import datetime
@@ -12,17 +12,23 @@ from datetime import datetime
 import shared
 from shared import rpcs
 
+
 class UpdateFoodRPCServer(rpcs.RPCServer):
     """
     Subclass of RPCServer which updates existing food items.
     """
 
-    def __init__(self, rabbitmq_user, rabbitmq_pass, rpc_prefix="update-food-item-rpc"):
+    def __init__(
+        self,
+        rabbitmq_user,
+        rabbitmq_pass,
+        rpc_prefix="update-food-item-rpc",
+    ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
     def update_food_item():
         pass
-    
+
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
 
@@ -45,7 +51,8 @@ class UpdateFoodRPCServer(rpcs.RPCServer):
 
             return response
         except KeyError:
-            return rpcs.response(400,{"reason": "Malformed request."})
+            return rpcs.response(400, {"reason": "Malformed request."})
+
 
 def main():
     """
@@ -63,13 +70,14 @@ def main():
     # create food rpc
     logging.info("Making UpdateFoodRPCServer...")
     rpc_server = UpdateFoodRPCServer(
-       os.environ["RABBITMQ_USERNAME"],
-       os.environ["RABBITMQ_PASSWORD"],
+        os.environ["RABBITMQ_USERNAME"],
+        os.environ["RABBITMQ_PASSWORD"],
     )
 
     # consuming...
     logging.info("Consuming...")
     rpc_server.channel.start_consuming()
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
