@@ -6,12 +6,15 @@ import os
 from secrets import token_hex
 
 from quart import Quart, request
+from quart_cors import cors
 import valkey
 
 from blueprints import register, login
 
 
 app = Quart(__name__)
+app = cors(app, allow_origin="http://localhost:3000")
+
 app.register_blueprint(register.blueprint)
 app.register_blueprint(login.blueprint)
 
