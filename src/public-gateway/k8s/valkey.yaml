@@ -3,6 +3,7 @@ kind: Valkey
 metadata:
   labels:
     app.kubernetes.io/name: public-gateway-valkey
+    app.kubernetes.io/component: valkey
   name: public-gateway-valkey
   namespace: public-gateway
 spec:
