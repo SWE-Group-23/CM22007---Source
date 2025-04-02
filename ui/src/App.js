@@ -76,7 +76,7 @@ function App() {
             path="/profile"
             element={<RequireLogin page={<Profile />} loggedIn={loggedIn} />}
           />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login setLoggedIn={setLoggedIn} />} />
           <Route
             path="/register"
             element={<Register setLoggedIn={setLoggedIn} />}
