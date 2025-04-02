@@ -74,6 +74,7 @@ function App() {
                 page={<Pantry />}
                 loggedIn={loggedIn}
                 setLoggedIn={setLoggedIn}
+                setSessionUsername={setUsername}
               />
             }
           />
@@ -84,6 +85,7 @@ function App() {
                 page={<Listings username={username} />}
                 loggedIn={loggedIn}
                 setLoggedIn={setLoggedIn}
+                setSessionUsername={setUsername}
               />
             }
           />
@@ -94,6 +96,7 @@ function App() {
                 page={<ListingDetail />}
                 loggedIn={loggedIn}
                 setLoggedIn={setLoggedIn}
+                setSessionUsername={setUsername}
               />
             }
           />
@@ -104,6 +107,7 @@ function App() {
                 page={<Profile username={username} />}
                 loggedIn={loggedIn}
                 setLoggedIn={setLoggedIn}
+                setSessionUsername={setUsername}
               />
             }
           />
@@ -111,6 +115,7 @@ function App() {
         <Route path="/chat" element={
           <RequireLogin page={<Chat />}
             loggedIn={loggedIn} setLoggedIn={setLoggedIn}
+            setSessionUsername={setUsername}
           />
         } />
         <Route
