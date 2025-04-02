@@ -1,5 +1,5 @@
 """
-Updates an existing food item in the user's private inventory.
+Views an existing food item in the user's private inventory.
 """
 
 import os
@@ -12,15 +12,15 @@ from datetime import datetime
 import shared
 from shared import rpcs
 
-class UpdateFoodRPCServer(rpcs.RPCServer):
+class ViewFoodRPCServer(rpcs.RPCServer):
     """
-    Subclass of RPCServer which updates existing food items.
+    Subclass of RPCServer which views current food table.
     """
 
-    def __init__(self, rabbitmq_user, rabbitmq_pass, rpc_prefix="update-food-item-rpc"):
+    def __init__(self, rabbitmq_user, rabbitmq_pass, rpc_prefix="view-food-rpc"):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
-    def update_food_item():
+    def view_food_item():
         pass
     
     def process(self, body):
@@ -41,7 +41,7 @@ class UpdateFoodRPCServer(rpcs.RPCServer):
             response = rpcs.response(500, {"reason": "Internal Server Error"})
 
             # get all the info from server
-            # call update food item
+            # call view food item
 
             return response
         except KeyError:
@@ -49,7 +49,7 @@ class UpdateFoodRPCServer(rpcs.RPCServer):
 
 def main():
     """
-    Connects Update Food RPC to ScyllaDB and creates corresponding RPC Server.
+    Connects View Food RPC to ScyllaDB and creates corresponding RPC Server.
     """
 
     # setup database session
@@ -61,8 +61,8 @@ def main():
     )
 
     # create food rpc
-    logging.info("Making UpdateFoodRPCServer...")
-    rpc_server = UpdateFoodRPCServer(
+    logging.info("Making ViewFoodRPCServer...")
+    rpc_server = ViewFoodRPCServer(
        os.environ["RABBITMQ_USERNAME"],
        os.environ["RABBITMQ_PASSWORD"],
     )
