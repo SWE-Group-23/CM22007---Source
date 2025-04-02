@@ -379,7 +379,35 @@ main {
 .button-group {
     display: flex;
     gap: 1rem;
-    margin-top: 2rem;
+}
+
+.dark-button, .light-button {
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    font-size: 1rem;
+    border-color: var(--deep-green);
+    cursor: pointer;
+}
+
+.dark-button {
+    background-color: var(--deep-green);
+    color: var(--pale-white);
+}
+
+.light-button {
+    background-color: var(--warm-brown);
+    color: #000;
+}
+
+.dark-button:hover {
+    background-color: var(--light-yellow);
+    color: #000;
+}
+
+.light-button:hover {
+    background-color: var(--light-yellow);
+    border-color: var(--deep-green);
+    color: #000;
 }
 
 .contact-button, .save-button {
@@ -411,3 +439,52 @@ main {
     color: #000;
 }
 
+/* page setup */
+.page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-color: var(--light-green);
+  padding: 2rem;
+}
+
+/* container div */
+.form-container {
+  background-color: var(--light-brown);
+  padding: 2rem;
+  border-radius: 15px;
+  border: 2px solid var(--deep-green);
+  width: 100%;
+  max-width: 31rem;
+}
+
+/* form layout */
+.form-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-top: 1.7rem;
+}
+
+/* form labels */
+.form-container label {
+  font-weight: bold;
+  color: var(--deep-green);
+  font-size: 1.1rem;
+}
+
+/* form inputs */
+.form-container input[type="text"],
+.form-container textarea,
+.form-container input[type="password"] {
+  padding: 0.8rem;
+  border: 2px solid var(--deep-green);
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: var(--pale-white);
+}
+
+.form-container textarea {
+    resize: none;
+}
