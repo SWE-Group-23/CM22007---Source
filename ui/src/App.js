@@ -2,12 +2,7 @@ import "leaflet/dist/leaflet.css";
 import "./App.css";
 import NavBar from "./components/NavBar";
 import ListingDetail from "./components/ListingDetail";
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 import RequireLogin from "./RequireLogin";
@@ -17,6 +12,7 @@ import Home from "./Home";
 import Listings from "./Listings";
 import Pantry from "./Pantry";
 import Register from "./Register";
+import Login from "./Login";
 
 const loggedOutLinks = [
   { title: "Login", path: "/login" },
@@ -80,12 +76,7 @@ function App() {
             path="/profile"
             element={<RequireLogin page={<Profile />} loggedIn={loggedIn} />}
           />
-          <Route
-            path="/login"
-            element={
-              <RequireLogin page={<Navigate to="/" />} loggedIn={loggedIn} />
-            }
-          />
+          <Route path="/login" element={<Login />} />
           <Route
             path="/register"
             element={<Register setLoggedIn={setLoggedIn} />}
