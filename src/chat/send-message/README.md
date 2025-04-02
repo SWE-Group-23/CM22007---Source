@@ -6,18 +6,15 @@
   "from": "send-message",
   "data": {
     "chat_id": "chat_id",
-    "sender_user": "sender_user",
     "receiver_user": "receiver_user",
     "time_sent": "time_sent",
     "message": "sample chat message"
   }
 }
 ```
-Where time_sent is in milliseconds
-
 This should:
-- Add a message sent by a user in a chat to the messages table
-- If chat_id is None then a new chat will be created, and the message will then be sent
+- Add a message sent by a user in a chat to the messages table, the sender stored will be the ```authUser```
+- If ```chat_id``` is None then a new chat will be created, and the message will then be sent
 
 ```json
 {

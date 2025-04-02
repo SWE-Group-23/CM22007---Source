@@ -7,14 +7,12 @@ Requests to the server should follow:
   "authUser": "user",
   "version": "1.0.0",
   "from": "view-chats",
-  "data": {
-    "username": "username"
-  }
+  "data": {}
 }
 ```
 
 This should:
-- Return a list of chats for a specified user
+- Return a list of chats for the ```authUser```
 
 ```json
 {

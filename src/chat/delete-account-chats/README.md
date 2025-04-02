@@ -4,9 +4,7 @@
   "authUser": "user",
   "version": "1.0.0",
   "from": "delete-account-chats",
-  "data": {
-    "username": "username"
-  }
+  "data": {}
 }
 ```
 
