@@ -394,6 +394,7 @@ main {
     border-color: var(--deep-green);
     cursor: pointer;
     width: 10rem;
+    flex-grow: 1;
 }
 
 .dark-button {
@@ -529,6 +530,6 @@ main {
 }
 
 .food-item img {
-  border-radius: 0.5rem;
+  border-radius: 1rem;
   width: 100%;
 }
