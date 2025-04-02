@@ -1,3 +1,5 @@
+import "./Register.css";
+
 import { useState } from "react";
 
 
@@ -59,26 +61,34 @@ function Login({setLoggedIn}) {
     switch (registerState) {
         // Enter Username and Password
         case 0:
-            content = <form action={submitCreds}>
+            content = (
+              <form action={submitCreds}>
                 <label htmlFor="username">Enter Username:</label>
                 <input type="text" name="username" />
                 <label htmlFor="password">Enter Password:</label>
                 <input type="password" name="password" />
                 <input type="submit" value="Submit" />
-            </ form>
+              </ form>
+            );
             break;
         // Set Up OTP
         case 1:
-            content = <form action={submitOTP}>
+            content = (
+              <form action={submitOTP}>
                 <label htmlFor="otp">Enter OTP:</label>
                 <input type="password" name="otp" />
                 <input type="submit" value="Submit" />
-            </form>
+              </form>
+            );
             break;
     }
 
 
-    return content;
+    return (
+      <div className="register-page">
+        <div className="register-container">{content}</div>
+      </div>
+    );
 }
 
 export default Login;
