@@ -181,6 +181,85 @@ main {
     margin-top: 2rem;
 }
 
+.chat-image {
+    align-self: center;
+    width: 4rem;
+    aspect-ratio: 1;
+    border-width: 0.1em;
+    border-color: var(--deep-green);
+    border-style: solid;
+    border-radius: 50%;
+    margin-top: 1rem;
+}
+
+.chat-top {
+    z-index: 1;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.chat-middle {
+    height: calc(100vh - 66px - 4rem);
+    display: flex;
+    flex-direction: column-reverse;
+    overflow: auto;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.chat-middle::-webkit-scrollbar {
+    display: none;
+}
+
+.chat-bottom {
+    height: 4rem;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.chat-form {
+    display: flex;
+    gap: 0.4rem;
+    margin: 0.4rem;
+    width: 60%;
+    align-self: center;
+    justify-content: space-around;
+}
+
+.chat-name {
+  font-size: 1.1rem;
+}
+
+.chat-form input[type="text"] {
+  padding: 0.8rem;
+  width: 100%;
+  border: 2px solid var(--deep-green);
+  border-radius: 2rem;
+  font-size: 1rem;
+  background-color: var(--pale-white);
+}
+
+.my-message, .their-message {
+    font-size: 1.6rem;
+    padding: 0.6rem;
+    margin: 0.4rem;
+    border-radius: 0.8rem;
+}
+
+.my-message {
+    align-self: flex-end;
+    background-color: var(--deep-green);
+    color: var(--pale-white);
+}
+
+.their-message {
+    align-self: flex-start;
+    background-color: var(--warm-brown);
+    color: #000;
+}
+
 .profile-page {
     color: var(--deep-green);
     align-self: center;
@@ -188,6 +267,16 @@ main {
     align-items: center;
     font-size: 40px;
 }
+
+.chat-page {
+    color: var(--deep-green);
+    align-self: center;
+    text-align: center;
+    align-items: center;
+    font-size: 40px;
+}
+
+
 
 .profile-container {
     display: flex;
@@ -389,7 +478,7 @@ main {
 
 .dark-button, .light-button {
     padding: 0.8rem 1.5rem;
-    border-radius: 25px;
+    border-radius: 2rem;
     font-size: 1rem;
     border-color: var(--deep-green);
     cursor: pointer;
@@ -532,4 +621,8 @@ main {
 .food-item img {
   border-radius: 1rem;
   width: 100%;
+}
+
+.chat-page {
+  
 }

@@ -16,6 +16,7 @@ import Profile from "./Profile";
 import Home from "./Home";
 import Listings from "./Listings";
 import Pantry from "./Pantry";
+import Chat from "./Chat";
 import Register from "./Register";
 
 const loggedOutLinks = [
@@ -79,6 +80,11 @@ function App() {
         } />
         <Route path="/profile" element={
           <RequireLogin page={<Profile />}
+            loggedIn={loggedIn} setLoggedIn={setLoggedIn}
+          />
+        } />
+        <Route path="/chat" element={
+          <RequireLogin page={<Chat />}
             loggedIn={loggedIn} setLoggedIn={setLoggedIn}
           />
         } />
