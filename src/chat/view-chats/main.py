@@ -47,7 +47,7 @@ class ViewChatsRPCServer(rpcs.RPCServer):
             return rpcs.response(200, {"data": data})
 
         logging.error("[DB ERROR] No chats listed")
-        return rpcs.response(400, {"message": "Unable to fetch chats"})
+        return rpcs.response(400, {"message": "No chats to find"})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
