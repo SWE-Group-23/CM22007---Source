@@ -20,7 +20,8 @@ class DeleteAccountChatsRPCClient(rpcs.RPCClient):
         req = rpcs.request(
             auth_user,
             api_version,
-            service
+            service,
+            data = {}
         )
 
         return self._call(body=req)
