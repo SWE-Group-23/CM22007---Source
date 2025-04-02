@@ -3,7 +3,6 @@ Runs a Quart app which serves as the public API gateway.
 """
 
 import os
-import json
 from secrets import token_hex
 
 from quart import Quart, request
