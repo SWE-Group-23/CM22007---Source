@@ -3,7 +3,7 @@
     --input-grey: #444;
     --light-green: #c2c5aa;
     --pale-white: #faf5e4;
-    --warm-brown: #b19c91;
+    --warm-brown: #bfaea6;
     --light-brown: #e7dad0;
     --light-yellow: #e0a458;
 }
@@ -369,8 +369,14 @@ main {
 .listing-card {
     border: 2px solid var(--deep-green);
     border-radius: 10px;
+    text-decoration: none;
     padding: 15px;
     text-align: center;
+    background-color: var(--light-brown);
+}
+
+.listing-card:hover {
+    text-decoration: none;
     background-color: var(--warm-brown);
 }
 
@@ -384,11 +390,13 @@ main {
 
 .listing-distance {
     font-size: 1rem;
+    text-decoration: none;
     color: #000;
 }
 
 .listing-title {
     color: var(--deep-green);
+    text-decoration: none;
     font-size: 2rem;
     font-weight: 999;
 }

@@ -5,7 +5,7 @@ import { Navigate } from "react-router-dom";
 
 import QRCode from "qrcode";
 
-function Register({ setLoggedIn }) {
+function Register({ setLoggedIn, setSessionUsername }) {
   const [registerState, setRegisterState] = useState(0);
   const [username, setUsername] = useState(null);
   let [imageSource, setImageSource] = useState(null);
@@ -102,6 +102,7 @@ function Register({ setLoggedIn }) {
 
   function login() {
     setLoggedIn(true);
+    setSessionUsername(username);
     setRegisterState(4);
   }
 
@@ -146,9 +147,13 @@ function Register({ setLoggedIn }) {
       content = (
         <div>
           <h2>Account Registered</h2>
-          <p>Backup Code: <strong>{backupCode}</strong></p>
-          <p>Make sure you write your backup code down,
-          print it out, or save it securely somewhere.</p>
+          <p>
+            Backup Code: <strong>{backupCode}</strong>
+          </p>
+          <p>
+            Make sure you write your backup code down, print it out, or save it
+            securely somewhere.
+          </p>
           <button onClick={login}>Continue</button>
         </div>
       );

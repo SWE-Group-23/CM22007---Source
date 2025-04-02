@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-function Listings() {
+function Listings({ username }) {
     const listings = [
         {
             id: 1,
@@ -10,7 +10,7 @@ function Listings() {
             description: "A bunch of ripe bananas, only bought recently.",
             lat: 51.3766938,
             lon: -2.3234206,
-            listerUsername: "bananas-for-bananas",
+            listerUsername: username,
             listerImage: "/blank.png"
         },
         {
