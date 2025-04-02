@@ -2,11 +2,11 @@ import "leaflet/dist/leaflet.css";
 import "./App.css";
 import NavBar from "./components/NavBar";
 import ListingDetail from "./components/ListingDetail";
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Navigate,
+import { 
+    BrowserRouter as Router,
+    Route,
+    Routes,
+    Navigate
 } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -87,7 +87,10 @@ function App() {
             loggedIn={loggedIn} setLoggedIn={setLoggedIn}
           />
         } />
-        <Route path="/register" element={<Register setLoggedIn={setLoggedIn} />} />
+        <Route
+          path="/register"
+          element={<Register setLoggedIn={setLoggedIn} />}
+        />
       </Routes>
       </main>
     </Router>

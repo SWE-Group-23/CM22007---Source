@@ -1,7 +1,11 @@
 import Login from "./Login.js";
-import { Navigate } from "react-router-dom";
 
-function RequireLogin({ page, loggedIn }) {
-  return loggedIn ? page : <Navigate to="/login" />;
+function RequireLogin({page, loggedIn, setLoggedIn}) {
+    return loggedIn ? (
+        page
+    ) : (
+        <Login loggedIn={loggedIn} setLoggedIn={setLoggedIn} />
+    );
 }
+
 export default RequireLogin;
