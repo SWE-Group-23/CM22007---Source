@@ -1,23 +1,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: add-alert
+  name: view-alert
   namespace: alerts
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: add-alert
+      app: view-alert
   template:
     metadata:
       labels:
-        app: add-alert
+        app: view-alert
     spec:
       containers:
-        - name: add-alert
-          image: add-alert:latest
+        - name: view-alert
+          image: view-alert:latest
           imagePullPolicy: IfNotPresent
           tty: true
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
             - mountPath: /home/user1/.cache/uv
               name: uv
@@ -27,12 +37,12 @@ spec:
             - name: RABBITMQ_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: add-alert-rabbitmq-user-user-credentials
+                  name: view-alert-rabbitmq-user-user-credentials
                   key: username
             - name: RABBITMQ_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: add-alert-rabbitmq-user-user-credentials
+                  name: view-alert-rabbitmq-user-user-credentials
                   key: password
             - name: SCYLLADB_USERNAME
               valueFrom:
@@ -60,7 +70,7 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: User
 metadata:
-  name: add-alert-rabbitmq-user
+  name: view-alert-rabbitmq-user
   namespace: alerts
 spec:
   tags:
@@ -74,16 +84,16 @@ spec:
 apiVersion: rabbitmq.com/v1beta1
 kind: Permission
 metadata:
-  name: add-alert-rabbitmq-permission
+  name: view-alert-rabbitmq-permission
   namespace: alerts
 spec:
   vhost: "/"
   userReference:
-    name: "add-alert-rabbitmq-user"
+    name: "view-alert-rabbitmq-user"
   permissions:
-    write: "add-alert-rpc-resp-exc"
+    write: "view-alert-rpc-resp-exc"
     configure: ""
-    read: "add-alert-rpc-call-q"
+    read: "view-alert-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq

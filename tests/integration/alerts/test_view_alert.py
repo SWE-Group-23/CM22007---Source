@@ -1,4 +1,3 @@
-
 """
 Integration tests for the add-alert RPC.
 """
@@ -7,26 +6,24 @@ import os
 import json
 import logging
 from lib import AutocleanTestCase
-from shared.rpcs.add_alert_rpc import AddAlertRPCClient
+from shared.rpcs.view_alert_rpc import ViewAlertRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
 
 
-class AddAlertRPCTest(AutocleanTestCase):
+class ViewAlertRPCTest(AutocleanTestCase):
     """
     Integration tests for the ping RPC.
     """
 
     def setUp(self): # pylint: disable=invalid-name
-        """
-        Setting up RabbitMQ
-        """
         super().setUp()
+
         # suppress new default session warning
         logging.getLogger(
             "cassandra.cqlengine.connection",
         ).setLevel(logging.ERROR)
 
-        self.add_alert_client = AddAlertRPCClient(
+        self.view_alert_client = ViewAlertRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"]
         )
@@ -34,28 +31,26 @@ class AddAlertRPCTest(AutocleanTestCase):
         self.test_client = TestRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"],
-            "add-alert-rpc",
+            "view-alert-rpc",
         )
 
-
-    def test_add_alert(self):
+    def test_view_alert(self):
         """
-        Tests adding an alert if the JSON is valid
+        Tests viewing an alert if the JSON is valid
         """
 
         logging.info("Starting the test_add_alert test.")
 
-        client = self.add_alert_client
+        client = self.view_alert_client
         authuser = "john doe"
         service = "testing"
-        message = "this is a test alert"
 
-        response_raw = client.call(authuser, service, message)
+        response_raw = client.call(authuser, service)
         response = json.loads(response_raw)
         logging.info("Response: %s", response)
 
         self.assertEqual(response["status"], 200)
-        self.assertEqual(response["data"]["reason"], "alert added successfully")
+        self.assertEqual(response["data"], "this is a test alert")
 
     def test_send_nothing(self):
         """

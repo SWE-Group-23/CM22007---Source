@@ -19,4 +19,3 @@ class Alerts(Model): # pylint: disable=too-few-public-methods
     message = columns.Text()
     service = columns.Text()
     read = columns.Boolean()
-

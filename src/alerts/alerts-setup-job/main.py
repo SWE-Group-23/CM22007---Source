@@ -7,7 +7,7 @@ import os
 import cassandra.cqlengine.management as cm
 
 import shared
-from shared.models import template as models
+from shared.models import alerts as models
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
         user=os.environ["SCYLLADB_USERNAME"],
         password=os.environ["SCYLLADB_PASSWORD"],
     )
-    
+
     # sync tables here
     print("Setting up alerts table...")
     cm.sync_table(models.Alerts)
