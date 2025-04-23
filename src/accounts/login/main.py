@@ -184,6 +184,7 @@ class LoginRPCServer(rpcs.RPCServer):
         in from the call queue. Selects
         the correct step to respond for.
         """
+        # FIXME: logging creds for debugging
         logging.info("[RECEIVED] %s", body)
 
         # decode json
