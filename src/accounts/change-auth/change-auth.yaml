@@ -91,9 +91,9 @@ spec:
   userReference:
     name: "change-auth-rabbitmq-user"
   permissions:
-    write: ""
+    write: "change-auth-rpc-resp-exc"
     configure: ""
-    read: ""
+    read: "change-auth-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq
