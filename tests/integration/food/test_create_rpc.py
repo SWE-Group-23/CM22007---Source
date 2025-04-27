@@ -2,17 +2,17 @@
 Integration tests for the Create Food RPC.
 """
 
-import os
 import json
 import logging
-
+import os
 import uuid
 from datetime import datetime, timedelta
 
-from lib import AutocleanTestCase
 from shared import rpcs
 from shared.rpcs.create_food_rpc import CreateFoodRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
+
+from lib import AutocleanTestCase
 
 
 class CreateFoodRPCTest(AutocleanTestCase):
@@ -85,7 +85,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         self.assertEqual(response["status"], 400)
         self.assertEqual(
             response["data"]["reason"],
-            "Unable to create food item - Already expired",
+            "Expiry datetime cannot be before now.",
         )
 
     def test_non_json(self):

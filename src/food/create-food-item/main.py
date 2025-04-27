@@ -2,10 +2,9 @@
 Adds a food item to the user's private inventory.
 """
 
-import os
-import logging
 import json
-
+import logging
+import os
 import uuid
 from datetime import datetime
 
@@ -33,23 +32,20 @@ class CreateFoodRPCServer(rpcs.RPCServer):
         """
         if useby < datetime.now():
             return rpcs.response(
-                400, {"reason": "Unable to create food item - Already expired"}
+                400, {"reason": "Expiry datetime cannot be before now."}
             )
 
-        try:
-            models.Food.if_not_exists().create(
-                user=auth_user,
-                img_id=img_id,
-                label=food_name,
-                useby=useby,
-            )
-            return rpcs.response(
-                200,
-                {"message": "Successfully created food item"},
-            )
-        except Exception as e:  # pylint: disable=broad-except
-            logging.error("[DB ERROR] %s", e, exc_info=True)
-            return rpcs.response(400, {"reason": "Unable to create food item"})
+        models.Food.if_not_exists().create(
+            user=auth_user,
+            img_id=img_id,
+            label=food_name,
+            useby=useby,
+        )
+
+        return rpcs.response(
+            200,
+            {"message": "Successfully created food item"},
+        )
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
@@ -66,20 +62,16 @@ class CreateFoodRPCServer(rpcs.RPCServer):
             if req["version"] != "1.0.0":
                 return rpcs.response(400, {"reason": "Bad version."})
 
-            response = rpcs.response(500, {"reason": "Internal Server Error"})
-
             img_id = uuid.UUID(req["data"]["img_id"])
             label = req["data"]["label"]
             useby = datetime.fromisoformat(req["data"]["useby"])
 
-            response = self.create_food_item(
+            return self.create_food_item(
                 auth_user=req["authUser"],
                 img_id=img_id,
                 food_name=label,
                 useby=useby,
             )
-
-            return response
         except KeyError:
             return rpcs.response(400, {"reason": "Malformed request."})
 
