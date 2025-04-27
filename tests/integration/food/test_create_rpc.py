@@ -16,6 +16,8 @@ from shared.rpcs.test_rpc import TestRPCClient
 
 from lib import AutocleanTestCase
 
+from cassandra.cqlengine.query import DoesNotExist
+
 
 class CreateFoodRPCTest(AutocleanTestCase):
     """
@@ -93,15 +95,16 @@ class CreateFoodRPCTest(AutocleanTestCase):
         Tests creating food item which has already expired.
         """
         img_id = uuid.uuid4()
+        user = "TestUser"
         label = ""
         useby = datetime(2025, 1, 1, 0, 0)
 
         resp_raw = self.client.call(
-            "Test User",
-            "testing",
-            img_id,
-            label,
-            useby,
+            auth_user=user,
+            srv_from="testing",
+            img_id=img_id,
+            label=label,
+            useby=useby,
         )
 
         response = json.loads(resp_raw)
@@ -112,6 +115,9 @@ class CreateFoodRPCTest(AutocleanTestCase):
             "Expiry datetime cannot be before now.",
         )
 
+        with self.assertRaises(DoesNotExist):
+            model.Food.get(user=user)
+
     def test_non_json(self):
         """
         Tests the case where a request is not JSON.
@@ -120,7 +126,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 400)
-        self.assertRaises(KeyError, lambda x: x["data"]["message"], resp)
+        self.assertIsNone(resp["data"].get("message"))
         self.assertEqual(resp["data"]["reason"], "Bad JSON.")
 
     def test_malformed(self):
@@ -134,7 +140,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 400)
-        self.assertRaises(KeyError, lambda x: x["data"]["message"], resp)
+        self.assertIsNone(resp["data"].get("message"))
         self.assertEqual(resp["data"]["reason"], "Malformed request.")
 
     def test_bad_version(self):
@@ -153,5 +159,5 @@ class CreateFoodRPCTest(AutocleanTestCase):
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 400)
-        self.assertRaises(KeyError, lambda x: x["data"]["message"], resp)
+        self.assertIsNone(resp["data"].get("message"))
         self.assertEqual(resp["data"]["reason"], "Bad version.")
