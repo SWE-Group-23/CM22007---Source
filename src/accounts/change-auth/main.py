@@ -207,7 +207,7 @@ class ChangeAuthRPCServer(rpcs.RPCServer):
         # get username from stage or request if it's there
         username = stage.get("username") or req["data"].get("username")
         if username is None:
-            return rpcs.response(400, {"reason": "Could not find username."})
+            return rpcs.response(400, {"reason": "Bad request."})
 
         # default response is error, should never get returned
         resp = rpcs.response(500, {"reason": "Internal Server Error"})
@@ -249,10 +249,42 @@ class ChangeAuthRPCServer(rpcs.RPCServer):
 
         return resp
 
+    def _change_password(
+        self,
+        *,
+        username: str,
+        new_pw_hash: str,
+        sid: str,
+    ) -> str:
+        pass
+
     def _handle_change(self, req: dict) -> str:
         # first check accounts valkey to make sure the user has authenticated
         # for changing their auth
-        pass
+
+        stage = json.loads(self.vk.get(f"change-auth:{req['sid']}"))
+
+        # check if stage exists
+        if stage is None:
+            return rpcs.response(403, {"reason": "Not allowed."})
+
+        # check for username
+        if (username := stage.get("username")) is None:
+            return rpcs.response(403, {"reason": "Not allowed."})
+
+        # check if authenticated
+        if not stage.get("authenticated"):
+            return rpcs.response(403, {"reason": "Not allowed."})
+
+        match req["change"]:
+            case "password":
+                pass
+            case "backup":
+                pass
+            case "otp-new":
+                pass
+            case "otp-verify":
+                pass
 
     def process(self, body: bytes) -> str:
         logging.info("[RECEIVED] %s", body)
