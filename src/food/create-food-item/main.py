@@ -26,7 +26,14 @@ class CreateFoodRPCServer(rpcs.RPCServer):
     ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
-    def create_food_item(self, auth_user, img_id, food_name, useby):
+    def create_food_item(
+        self,
+        auth_user: str,
+        img_id: uuid.UUID,
+        food_name: str,
+        description: str,
+        useby: datetime,
+    ) -> str:
         """
         Attempts to add a new food item to the user's inventory.
         """
@@ -39,6 +46,7 @@ class CreateFoodRPCServer(rpcs.RPCServer):
             user=auth_user,
             img_id=img_id,
             label=food_name,
+            description=description,
             useby=useby,
         )
 
@@ -64,12 +72,14 @@ class CreateFoodRPCServer(rpcs.RPCServer):
 
             img_id = uuid.UUID(req["data"]["img_id"])
             label = req["data"]["label"]
+            description = req["data"].get("description")
             useby = datetime.fromisoformat(req["data"]["useby"])
 
             return self.create_food_item(
                 auth_user=req["authUser"],
                 img_id=img_id,
                 food_name=label,
+                description=description,
                 useby=useby,
             )
         except KeyError:

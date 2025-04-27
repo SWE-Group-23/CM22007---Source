@@ -44,12 +44,7 @@ class UpdateFoodRPCServer(rpcs.RPCServer):
             if req["version"] != "1.0.0":
                 return rpcs.response(400, {"reason": "Bad version."})
 
-            response = rpcs.response(500, {"reason": "Internal Server Error"})
-
-            # get all the info from server
-            # call update food item
-
-            return response
+            return self.update_food_item()
         except KeyError:
             return rpcs.response(400, {"reason": "Malformed request."})
 

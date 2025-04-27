@@ -21,4 +21,5 @@ class Food(Model):  # pylint: disable=too-few-public-methods
     user = columns.Text(primary_key=True, index=True)
     img_id = columns.UUID()
     label = columns.Text(required=True)
+    description = columns.Text()
     useby = columns.DateTime(required=True)

@@ -8,7 +8,9 @@ import os
 import uuid
 from datetime import datetime, timedelta
 
+import shared
 from shared import rpcs
+from shared.models import food as model
 from shared.rpcs.create_food_rpc import CreateFoodRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
 
@@ -20,33 +22,57 @@ class CreateFoodRPCTest(AutocleanTestCase):
     Integration tests for Create Food RPC.
     """
 
-    def test_normal(self):
+    def setUp(self):  # pylint: disable=invalid-name
         """
-        Tests creating standard food item.
+        Sets up the RPC client and Scylla.
         """
-        logging.info("Starting test: test_normal.")
-        client = CreateFoodRPCClient(
+        super().setUp()
+
+        logging.getLogger(
+            "cassandra.cqlengine.connection",
+        ).setLevel(logging.ERROR)
+
+        self.client = CreateFoodRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"],
             "create-food-item-rpc",
         )
 
-        food_id = "None"
+        self.test_client = TestRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"],
+            "create-food-item-rpc",
+        )
+
+        _ = shared.setup_scylla(
+            "kcpnmup1dddinisrgc5hma",
+            user=os.environ["SCYLLADB_USERNAME"],
+            password=os.environ["SCYLLADB_PASSWORD"],
+        )
+
+    def test_normal(self):
+        """
+        Tests creating standard food item.
+        """
+        user = "TestUser"
         img_id = uuid.uuid4()
         label = "Test Food"
-        useby = datetime.now() + timedelta(1.0)
+        description = "Test Food Description"
+        useby = (datetime.now() + timedelta(30)).replace(
+            second=0,
+            microsecond=0,
+        )
 
-        resp_raw = client.call(
-            "Test User",
-            "testing",
-            food_id,
-            img_id,
-            label,
-            useby,
+        resp_raw = self.client.call(
+            auth_user=user,
+            srv_from="testing",
+            img_id=img_id,
+            label=label,
+            useby=useby,
+            description=description,
         )
 
         response = json.loads(resp_raw)
-        logging.info("Response: %s", response)
 
         self.assertEqual(response["status"], 200)
         self.assertEqual(
@@ -54,33 +80,31 @@ class CreateFoodRPCTest(AutocleanTestCase):
             "Successfully created food item",
         )
 
+        food = model.Food.get(user=user)
+        self.assertIsNotNone(food)
+        self.assertEqual(food["user"], user)
+        self.assertEqual(food["img_id"], img_id)
+        self.assertEqual(food["label"], label)
+        self.assertEqual(food["description"], description)
+        self.assertEqual(food["useby"], useby)
+
     def test_past_useby(self):
         """
         Tests creating food item which has already expired.
         """
-        logging.info("Starting test: test_send_nothing.")
-        client = CreateFoodRPCClient(
-            os.environ["RABBITMQ_USERNAME"],
-            os.environ["RABBITMQ_PASSWORD"],
-            "create-food-item-rpc",
-        )
-
-        food_id = "None"
         img_id = uuid.uuid4()
         label = ""
         useby = datetime(2025, 1, 1, 0, 0)
 
-        resp_raw = client.call(
+        resp_raw = self.client.call(
             "Test User",
             "testing",
-            food_id,
             img_id,
             label,
             useby,
         )
 
         response = json.loads(resp_raw)
-        logging.info("Response: %s", response)
 
         self.assertEqual(response["status"], 400)
         self.assertEqual(
@@ -92,13 +116,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         """
         Tests the case where a request is not JSON.
         """
-        test_client = TestRPCClient(
-            os.environ["RABBITMQ_USERNAME"],
-            os.environ["RABBITMQ_PASSWORD"],
-            "create-food-item-rpc",
-        )
-
-        resp_raw = test_client.call("asdfjkl;")
+        resp_raw = self.test_client.call("asdfjkl;")
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 400)
@@ -110,15 +128,9 @@ class CreateFoodRPCTest(AutocleanTestCase):
         Tests the case where the request is malformed
         JSON.
         """
-        test_client = TestRPCClient(
-            os.environ["RABBITMQ_USERNAME"],
-            os.environ["RABBITMQ_PASSWORD"],
-            "create-food-item-rpc",
-        )
-
         req = {"hello": "world"}
 
-        resp_raw = test_client.call(json.dumps(req))
+        resp_raw = self.test_client.call(json.dumps(req))
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 400)
@@ -130,12 +142,6 @@ class CreateFoodRPCTest(AutocleanTestCase):
         Tests the case where the request version
         is incorrect.
         """
-        test_client = TestRPCClient(
-            os.environ["RABBITMQ_USERNAME"],
-            os.environ["RABBITMQ_PASSWORD"],
-            "create-food-item-rpc",
-        )
-
         req = rpcs.request(
             "",
             "1.2.3",
@@ -143,7 +149,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
             {"message": "Ping!"},
         )
 
-        resp_raw = test_client.call(req)
+        resp_raw = self.test_client.call(req)
         resp = json.loads(resp_raw)
 
         self.assertEqual(resp["status"], 400)
