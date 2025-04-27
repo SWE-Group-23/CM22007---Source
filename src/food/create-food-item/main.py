@@ -70,7 +70,10 @@ class CreateFoodRPCServer(rpcs.RPCServer):
             if req["version"] != "1.0.0":
                 return rpcs.response(400, {"reason": "Bad version."})
 
-            img_id = uuid.UUID(req["data"]["img_id"])
+            img_id = None
+            if (img_id_str := req["data"].get("img_id")) is not None:
+                img_id = uuid.UUID(img_id_str)
+
             label = req["data"]["label"]
             description = req["data"].get("description")
             useby = datetime.fromisoformat(req["data"]["useby"])

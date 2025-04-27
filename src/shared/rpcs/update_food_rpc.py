@@ -13,12 +13,12 @@ class UpdateFoodRPCClient(rpcs.RPCClient):
     food items in the user's inventory.
     """
 
-    def call(   # pylint: disable=too-many-arguments,too-many-positional-arguments
-            self,
-            auth_user: str,
-            service: str,
-            
-            api_version="1.0.0"):
+    def call(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        auth_user: str,
+        service: str,
+        api_version="1.0.0",
+    ):
         """
         Calls Update Food RPC
         """
@@ -26,9 +26,9 @@ class UpdateFoodRPCClient(rpcs.RPCClient):
             auth_user,
             api_version,
             service,
-            data = {
+            data={
                 # data to be sent
-            }
+            },
         )
 
         return self._call(body=req)

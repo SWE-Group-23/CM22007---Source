@@ -90,6 +90,40 @@ class CreateFoodRPCTest(AutocleanTestCase):
         self.assertEqual(food["description"], description)
         self.assertEqual(food["useby"], useby)
 
+    def test_all_optional(self):
+        """
+        Tests creating a food item with only the required fields
+        """
+        user = "TestUser"
+        label = "Test Food"
+        useby = (datetime.now() + timedelta(30)).replace(
+            second=0,
+            microsecond=0,
+        )
+
+        resp_raw = self.client.call(
+            auth_user=user,
+            srv_from="testing",
+            label=label,
+            useby=useby,
+        )
+
+        response = json.loads(resp_raw)
+
+        self.assertEqual(response["status"], 200)
+        self.assertEqual(
+            response["data"]["message"],
+            "Successfully created food item",
+        )
+
+        food = model.Food.get(user=user)
+        self.assertIsNotNone(food)
+        self.assertEqual(food["user"], user)
+        self.assertIsNone(food["img_id"])
+        self.assertEqual(food["label"], label)
+        self.assertIsNone(food["description"])
+        self.assertEqual(food["useby"], useby)
+
     def test_past_useby(self):
         """
         Tests creating food item which has already expired.

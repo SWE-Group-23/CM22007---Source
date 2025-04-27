@@ -18,9 +18,9 @@ class CreateFoodRPCClient(rpcs.RPCClient):
         self,
         auth_user: str,
         srv_from: str,
-        img_id: uuid,
         label: str,
         useby: datetime,
+        img_id: uuid.UUID | None = None,
         description: str | None = None,
         api_version="1.0.0",
     ) -> bytes:
@@ -28,10 +28,12 @@ class CreateFoodRPCClient(rpcs.RPCClient):
         Calls Create Food RPC
         """
         data = {
-            "img_id": str(img_id),
             "label": label,
             "useby": useby.isoformat(timespec="minutes"),
         }
+
+        if img_id is not None:
+            data["img_id"] = str(img_id)
 
         if description is not None:
             data["description"] = description

@@ -5,9 +5,9 @@
     "from": "public-gateway",
     "version": "1.0.0",
     "data": {
-        "img_id": "UUID",
+        "img_id": "UUID (optional)",
         "label": "Name of food",
-        "description": "Text description or null",
+        "description": "Text description (optional)",
         "useby": "Time in ISO format"
     }
 }
