@@ -15,7 +15,7 @@ class Alerts(Model): # pylint: disable=too-few-public-methods
         message - Text
     """
     id = columns.UUID(primary_key=True, default=uuid.uuid4)
-    userID = columns.Text()
+    userID = columns.Text(index=True)
     message = columns.Text()
     service = columns.Text()
     read = columns.Boolean()

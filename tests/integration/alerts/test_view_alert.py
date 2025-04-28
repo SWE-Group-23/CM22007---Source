@@ -7,6 +7,7 @@ import json
 import logging
 from lib import AutocleanTestCase
 from shared.rpcs.view_alert_rpc import ViewAlertRPCClient
+from shared.rpcs.add_alert_rpc import AddAlertRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
 
 
@@ -16,6 +17,9 @@ class ViewAlertRPCTest(AutocleanTestCase):
     """
 
     def setUp(self): # pylint: disable=invalid-name
+        """
+        Setting up RabbitMQ
+        """
         super().setUp()
 
         # suppress new default session warning
@@ -34,23 +38,32 @@ class ViewAlertRPCTest(AutocleanTestCase):
             "view-alert-rpc",
         )
 
+    def _add_alert(self, authUser, message):
+        add_alert_rpc = AddAlertRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"]
+        )
+        resp_raw = add_alert_rpc.call(authUser, "testing", message)
+        response = json.loads(resp_raw)
+        logging.info("Response: %s", response)
+
     def test_view_alert(self):
         """
         Tests viewing an alert if the JSON is valid
         """
 
-        logging.info("Starting the test_add_alert test.")
+        logging.info("Starting the test_view_alert test.")
 
         client = self.view_alert_client
         authuser = "john doe"
         service = "testing"
-
+        self._add_alert(authuser, "this is a test alert")
         response_raw = client.call(authuser, service)
         response = json.loads(response_raw)
         logging.info("Response: %s", response)
 
         self.assertEqual(response["status"], 200)
-        self.assertEqual(response["data"], "this is a test alert")
+        self.assertEqual(response["data"]["alerts"][0]["message"], "this is a test alert")
 
     def test_send_nothing(self):
         """

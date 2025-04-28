@@ -25,22 +25,30 @@ class ViewAlertRPCServer(rpcs.RPCServer):
         """
         Views the unread alerts for the requesting user
         """
-
+        logging.info("trying to view")
         # views all unread alerts for the user
-        try:
-            q = models.Alerts.filter(userID=user_id,read=False)
-            data = [{"message": str(alert.message),
-                    "service": str(alert.service)}
-                for alert in q]
-           # updating the entries to read
-            for alert in q:
-                alert.read = True
-                alert.update()
+        q = list(models.Alerts.objects.filter(userID=user_id).allow_filtering())
+        logging.info("Received q")
+        if q:
+            unread_q = [a for a in q if not a.read]
+            data = {
+                "alerts": [
+                      {
+                           "message": str(alert.message),
+                           "service": str(alert.service),
+                      }
+                      for alert in unread_q
+                  ]
+            }
+            # updating the entries to read
 
-            return rpcs.response(200, {"data:", data})
-        except q.DoesNotExist as e:
-            logging.error("[DB ERROR] %s", e, exc_info=True)
-            return rpcs.response(400, {"reason": "Unable to view the alert"})
+            for alert in unread_q:
+                alert.read = True
+                alert.save()
+            return rpcs.response(200, data)
+
+        logging.error("[DB ERROR] No alerts")
+        return rpcs.response(400, {"reason": "No alerts"})
 
     def process(self, body):
         """
@@ -51,12 +59,18 @@ class ViewAlertRPCServer(rpcs.RPCServer):
             req = json.loads(body)
         except json.JSONDecodeError:
             return rpcs.response(400, {"reason": "Invalid JSON"})
-        user_id = req["authUser"]
+        try:
+           if req["version"] != "1.0.0":
+               return rpcs.response(400, {"reason": "Bad version"})
 
-        res = rpcs.response(500, {"reason": "Internal Server Error"})
-        res = self.view_alert(user_id)
-        return res
+           user_id = req["authUser"]
 
+           res = rpcs.response(500, {"reason": "Internal Server Error"})
+           logging.info("calling view_alert")
+           res = self.view_alert(user_id)
+           return res
+        except KeyError:
+            return rpcs.response(400, {"reason": "Malformed request."})
 def main():
     """
     Add appropriate docs here.
@@ -71,10 +85,10 @@ def main():
 
     # Set up rpcs
     rpc_server = ViewAlertRPCServer(
-    os.environ["RABBITMQ_USERNAME"],
-    os.environ["RABBITMQ_PASSWORD"],
+        os.environ["RABBITMQ_USERNAME"],
+        os.environ["RABBITMQ_PASSWORD"],
     )
-
+    logging.info("Consuming...")
     rpc_server.channel.start_consuming()
 
 if __name__ == "__main__":

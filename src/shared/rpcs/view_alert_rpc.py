@@ -1,5 +1,5 @@
 """
-The rpc for adding an alert.
+The rpc for viewing an alert.
 """
 
 
@@ -8,7 +8,7 @@ from shared import rpcs
 
 class ViewAlertRPCClient(rpcs.RPCClient):
     """
-    Sub-class of RPC client which sends adds the alert.
+    Sub-class of RPC client which views the alert.
     """
     def __init__(self, *args, rpc_prefix="view-alert-rpc", **kwargs):
         super().__init__(*args, rpc_prefix, **kwargs)
@@ -21,7 +21,7 @@ class ViewAlertRPCClient(rpcs.RPCClient):
         """
         Send the JSON to the server.
         """
-        data = {""}
+        data = {}
         req = rpcs.request(
                 auth_user,
                 version,
