@@ -28,13 +28,13 @@ class Messages(Model):  # pylint: disable=too-few-public-methods
         msg_id - UUID - Primary Key
         chat_id - UUID - Partition Key
         sender_user - Text
-        sent_time - DateTime
+        sent_time - Text
         message - Text
         reported - Boolean
     """
     msg_id = columns.UUID(primary_key=True, default=uuid.uuid4)
     chat_id = columns.UUID(index=True)
     sender_user = columns.Text()
-    sent_time = columns.DateTime()
+    sent_time = columns.Text()
     message = columns.Text()
     reported = columns.Boolean(default=False)

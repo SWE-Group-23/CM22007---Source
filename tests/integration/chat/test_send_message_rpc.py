@@ -9,6 +9,7 @@ import logging
 from datetime import datetime
 
 from lib import AutocleanTestCase
+from shared import rpcs
 from shared.rpcs.send_message_rpc import SendMessageRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
 
@@ -63,6 +64,8 @@ class SendMessageRPCTest(AutocleanTestCase):
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)
 
+        print(response)
+
         self.assertEqual(response["status"], 200)
         self.assertEqual(response["data"]["message"], "Message sent")
 
@@ -105,3 +108,40 @@ class SendMessageRPCTest(AutocleanTestCase):
         logging.info("Response: %s", response)
         self.assertEqual(response["status"], 400)
         self.assertEqual(response["data"]["reason"], "Bad JSON.")
+
+    def test_bad_version(self):
+        """
+        Tests the case where the request version
+        is incorrect.
+        """
+        client = self.test_client
+
+        req = rpcs.request(
+            "",
+            "1.2.3",
+            "testing",
+            {"message": "Bad test"},
+        )
+
+        resp_raw = client.call(req)
+        resp = json.loads(resp_raw)
+
+        self.assertEqual(resp["status"], 400)
+        self.assertRaises(KeyError, lambda x: x["data"]["message"], resp)
+        self.assertEqual(resp["data"]["reason"], "Bad version.")
+
+    def test_malformed(self):
+        """
+        Tests the case where the request is malformed
+        JSON.
+        """
+        client = self.test_client
+
+        req = {"hello": "world"}
+
+        resp_raw = client.call(json.dumps(req))
+        resp = json.loads(resp_raw)
+
+        self.assertEqual(resp["status"], 400)
+        self.assertRaises(KeyError, lambda x: x["data"]["message"], resp)
+        self.assertEqual(resp["data"]["reason"], "Malformed request.")

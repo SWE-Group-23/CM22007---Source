@@ -67,7 +67,7 @@ class SendMessageRPCServer(rpcs.RPCServer):
             chat_id = req["data"]["chat_id"]
             sender_user = str(req["authUser"])
             receiver_user = str(req["data"]["receiver_user"])
-            time_sent = datetime.strptime(req["data"]["time"], "%Y-%m-%d %H:%M:%S.%f")
+            time_sent = str(datetime.strptime(req["data"]["time_sent"], "%Y-%m-%d %H:%M:%S.%f"))
             message= req["data"]["message"]
 
             if chat_id != "None":
