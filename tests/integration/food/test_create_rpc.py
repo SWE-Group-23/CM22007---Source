@@ -79,7 +79,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         self.assertEqual(response["status"], 200)
         self.assertEqual(
             response["data"]["message"],
-            "Successfully created food item",
+            "Successfully created food item.",
         )
 
         food = model.Food.get(user=user)
@@ -113,7 +113,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
         self.assertEqual(response["status"], 200)
         self.assertEqual(
             response["data"]["message"],
-            "Successfully created food item",
+            "Successfully created food item.",
         )
 
         food = model.Food.get(user=user)

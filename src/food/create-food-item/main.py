@@ -52,7 +52,7 @@ class CreateFoodRPCServer(rpcs.RPCServer):
 
         return rpcs.response(
             200,
-            {"message": "Successfully created food item"},
+            {"message": "Successfully created food item."},
         )
 
     def process(self, body):

@@ -32,7 +32,7 @@ class UpdateFoodRPCServer(rpcs.RPCServer):
             auth_user: str,
             food_id: uuid.UUID,
             img_id: uuid.UUID,
-            food_name: str,
+            label: str,
             description: str,
             useby: datetime,
 
@@ -40,18 +40,25 @@ class UpdateFoodRPCServer(rpcs.RPCServer):
         """
         Attempts to update an existing food item in a user's inventory
         """
+
         if useby < datetime.now():
             return rpcs.response(
-                400, {"reason": "Expiry datetime cannot be before now"}
+                400, {"reason": "Expiry datetime cannot be before now."}
             )
+        
         food = models.Food.objects.filter(
             user=auth_user,
             food_id=food_id
         )
+        
+        food.update(
+            img_id=img_id,
+            label=label,
+            description=description,
+            useby=useby
+        )
 
-        # TODO: update food table
-
-        return rpcs.response(200, {"message": "Successfully updated food item"})
+        return rpcs.response(200, {"message": "Successfully updated food item."})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
