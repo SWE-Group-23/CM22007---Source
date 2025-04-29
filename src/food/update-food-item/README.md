@@ -5,7 +5,7 @@
     "from": "public-gateway",
     "version": "1.0.0",
     "data": {
-        "food_id": "UUID"
+        "food_id": "UUID",
         "img_id": "UUID (optional)",
         "label": "Name of food (optional)",
         "description": "Text description (optional)",

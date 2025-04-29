@@ -15,6 +15,7 @@ class Food(Model):  # pylint: disable=too-few-public-methods
         user - Text - primary key
         img_id - UUID
         label - Text
+        description - Text
         useby - DateTime (YYYY-MM-DD'T'HH:MM)
     """
     food_id = columns.UUID(primary_key=True, default=uuid.uuid4())

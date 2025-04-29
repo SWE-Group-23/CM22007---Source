@@ -186,7 +186,7 @@ class CreateFoodRPCTest(AutocleanTestCase):
             "",
             "1.2.3",
             "testing",
-            {"message": "Ping!"},
+            label="Test Food",
         )
 
         resp_raw = self.test_client.call(req)

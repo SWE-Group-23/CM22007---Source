@@ -93,7 +93,7 @@ spec:
   permissions:
     write: ""
     configure: ""
-    read: "view-food-rpc-callq"
+    read: "view-food-rpc-call-q"
   rabbitmqClusterReference:
     name: rabbitmq
     namespace: rabbitmq

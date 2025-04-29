@@ -1,14 +1,4 @@
-```json
-{
-  "authUser": "user",
-  "version": "1.0.0",
-  "from": "fetch-messages",
-  "data": {}
-}
-```
-
-This should:
-- Find all foods belonging to the authenticated user.
+# Viewing a food item
 
 ```json
 {
@@ -18,7 +8,7 @@ This should:
       {
         "food_id": "UUID",
         "img_id": "UUID",
-        "label": "Tomatoes",
+        "label": "Name of food",
         "useby": "YYYY-MM-DDTHH:MM"
       }
     ]

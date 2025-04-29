@@ -11,6 +11,7 @@ from datetime import datetime
 
 import shared
 from shared import rpcs
+from shared.models import food as models
 
 
 class UpdateFoodRPCServer(rpcs.RPCServer):
@@ -26,8 +27,31 @@ class UpdateFoodRPCServer(rpcs.RPCServer):
     ):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
 
-    def update_food_item():
-        pass
+    def update_food_item(
+            self,
+            auth_user: str,
+            food_id: uuid.UUID,
+            img_id: uuid.UUID,
+            food_name: str,
+            description: str,
+            useby: datetime,
+
+    ) -> str:
+        """
+        Attempts to update an existing food item in a user's inventory
+        """
+        if useby < datetime.now():
+            return rpcs.response(
+                400, {"reason": "Expiry datetime cannot be before now"}
+            )
+        food = models.Food.objects.filter(
+            user=auth_user,
+            food_id=food_id
+        )
+
+        # TODO: update food table
+
+        return rpcs.response(200, {"message": "Successfully updated food item"})
 
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())
@@ -44,7 +68,21 @@ class UpdateFoodRPCServer(rpcs.RPCServer):
             if req["version"] != "1.0.0":
                 return rpcs.response(400, {"reason": "Bad version."})
 
-            return self.update_food_item()
+            img_id = None
+            if (img_id_str := req["data"].get("img_id")) is not None:
+                img_id = uuid.UUID(img_id_str)
+
+            label = req["data"]["label"]
+            description = req["data"].get("description")
+            useby = datetime.fromisoformat(req["data"]["useby"])
+
+            return self.update_food_item(
+                auth_user=req["authUser"],
+                img_id=img_id,
+                label=label,
+                description=description,
+                useby=useby
+            )
         except KeyError:
             return rpcs.response(400, {"reason": "Malformed request."})
 

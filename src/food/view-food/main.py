@@ -1,12 +1,11 @@
 """
-Views an existing food item in the user's private inventory.
+Views all uploaded food for a user.
 """
 
 import os
 import logging
 import json 
 
-import uuid
 from datetime import datetime
 
 import shared
@@ -17,27 +16,8 @@ class ViewFoodRPCServer(rpcs.RPCServer):
     """
     Subclass of RPCServer which views current food table.
     """
-
     def __init__(self, rabbitmq_user, rabbitmq_pass, rpc_prefix="view-food-rpc"):
         super().__init__(rabbitmq_user, rabbitmq_pass, rpc_prefix)
-
-    def view_food_item(self, food_id):
-
-        q = models.Food.objects.filter(food_id=food_id)
-        if q:
-            data = [
-                {
-                    "food_id": str(f.food_id),
-                    "img_id": str(f.img_id),
-                    "label": f.label,
-                    "useby": f.useby
-                }
-
-                for f in q
-            ]
-            return rpcs.response(200, {"data": data})
-        logging.error("[DB ERROR] Could not get food")
-        return rpcs.response(400, {"reason": "Unable to find food"})
     
     def process(self, body):
         logging.info("[RECEIVED] %s", body.decode())

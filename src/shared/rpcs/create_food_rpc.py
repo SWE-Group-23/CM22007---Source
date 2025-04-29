@@ -1,5 +1,5 @@
 """
-Defines RPC client for Create Food RPC.
+Defines RPC client for the Create Food RPC.
 """
 
 import uuid

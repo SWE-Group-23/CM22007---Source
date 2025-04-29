@@ -30,7 +30,7 @@ class CreateFoodRPCServer(rpcs.RPCServer):
         self,
         auth_user: str,
         img_id: uuid.UUID,
-        food_name: str,
+        label: str,
         description: str,
         useby: datetime,
     ) -> str:
@@ -45,7 +45,7 @@ class CreateFoodRPCServer(rpcs.RPCServer):
         models.Food.if_not_exists().create(
             user=auth_user,
             img_id=img_id,
-            label=food_name,
+            label=label,
             description=description,
             useby=useby,
         )
@@ -81,7 +81,7 @@ class CreateFoodRPCServer(rpcs.RPCServer):
             return self.create_food_item(
                 auth_user=req["authUser"],
                 img_id=img_id,
-                food_name=label,
+                label=label,
                 description=description,
                 useby=useby,
             )
