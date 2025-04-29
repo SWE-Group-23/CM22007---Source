@@ -64,8 +64,6 @@ class SendMessageRPCTest(AutocleanTestCase):
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)
 
-        print(response)
-
         self.assertEqual(response["status"], 200)
         self.assertEqual(response["data"]["message"], "Message sent")
 
