@@ -1,4 +1,4 @@
-import Login from "./Login.js";
+import Login from "../../pages/Login.js";
 
 function RequireLogin({ page, loggedIn, setLoggedIn, setSessionUsername }) {
   return loggedIn ? (

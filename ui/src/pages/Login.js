@@ -1,4 +1,4 @@
-import "./Register.css";
+import "../assets/styles/Auth.css";
 
 import { useState } from "react";
 
@@ -81,6 +81,9 @@ function Login({ setLoggedIn, setSessionUsername }) {
           <input type="submit" value="Submit" />
         </form>
       );
+      break;
+    default:
+      content = <p>Unknown register state</p>;
       break;
   }
 

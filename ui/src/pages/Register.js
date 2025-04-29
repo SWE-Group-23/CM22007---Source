@@ -1,4 +1,4 @@
-import "./Register.css";
+import "../assets/styles/Auth.css";
 
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
@@ -135,7 +135,7 @@ function Register({ setLoggedIn, setSessionUsername }) {
     case 2:
       content = (
         <form action={submitOTP}>
-          <img src={imageSource} />
+          <img src={imageSource} alt="OTP QR code" />
           <label htmlFor="otp">Enter OTP:</label>
           <input type="password" name="otp" />
           <input type="submit" value="Submit" />
@@ -161,6 +161,10 @@ function Register({ setLoggedIn, setSessionUsername }) {
     // Got To Pantry
     case 4:
       content = <Navigate to="/pantry" />;
+      break;
+    default:
+      content = <p>Unknown register step.</p>;
+      break;
   }
 
   return (

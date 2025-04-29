@@ -1,7 +1,7 @@
 import "leaflet/dist/leaflet.css";
 import "./App.css";
-import NavBar from "./components/NavBar";
-import ListingDetail from "./components/ListingDetail";
+import NavBar from "../common/components/layout/navbar/NavBar";
+import ListingDetail from "../features/ListingDetail";
 import {
   BrowserRouter as Router,
   Route,
@@ -10,14 +10,14 @@ import {
 } from "react-router-dom";
 import { useState, useEffect } from "react";
 
-import RequireLogin from "./RequireLogin";
+import RequireLogin from "../common/components/RequireLogin";
 
-import Profile from "./Profile";
-import Home from "./Home";
-import Listings from "./Listings";
-import Pantry from "./Pantry";
-import Chat from "./Chat";
-import Register from "./Register";
+import Profile from "../pages/Profile";
+import Home from "../pages/Home";
+import Listings from "../pages/Listings";
+import Pantry from "../pages/Pantry";
+import Chat from "../pages/Chat";
+import Register from "../pages/Register";
 
 const loggedOutLinks = [
   { title: "Login", path: "/login" },

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import Message from "./components/Message";
+import Message from "../features/Message";
 
 let messageId = 0;
 
@@ -22,7 +22,7 @@ function Chat() {
       <div className="chat-top">
         <img
           className="chat-image"
-          src="blank.png"
+          src="img/blank.png"
           alt="A dark grey silhouette on a light grey background."
         />
         <p className="chat-name">TomatoMagic23</p>

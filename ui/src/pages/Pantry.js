@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import Food from "./components/Food";
+import Food from "../features/Food";
 
 let itemId = 0;
 

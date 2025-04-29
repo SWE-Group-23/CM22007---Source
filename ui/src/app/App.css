@@ -133,7 +133,7 @@ main {
 .title-page {
     display: flex;
     flex-direction: column;
-    background-image: url("home.jpeg");
+    background-image: url("../../public/img/home.jpg");
     height: calc(100vh - 67px);
     background-size: cover;
     background-attachment: fixed;
@@ -152,7 +152,7 @@ main {
     font-weight: 900;
     padding: 0.2em 0.5em;
     margin-top: 1em;
-    border-radius: 10em; 
+    border-radius: 10em;
 }
 
 .title-text {
@@ -166,7 +166,7 @@ main {
     margin: 20px;
     border-radius: 2vw;
     width: min(80vw, 15em);
-    margin-top: calc(2em + 5vh - 5vw); 
+    margin-top: calc(2em + 5vh - 5vw);
 }
 
 .profile-image {
@@ -636,5 +636,5 @@ main {
 }
 
 .chat-page {
-  
+
 }

@@ -3,7 +3,7 @@ function Food({foodItem, setPostingListing, setListingItem, removeItem}) {
     <h3>{foodItem.name}</h3>
     <p>Expires: {foodItem.exp}</p>
     <p>{foodItem.desc}</p>
-    <img src="/bananas.jpg" />
+    <img src="/img/bananas.jpg" alt="bananas" />
     <div className="button-group jc-center-margin">
     <button className="light-button" onClick={
       () => {

@@ -3,7 +3,7 @@ function Profile({ username }) {
     <div className="profile-page">
       <img
         className="profile-image"
-        src="blank.png"
+        src="img/blank.png"
         alt="A dark grey silhouette on a light grey background."
       />
       <p className="profile-name">{username}</p>
