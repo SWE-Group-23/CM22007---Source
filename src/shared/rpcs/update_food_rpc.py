@@ -19,22 +19,30 @@ class UpdateFoodRPCClient(rpcs.RPCClient):
         srv_from: str,
         food_id: uuid.UUID,
         label: str,
+        useby: datetime,
+        img_id: uuid.UUID | None = None,
         description: str | None = None,
         api_version="1.0.0",
-    ):
+    ) -> bytes:
         """
         Calls Update Food RPC
         """
+        data = {
+            "label": label,
+            "useby": useby.isoformat(timespec="minutes"),
+        }
+
+        if img_id is not None:
+            data["img_id"] = str(img_id)
+
+        if description is not None:
+            data["description"] = description
+
         req = rpcs.request(
             auth_user,
             api_version,
             srv_from,
-            data={
-                "food_id": food_id,
-                "label": label,
-                "description": description
-            },
+            data=data,
         )
 
         return self._call(body=req)
-c

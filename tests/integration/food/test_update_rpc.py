@@ -1,5 +1,5 @@
 """
-Integration tests for the View Food RPC.
+Integration tests for the Update Food RPC.
 """
 
 import json
@@ -12,17 +12,15 @@ import shared
 from shared import rpcs
 from shared.models import food as model
 from shared.rpcs.create_food_rpc import CreateFoodRPCClient
-from shared.rpcs.view_food_rpc import ViewFoodRPCClient
+from shared.rpcs.update_food_rpc import UpdateFoodRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
 
 from lib import AutocleanTestCase
 
-from cassandra.cqlengine.query import DoesNotExist
 
-
-class ViewFoodRPCTest(AutocleanTestCase):
+class UpdateFoodRPCTest(AutocleanTestCase):
     """
-    Integration tests for View Food RPC.
+    Integration tests for Update Food RPC.
     """
 
     def setUp(self):  # pylint: disable=invalid-name
@@ -35,77 +33,102 @@ class ViewFoodRPCTest(AutocleanTestCase):
             "cassandra.cqlengine.connection",
         ).setLevel(logging.ERROR)
 
-        self.client = ViewFoodRPCClient(
+        self.client = UpdateFoodRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"],
-            "view-food-rpc",
+            "update-food-item-rpc",
         )
 
         self.test_client = TestRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"],
-            "view-food-rpc",
+            "update-food-item-rpc",
         )
-       
-    def create_food(self, user, useby):
+    
+    def create_food(self, user, label, useby, img_id, description):
         """
-        Populates the food table for a test user.
+        Populate food table.
         """
-        create_food_rpc = CreateFoodRPCClient(
+        create_food_rpc =  CreateFoodRPCClient(
             os.environ["RABBITMQ_USERNAME"],
             os.environ["RABBITMQ_PASSWORD"],
         )
 
         resp_raw = create_food_rpc.call(
-            user,
-            "testing",
-            "Test Food",
-            useby,
+            auth_user=user,
+            srv_from="testing",
+            label=label,
+            useby=useby,            
+            img_id=img_id,
+            description=description,
         )
 
-        response = json.load(resp_raw)
+        response = json.loads(resp_raw)
         logging.info("Response: %s", response)
 
     def test_normal(self):
         """
-        Tests viewing standard food table.
+        Tests updating standard food item.
         """
         user = "TestUser"
-
-        for _ in range(3):
-            useby = (datetime.now() + timedelta(30)).replace(
-                second=0,
-                microsecond=0,
-            )
-
-            self.create_food(user, useby)
+        img_id = uuid.uuid4()
+        label = "Test Food"
+        description = "Test Food Description"
+        useby = (datetime.now() + timedelta(30)).replace(
+            second=0,
+            microsecond=0,
+        )
+        self.create_food(user, label, useby, img_id, description)
 
         resp_raw = self.client.call(
             auth_user=user,
-            srv_from="testing"
+            srv_from="testing",
+            label="New Test Food",
+            useby=useby,
+            img_id=img_id,
+            description="New Test Food Description"
+        )
+        response = json.load(resp_raw)
+
+        self.assertEqual(response["status"], 200)
+        self.assertEqual(
+            response["data"]["message"],
+            "Successfully updates food item.",
+        )
+
+        food = model.Food.get(user=user)
+        self.assertIsNotNone(food)
+        self.assertEqual(food["user"], user)
+        self.assertEqual(food["img_id"], img_id)
+        self.assertEqual(food["label"], label)
+        self.assertEqual(food["description"], description)
+        self.assertEqual(food["useby"], useby)
+
+    def test_past_useby(self):
+        """
+        Tests updating a food item's useby to a time that has 
+        already passed.
+        """
+        img_id = uuid.uuid4()
+        user = "TestUser"
+        label = ""
+        useby = datetime(2025, 1, 1, 0, 0)
+
+        resp_raw = self.client.call(
+            auth_user=user,
+            srv_from="testing",
+            img_id=img_id,
+            label=label,
+            useby=useby,
         )
 
         response = json.loads(resp_raw)
 
-        self.assertEqual(response["status"], 200)
-        
-        food = model.Food.get(user=user)
-        # TODO: check the food response is the same as food in table
-
-    def test_empty(self):
-        """
-        Tests viewing an empty inventory.
-        """
-        user = "TestUser"
-
-        resp_raw = self.client.call(
-            auth_user=user,
-            srv_from="testing"
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["data"]["reason"],
+            "Expiry datetime cannot be before now.",
         )
-
-        response = json.load(resp_raw)
-        with self.assertRaises(DoesNotExist):
-            self.assertEqual(response["status"], 200)
 
     def test_non_json(self):
         """
@@ -141,7 +164,7 @@ class ViewFoodRPCTest(AutocleanTestCase):
             "",
             "1.2.3",
             "testing",
-            label="testing food",
+            label="Test Food",
         )
 
         resp_raw = self.test_client.call(req)

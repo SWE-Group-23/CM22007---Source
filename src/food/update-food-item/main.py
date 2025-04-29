@@ -46,12 +46,7 @@ class UpdateFoodRPCServer(rpcs.RPCServer):
                 400, {"reason": "Expiry datetime cannot be before now."}
             )
         
-        food = models.Food.objects.filter(
-            user=auth_user,
-            food_id=food_id
-        )
-        
-        food.update(
+        models.Food.objects(user=auth_user, food_id=food_id).update(
             img_id=img_id,
             label=label,
             description=description,
