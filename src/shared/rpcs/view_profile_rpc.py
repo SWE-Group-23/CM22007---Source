@@ -3,7 +3,6 @@ Client for using the view profile RPC from the
 profile subsystem.
 """
 
-import uuid
 from shared import rpcs
 
 class ViewProfileRPCClient(rpcs.RPCClient):

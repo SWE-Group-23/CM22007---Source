@@ -3,7 +3,6 @@ Integration tests for the view profile RPC.
 """
 
 import os
-import uuid
 import json
 import logging
 
