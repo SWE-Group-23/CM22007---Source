@@ -8,6 +8,7 @@ import logging
 
 from lib import AutocleanTestCase
 from shared.rpcs.view_profile_rpc import ViewProfileRPCClient
+from shared.rpcs.create_profile_rpc import CreateProfileRPCClient
 from shared.rpcs.test_rpc import TestRPCClient
 
 
@@ -38,6 +39,24 @@ class ViewProfileRPCTest(AutocleanTestCase):
             "view-profile-rpc",
         )
 
+    def _add_profile(self):
+        create_profile_rpc = CreateProfileRPCClient(
+            os.environ["RABBITMQ_USERNAME"],
+            os.environ["RABBITMQ_PASSWORD"]
+        )
+
+        resp_raw = create_profile_rpc.call(
+            "a.smith",
+            "testing",
+            "adam smith",
+            "love sourdough <3",
+            "vegan"
+            )
+
+        response = json.loads(resp_raw)
+        logging.info("Response: %s", response)
+
+
 
     def test_view_profile(self):
         """
@@ -46,11 +65,9 @@ class ViewProfileRPCTest(AutocleanTestCase):
         logging.info("Starting the test_view_chats test.")
         client = self.view_profile_client
 
-        resp_raw = client.call(
-            "j.smith",
-            "testing",
-            "a.smith"
-            )
+        self._add_profile()
+
+        resp_raw = client.call("j.smith", "testing", "a.smith")
 
         response = json.loads(resp_raw)
         logging.info("Response: %s", response)
