@@ -107,7 +107,7 @@ function Listings({ username }) {
       const withinDistance = listing.distance <= maxDistance;
       const hasTags =
         selectedTags.length === 0 ||
-        listing.tags.some((tag) => selectedTags.includes(tag));
+        selectedTags.every((tag) => listing.tags.includes(tag));
       return withinDistance && hasTags;
     });
   }
