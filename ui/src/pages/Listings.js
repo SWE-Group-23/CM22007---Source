@@ -7,56 +7,32 @@ function Listings({ username }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [listingsWithDistance, setListingsWithDistance] = useState([]);
 
-  const [initialListings] = useState(() => [
-    {
-      id: 1,
-      title: "Bananas",
-      tags: ["fruit", "sweet"],
-      image: "/img/bananas.jpg",
-      distance: Math.random().toFixed(1),
-      description: "A bunch of ripe bananas, only bought recently.",
-      lat: 51.3766938,
-      lon: -2.3234206,
-      listerUsername: username,
-      listerImage: "/img/blank.png",
-    },
-    {
-      id: 2,
-      title: "Bread",
-      tags: ["bread", "savoury", "bakery"],
-      image: "/img/bread.jpg",
-      distance: Math.random().toFixed(1),
-      description: "Baked too much bread, so giving some away!",
-      lat: 51.3766938,
-      lon: -2.3234206,
-      listerUsername: "oh-yeast",
-      listerImage: "/img/blank.png",
-    },
-    {
-      id: 3,
-      title: "Potatoes",
-      image: "/img/potato.jpg",
-      tags: ["vegetables", "savoury"],
-      distance: Math.random().toFixed(1),
-      description: "Spare potatoes I won't use.",
-      lat: 51.3766938,
-      lon: -2.3234206,
-      listerUsername: "cool-guy99",
-      listerImage: "/img/blank.png",
-    },
-    {
-      id: 4,
-      title: "Tomatoes",
-      image: "/img/tomato.jpg",
-      tags: ["fruit", "vegetables"],
-      distance: Math.random().toFixed(1),
-      description: "Tomatoes, bought too many for making pico de gallo.",
-      lat: 51.3766938,
-      lon: -2.3234206,
-      listerUsername: "TomatoMagic23",
-      listerImage: "/img/blank.png",
-    },
-  ]);
+  const [initialListings, setInitialListings] = useState([]);
+
+  useEffect(() => {
+    const loadListings = async () => {
+      const baseLat = 51.3766938;
+      const baseLon = -2.3234206;
+
+      const response = await fetch("listings.json");
+      if (!response.ok) throw new Error("Failed to load listings");
+      const listings = await response.json();
+
+      const randomiseLocation = (id) => ({
+        lat: baseLat + Math.sin(id * 18) * 0.033,
+        lon: baseLon + Math.cos(id * 18) * 0.033,
+      });
+
+      setInitialListings(
+        listings.map((item) => ({
+          ...item,
+          ...randomiseLocation(item.id),
+        })),
+      );
+    };
+
+    loadListings();
+  }, []);
 
   // this would get actual location but for now just placeholder
   useEffect(() => {
@@ -97,8 +73,8 @@ function Listings({ username }) {
 
   const fuse = new Fuse(listingsWithDistance, {
     keys: ["title", "description", "tags"],
-    threshold: 0.3,
-    shouldSort: true,
+    threshold: 0.4,
+    findAllMatches: true,
   });
 
   const finalListings = searchQuery
