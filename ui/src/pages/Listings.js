@@ -7,24 +7,24 @@ const STUDY_CONFIG = {
   methodOrder: ["search", "filter"],
   trials: {
     search: [
-      { id: 1, targetId: 1, prompt: "", training: true },
-      { id: 2, targetId: 1, prompt: "", training: true },
-      { id: 3, targetId: 1, prompt: "", training: true },
-      { id: 4, targetId: 1, prompt: "" },
-      { id: 5, targetId: 1, prompt: "" },
-      { id: 6, targetId: 1, prompt: "" },
-      { id: 7, targetId: 1, prompt: "" },
-      { id: 8, targetId: 1, prompt: "" },
+      { id: 1, targetId: 12, prompt: "Jasmine Rice", training: true },
+      { id: 2, targetId: 99, prompt: "Edamame", training: true },
+      { id: 3, targetId: 53, prompt: "Granola Bar", training: true },
+      { id: 4, targetId: 51, prompt: "Frozen Pizza" },
+      { id: 5, targetId: 10, prompt: "Onions" },
+      { id: 6, targetId: 20, prompt: "Oranges" },
+      { id: 7, targetId: 43, prompt: "Fresh Figs" },
+      { id: 8, targetId: 95, prompt: "Mangoes" },
     ],
     filter: [
-      { id: 9, targetId: 1, prompt: "", training: true },
-      { id: 10, targetId: 1, prompt: "", training: true },
-      { id: 11, targetId: 1, prompt: "", training: true },
-      { id: 12, targetId: 1, prompt: "" },
-      { id: 13, targetId: 1, prompt: "" },
-      { id: 14, targetId: 1, prompt: "" },
-      { id: 15, targetId: 1, prompt: "" },
-      { id: 16, targetId: 1, prompt: "" },
+      { id: 9, targetId: 85, prompt: "Kiwis", training: true },
+      { id: 10, targetId: 82, prompt: "Frozen Dumplings", training: true },
+      { id: 11, targetId: 41, prompt: "Bell Peppers", training: true },
+      { id: 12, targetId: 74, prompt: "Dill Pickles" },
+      { id: 13, targetId: 19, prompt: "Sourdough Bread" },
+      { id: 14, targetId: 61, prompt: "Raspberries" },
+      { id: 15, targetId: 71, prompt: "Hummus" },
+      { id: 16, targetId: 39, prompt: "Sweetcorn" },
     ],
   },
 };
@@ -159,6 +159,7 @@ function Listings({ username }) {
     setSearchQuery("");
     setSelectedTags([]);
     setMaxDistance(10);
+    window.scrollTo(0, 0);
 
     // start trial
     setIsTrialActive(true);

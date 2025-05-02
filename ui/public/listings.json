@@ -3,8 +3,8 @@
     "id": 1,
     "title": "Bananas",
     "tags": [
-      "fruit",
-      "fresh"
+      "fresh",
+      "fruit"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/78/Banana-Sitia-Crete.jpg",
     "description": "A bunch of ripe bananas, only bought recently.",
@@ -27,6 +27,7 @@
     "title": "Potatoes",
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/22/11-09-10-kartoffel-DSC_5410.jpg",
     "tags": [
+      "fresh",
       "vegetables"
     ],
     "description": "Spare potatoes I won't use.",
@@ -48,9 +49,10 @@
     "id": 5,
     "title": "Apples",
     "tags": [
-      "fruit",
       "fresh",
-      "organic"
+      "fruit",
+      "organic",
+      "seasonal"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Apple_II_at_Mus%C3%A9e_Bolo.jpg",
     "description": "Fresh organic apples from my tree.",
@@ -61,8 +63,8 @@
     "id": 6,
     "title": "Carrots",
     "tags": [
-      "vegetables",
-      "fresh"
+      "fresh",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Carrot_juice_-_July_2023_-_Sarah_Stierch.jpg",
     "description": "Homegrown carrots, freshly harvested.",
@@ -73,7 +75,8 @@
     "id": 7,
     "title": "Yogurt",
     "tags": [
-      "dairy"
+      "dairy",
+      "protein"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Food_-_Yogurt_%288560%29_--_Smart-Servier.png",
     "description": "Natural yogurt, best before next week.",
@@ -95,8 +98,8 @@
     "id": 9,
     "title": "Spinach",
     "tags": [
-      "vegetables",
-      "fresh"
+      "fresh",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/41/Party_food_dish_4_spinach_cheese.jpg",
     "description": "Fresh spinach leaves, great for salads.",
@@ -140,8 +143,8 @@
     "id": 13,
     "title": "Cooked Pasta",
     "tags": [
-      "grains",
-      "dairy"
+      "dairy",
+      "grains"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/3f/%28Pasta%29_by_David_Adam_Kess_%28pic.2%29.jpg",
     "description": "Cooked penne pasta with creamy sauce.",
@@ -153,7 +156,6 @@
     "title": "Strawberries",
     "tags": [
       "fresh",
-      "miscellaneous",
       "fruit"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/69/2022_Strawberries_on_the_Square_-_Sarah_Stierch_06.jpg",
@@ -165,8 +167,8 @@
     "id": 15,
     "title": "Whole Wheat Bread",
     "tags": [
-      "grains",
-      "fresh"
+      "fresh",
+      "grains"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/75/Chicken_and_mushroom_sausages_on_toasted%2C_homemade_whole_wheat_bread%2C_with_mustard_-_Massachusetts.jpg",
     "description": "Freshly baked whole wheat loaf, still warm!",
@@ -178,7 +180,8 @@
     "title": "Organic Apples",
     "tags": [
       "fruit",
-      "organic"
+      "organic",
+      "seasonal"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/60/2020-03-14_23_59_12_A_single_Nature%27s_Promise_Organic_Red_Delicious_Apple_core_in_the_Franklin_Farm_section_of_Oak_Hill%2C_Fairfax_County%2C_Virginia.jpg",
     "description": "Certified organic apples from pesticide-free orchard.",
@@ -189,8 +192,8 @@
     "id": 17,
     "title": "Cucumbers",
     "tags": [
-      "vegetables",
-      "fresh"
+      "fresh",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/72/Cucumber_on_tomato_-_20180903_130208.jpg",
     "description": "Crisp greenhouse cucumbers, perfect for pickling.",
@@ -270,8 +273,8 @@
     "id": 24,
     "title": "Fresh Basil",
     "tags": [
-      "vegetables",
-      "fresh"
+      "fresh",
+      "vegetables"
     ],
     "image": "/img/blank.png",
     "description": "Potted basil plant needing new home.",
@@ -282,6 +285,7 @@
     "id": 25,
     "title": "Red Cabbage",
     "tags": [
+      "artisan",
       "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/cc/-2018-12-15_Jars_of_Pickled_Red_Cabbage%2C_Cromer.jpg",
@@ -293,8 +297,8 @@
     "id": 26,
     "title": "Blueberries",
     "tags": [
-      "fruit",
-      "miscellaneous"
+      "frozen",
+      "fruit"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/84/Blaabaer.jpg",
     "description": "Frozen blueberries from last summer's harvest.",
@@ -306,8 +310,7 @@
     "title": "Almond Milk",
     "tags": [
       "dairy-free",
-      "protein",
-      "sweet"
+      "protein"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/2/2f/2020-03-29_20_24_44_A_H%C3%A4agen-Dazs_Vanilla_Milk_Chocolate_Almond_Ice_Cream_Bar_after_being_unwrapped_in_the_Franklin_Farm_section_of_Oak_Hill%2C_Fairfax_County%2C_Virginia.jpg",
     "description": "Unopened carton of unsweetened almond milk.",
@@ -318,9 +321,10 @@
     "id": 28,
     "title": "Pumpkin",
     "tags": [
-      "vegetables",
+      "fresh",
+      "seasonal",
       "sweet",
-      "seasonal"
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/31/Fairall%27s_Farm_pumpkin_chocolate_chip_bread_-_December_2023_-_Sarah_Stierch_01.jpg",
     "description": "Small sugar pumpkin for pies or carving.",
@@ -331,10 +335,10 @@
     "id": 29,
     "title": "Homemade Granola",
     "tags": [
+      "artisan",
       "grains",
       "protein",
-      "sweet",
-      "artisan"
+      "sweet"
     ],
     "image": "/img/blank.png",
     "description": "Maple-sweetened granola with nuts and seeds.",
@@ -356,8 +360,8 @@
     "id": 31,
     "title": "Broccoli",
     "tags": [
-      "vegetables",
-      "fresh"
+      "fresh",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Brassica-oleracea-italica-flower.JPG",
     "description": "Fresh broccoli florets, great for stir-fry.",
@@ -368,8 +372,8 @@
     "id": 32,
     "title": "Local Honey",
     "tags": [
-      "sweet",
-      "miscellaneous"
+      "miscellaneous",
+      "sweet"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/73/Apis_florea_worker_1.jpg",
     "description": "Raw honey from urban beehives.",
@@ -380,8 +384,9 @@
     "id": 33,
     "title": "Green Apples",
     "tags": [
+      "fresh",
       "fruit",
-      "fresh"
+      "seasonal"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Apples%2C_Illustration_from_The_Encyclopedia_of_Food_by_Artemas_Ward.jpg",
     "description": "Crisp Granny Smith apples perfect for baking.",
@@ -392,8 +397,8 @@
     "id": 34,
     "title": "Ripe Avocados",
     "tags": [
-      "fruit",
-      "fresh"
+      "fresh",
+      "fruit"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/69/A_nice_ripe_avocado_%28Creative_Commons_Photo%29_%285157248883%29.jpg",
     "description": "Perfectly ripe hass avocados ready to eat.",
@@ -404,9 +409,9 @@
     "id": 35,
     "title": "Whole Chicken",
     "tags": [
-      "protein",
+      "meat",
       "organic",
-      "meat"
+      "protein"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/75/Chicken_and_mushroom_sausages_on_toasted%2C_homemade_whole_wheat_bread%2C_with_mustard_-_Massachusetts.jpg",
     "description": "Never frozen, from local organic farm.",
@@ -417,8 +422,9 @@
     "id": 36,
     "title": "Frozen Berries Mix",
     "tags": [
-      "sweet",
-      "miscellaneous"
+      "frozen",
+      "miscellaneous",
+      "sweet"
     ],
     "image": "/img/blank.png",
     "description": "Mixed berries for smoothies or desserts.",
@@ -440,8 +446,8 @@
     "id": 38,
     "title": "Fresh Mint",
     "tags": [
-      "vegetables",
-      "fresh"
+      "fresh",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/cb/Aseedtolife_mint_chocolate_wiki.jpg",
     "description": "Overgrown mint plant needs trimming.",
@@ -452,9 +458,9 @@
     "id": 39,
     "title": "Sweet Corn",
     "tags": [
-      "vegetables",
+      "fresh",
       "sweet",
-      "fresh"
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/9b/Birds_Eye_Steamfresh_Super_Sweet_Corn_-_November_2023_-_Sarah_Stierch.jpg",
     "description": "Fresh-picked sweet corn on the cob.",
@@ -465,7 +471,7 @@
     "id": 40,
     "title": "Oat Milk",
     "tags": [
-      "dairy"
+      "dairy-free"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/cf/HK_SKD_%E6%97%A5%E5%87%BA%E5%BA%B7%E5%9F%8E_Lohas_park_%E5%95%86%E5%A0%B4_mall_shop_%E9%A3%9F%E5%93%81%E8%B6%85%E7%B4%9A%E5%B8%82%E5%A0%B4_Fresh_Food_Supermarket_goods_%E9%A3%B2%E6%96%99_beverage_April_2022_Px3_06.jpg",
     "description": "Extra carton of barista-style oat milk.",
@@ -487,9 +493,9 @@
     "id": 42,
     "title": "Dark Chocolate",
     "tags": [
-      "sweet",
       "dairy-free",
-      "miscellaneous"
+      "miscellaneous",
+      "sweet"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/cb/Aseedtolife_mint_chocolate_wiki.jpg",
     "description": "70% cocoa bars, dairy-free.",
@@ -500,8 +506,8 @@
     "id": 43,
     "title": "Fresh Figs",
     "tags": [
-      "fruit",
-      "fresh"
+      "fresh",
+      "fruit"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/68/Fresh_Figs_%28156741031%29.jpeg",
     "description": "Ripe black mission figs from tree.",
@@ -512,10 +518,11 @@
     "id": 44,
     "title": "Pumpkin Pie",
     "tags": [
-      "grains",
-      "sweet",
+      "artisan",
       "fresh",
-      "artisan"
+      "grains",
+      "seasonal",
+      "sweet"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Chili_pumpkin_pie_decorated.jpg",
     "description": "Homemade pie using fresh pumpkin.",
@@ -526,8 +533,8 @@
     "id": 45,
     "title": "Green Grapes",
     "tags": [
-      "fruit",
-      "fresh"
+      "fresh",
+      "fruit"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/fe/05166_Kissel%2C_with_bananas_and_grapes%2C_Sanok_2011.jpg",
     "description": "Crisp seedless grapes from local market.",
@@ -573,8 +580,8 @@
     "id": 49,
     "title": "Brussels Sprouts",
     "tags": [
-      "vegetables",
-      "fresh"
+      "fresh",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Brassica_Oleracea_Gemmifera.JPG",
     "description": "Fresh on the stalk from farmers market.",
@@ -585,8 +592,8 @@
     "id": 50,
     "title": "Coconut Water",
     "tags": [
-      "fruit",
-      "beverage"
+      "beverage",
+      "fruit"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/05/A_fruit_and_vegetable_stall_in_South_Trinidad_selling_coconuts%2C_coconut_water%2C_pineapple%2C_bananas%2C_green_fig%2C_tomatoes_and_more.jpg",
     "description": "12-pack of natural coconut water.",
@@ -597,6 +604,8 @@
     "id": 51,
     "title": "Frozen Pizza",
     "tags": [
+      "frozen",
+      "grains",
       "miscellaneous"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/00/Frozen_Grandiosa_Doublesalami.JPG",
@@ -608,8 +617,8 @@
     "id": 52,
     "title": "Kale",
     "tags": [
-      "vegetables",
-      "organic"
+      "organic",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/31/Kale%2C_photo_from_The_Encyclopedia_of_Food_by_Artemas_Ward.jpg",
     "description": "Organic curly kale bunch.",
@@ -620,9 +629,9 @@
     "id": 53,
     "title": "Granola Bars",
     "tags": [
+      "artisan",
       "grains",
-      "snacks",
-      "artisan"
+      "snacks"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/30/2021-03-08_16_40_58_A_Quaker_Chewy_Dark_Chocolate_Chunk_Granola_Bar_in_the_Dulles_section_of_Sterling%2C_Loudoun_County%2C_Virginia.jpg",
     "description": "Homemade no-bake energy bars.",
@@ -633,9 +642,8 @@
     "id": 54,
     "title": "Eggplant",
     "tags": [
-      "vegetables",
-      "protein",
-      "fresh"
+      "fresh",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/15/Aubergine_dish%2C_S%C3%B6dermalm.jpg",
     "description": "Fresh aubergines for Mediterranean dishes.",
@@ -669,8 +677,8 @@
     "id": 57,
     "title": "Pears",
     "tags": [
-      "fruit",
-      "fresh"
+      "fresh",
+      "fruit"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/34/A_bowl_of_Comice_pears.jpg",
     "description": "Bartlett pears ripening now.",
@@ -681,8 +689,8 @@
     "id": 58,
     "title": "Canned Beans",
     "tags": [
-      "vegetables",
-      "protein"
+      "protein",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/ee/00_HK_canned_food_%E8%B1%86%E8%B1%89%E9%AF%AA%E9%AD%9A_oil_Salted_Black_Beans_n_Fried_Dace_fish_Dec-2015.JPG",
     "description": "Mixed beans in tomato sauce.",
@@ -693,9 +701,9 @@
     "id": 59,
     "title": "Ginger Root",
     "tags": [
-      "vegetables",
+      "beverage",
       "organic",
-      "beverage"
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/c/c5/Bumbu_Rawon.jpg",
     "description": "Organic ginger for tea or cooking.",
@@ -706,6 +714,7 @@
     "id": 60,
     "title": "Frozen Peas",
     "tags": [
+      "frozen",
       "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Baked_frozen_vegetable_sausages_and_peas_%288016892990%29.jpg",
@@ -717,7 +726,8 @@
     "id": 61,
     "title": "Raspberries",
     "tags": [
-      "miscellaneous"
+      "fresh",
+      "fruit"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/62/Blueberries_and_raspberries_in_a_plate.png",
     "description": "IQF raspberries from local farm.",
@@ -728,7 +738,7 @@
     "id": 62,
     "title": "Soy Milk",
     "tags": [
-      "dairy"
+      "dairy-free"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Creamy_soy_milk_foam.jpg",
     "description": "Fortified original flavor, 6-pack.",
@@ -739,8 +749,8 @@
     "id": 63,
     "title": "Whole Fish",
     "tags": [
-      "protein",
       "fresh",
+      "protein",
       "seafood"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/31/American_food_and_game_fishes_BHL8308491.jpg",
@@ -774,7 +784,6 @@
     "id": 66,
     "title": "Cherry Tomatoes",
     "tags": [
-      "fruit",
       "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/39/Cherry-Tomatoes-in-Pack.jpg",
@@ -797,9 +806,9 @@
     "id": 68,
     "title": "Cinnamon Rolls",
     "tags": [
-      "grains",
       "dairy",
-      "fresh"
+      "fresh",
+      "grains"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/87/Bagel_and_cinnamon_bun_%284617778014%29.jpg",
     "description": "Freshly baked with cream cheese icing.",
@@ -810,8 +819,8 @@
     "id": 69,
     "title": "Walnuts",
     "tags": [
-      "protein",
-      "fresh"
+      "fresh",
+      "protein"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/94/Blooming_walnut_%28Juglans_regia%29.jpg",
     "description": "Shelled halves from last harvest.",
@@ -822,8 +831,8 @@
     "id": 70,
     "title": "Iceberg Lettuce",
     "tags": [
-      "vegetables",
-      "fresh"
+      "fresh",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/51/Caesar_salad_with_iceberg_lettuce%2C_chicken%2C_broiled_eel%2C_cheddar_cheese%2C_and_black_pepper_-_Massachusetts.jpg",
     "description": "Fresh heads great for wraps.",
@@ -834,9 +843,9 @@
     "id": 71,
     "title": "Hummus",
     "tags": [
-      "vegetables",
       "artisan",
-      "protein"
+      "protein",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/7/7e/02021_0752_%282%29_Hummus%2C_Vegan_food_in_Poland.jpg",
     "description": "Homemade garlic hummus in container.",
@@ -847,8 +856,8 @@
     "id": 72,
     "title": "Pineapple",
     "tags": [
-      "fruit",
-      "fresh"
+      "fresh",
+      "fruit"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Iced_Pineapple_Juice%2C_Apr_2025.jpg",
     "description": "Whole pineapple ripened naturally.",
@@ -882,8 +891,8 @@
     "id": 75,
     "title": "Frozen Burgers",
     "tags": [
-      "protein",
-      "plant-based"
+      "plant-based",
+      "protein"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/0/00/All_out_of_horse_burgers_-_Tesco_supermarket_-_8_February_2013.jpg",
     "description": "Plant-based burger patties.",
@@ -939,9 +948,8 @@
     "id": 80,
     "title": "Radishes",
     "tags": [
-      "vegetables",
-      "protein",
-      "fresh"
+      "fresh",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/4/43/Food-radishes-vegatables_%2823699795143%29.jpg",
     "description": "Easter egg variety, freshly pulled.",
@@ -952,8 +960,8 @@
     "id": 81,
     "title": "Protein Powder",
     "tags": [
-      "protein",
-      "dairy-free"
+      "dairy-free",
+      "protein"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Chocolate_Pea_Protein_Powder.jpg",
     "description": "Unopened vegan pea protein.",
@@ -965,8 +973,8 @@
     "title": "Frozen Dumplings",
     "tags": [
       "artisan",
-      "miscellaneous",
       "meat",
+      "miscellaneous",
       "protein"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/9/97/020231124_154848_Traditional_Christmas_foods.jpg",
@@ -978,8 +986,9 @@
     "id": 83,
     "title": "Cranberries",
     "tags": [
-      "seasonal",
-      "miscellaneous"
+      "fruit",
+      "miscellaneous",
+      "seasonal"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Cranberries_%26_Nuts_%284122543297%29.jpg",
     "description": "Extra from Thanksgiving cooking.",
@@ -990,8 +999,8 @@
     "id": 84,
     "title": "Pita Bread",
     "tags": [
-      "grains",
-      "fresh"
+      "fresh",
+      "grains"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/3/30/Bread_With_Sesame.JPG",
     "description": "Freshly baked whole wheat pitas.",
@@ -1002,8 +1011,8 @@
     "id": 85,
     "title": "Kiwi",
     "tags": [
-      "fruit",
       "fresh",
+      "fruit",
       "organic"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/5/5d/900925-Kiwifruit-2.jpg",
@@ -1037,11 +1046,9 @@
     "id": 88,
     "title": "Trail Mix",
     "tags": [
-      "sweet",
-      "snacks",
       "artisan",
-      "miscellaneous",
-      "protein"
+      "protein",
+      "snacks"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/d/db/2020-07-13_21_33_45_A_package_of_Goodfield%27s_Mountain_Trail_Mix_in_Rochelle_Park%2C_Bergen_County%2C_New_Jersey.jpg",
     "description": "Homemade mix with dark chocolate chunks.",
@@ -1052,9 +1059,9 @@
     "id": 89,
     "title": "Smoked Salmon",
     "tags": [
-      "seafood",
       "miscellaneous",
-      "protein"
+      "protein",
+      "seafood"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/1b/At_Berlin_-_Smoked_Salmon_at_KaDeWe.jpg",
     "description": "Vacuum-sealed package from local smokehouse.",
@@ -1076,8 +1083,8 @@
     "id": 91,
     "title": "Pomegranate",
     "tags": [
-      "fruit",
-      "fresh"
+      "fresh",
+      "fruit"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/62/Pomegranate%2C_illustration_from_The_Encyclopedia_of_Food_by_Artemas_Ward.jpg",
     "description": "Ripe fruit ready for juicing or salads.",
@@ -1088,8 +1095,8 @@
     "id": 92,
     "title": "Bok Choy",
     "tags": [
-      "vegetables",
-      "fresh"
+      "fresh",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/60/Bok_choy%2C_sauteed_-_Massachusetts.jpg",
     "description": "Fresh baby bok choy for stir-fries.",
@@ -1111,8 +1118,8 @@
     "id": 94,
     "title": "Black Beans",
     "tags": [
-      "vegetables",
-      "protein"
+      "protein",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/6/60/00_HK_canned_food_%E8%B1%86%E8%B1%89%E9%AF%AA%E9%AD%9A_Black_Bean_oil_Fried_Dace_fish_n_steamed_rice_Dec-2015_002.JPG",
     "description": "Dry beans in 2kg bulk package.",
@@ -1123,8 +1130,8 @@
     "id": 95,
     "title": "Mangoes",
     "tags": [
-      "fruit",
-      "fresh"
+      "fresh",
+      "fruit"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/8/82/Green_Mangoes_%28Mangifera_indica%29.jpg",
     "description": "Ripe Ataulfo mangoes from Mexico.",
@@ -1146,8 +1153,8 @@
     "id": 97,
     "title": "Acorn Squash",
     "tags": [
-      "vegetables",
-      "organic"
+      "organic",
+      "vegetables"
     ],
     "image": "https://upload.wikimedia.org/wikipedia/commons/1/11/Acorn_Squash_And_Black_Bean_Empanadas_%28140491479%29.jpeg",
     "description": "Organic squash perfect for stuffing.",
