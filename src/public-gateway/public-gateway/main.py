@@ -15,7 +15,13 @@ from blueprints import register, login
 
 
 app = Quart(__name__)
-app = cors(app, allow_origin="http://localhost:3000", allow_credentials=True)
+app = cors(
+    app,
+    allow_origin="http://localhost:3000",
+    allow_credentials=True,
+    allow_methods=["POST"],
+    allow_headers=["content-type"],
+)
 
 app.register_blueprint(register.blueprint)
 app.register_blueprint(login.blueprint)
